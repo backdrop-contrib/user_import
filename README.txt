@@ -25,6 +25,9 @@ Can stagger number of users imported, so that not too many emails are sent at on
 Multiple files can be imported/tested at the same time.
 Designed to be infinitely scalable.
 
+Supported CSV File Formats:
+Make sure csv file has been saved with 'Windows' line endings.
+
 
 
 ********************************************************************

@@ -102,11 +102,7 @@ function user_import_callback_overview() {
             
         case t('Continue Processing'):
             $import = user_import_select_imports($edit['iid']);
-            if ($import['setting'] == 'import') {
-                user_import_import($import);
-            } elseif ($import['setting'] == 'test') {
-                user_import_test($import);
-            }
+            user_import_process($import);
             break;
     }
 
@@ -159,8 +155,9 @@ function user_import_callback_add($iid = NULL) {
             user_import_check_add($edit['field_match']);
     
             if (!form_get_errors()) {
-    
-                user_import_test($edit);
+                
+                $edit['setting'] = 'test';
+                user_import_process($edit);
                 drupal_set_message (t('Tested'));
                 drupal_goto ('admin/settings/user_import/list');
             }
@@ -170,7 +167,8 @@ function user_import_callback_add($iid = NULL) {
             user_import_check_add($edit['field_match']);
             
             if (!form_get_errors()) {
-                $output = user_import_import($edit);
+                $edit['setting'] = 'import';
+                user_import_process($edit);
                 drupal_set_message (t('Imported'));
                 drupal_goto ('admin/settings/user_import/list');
             }
@@ -178,6 +176,9 @@ function user_import_callback_add($iid = NULL) {
             
         case t('Upload'):  
             $file = file_save_upload($file_name);
+            // TO DO
+            // currently function screws up line endings
+            // user_import_file_cleaner($file->filepath);
             break;
             
         case t('Remove file'):
@@ -200,6 +201,9 @@ function user_import_callback_add($iid = NULL) {
     
     // Upload file form
     if (!$file) {
+        $upload .= form_hidden ('send_email' , 1);
+        $upload .= form_hidden ('contact' , 1);
+        $upload .= form_hidden ('file_handle' , $file_name);
         $upload .= form_hidden ('file_handle' , $file_name);
         $upload .= form_file(t('CSV File'), $file_name, 50, t('Upload the CSV file to be imported.'), TRUE);
         $upload  .= form_submit(t('Upload'));
@@ -210,7 +214,6 @@ function user_import_callback_add($iid = NULL) {
     }
     
     // Process file form
-    $remove .= form_hidden ('file_handle' , $file_name);
     $remove .= form_item(t('Uploaded file'), sprintf("%s (%d Bytes)", $file->filename, $file->filesize));
     $remove .= form_submit(t('Remove file'));
     $remove = form_group(t('CSV file'), $remove, t('Remove file to use a different file.'));
@@ -262,7 +265,7 @@ function user_import_callback_add($iid = NULL) {
     $options .= form_checkbox(t('Send Email'), 'send_email', 1, $edit['send_email'], t('Send email to users when their account is created.'));
     $options = form_group(t('Options'), $options);
     
-    $field_match_header = array(t('csv column'), t('profile fields'), t('username'), t('abbreviate'));
+    $field_match_header = array(t('csv column'), t('Drupal fields'), t('username'), t('abbreviate'));
     $fieldmatch .= theme('table', $field_match_header, $field_match_rows, array('id' => 'select-match'));
     $group_text = t("Match columns in CSV file to profile fields, leave as '----' if there is no match.");
     $group_text .= '<br /><strong>' . t('Username') . ': </strong>' . t("The Username will be built from CSV columns in the order selected.");
@@ -338,8 +341,6 @@ function user_import_callback_configure() {
             break;
     }
     
-    
-    
     $form .= form_textfield(t('Maximum Users/Process'), 'user_import_max', $user_import_max, 10, 10, t('Maximum number of users to import each time the file is processed, useful for controling the rate at which emails are sent out.'));
     $form .= form_submit(t('Save'));
     $output .= form($form);
@@ -348,178 +349,6 @@ function user_import_callback_configure() {
     return;
 }
 
-
-function user_import_import($settings) {
-
-     // if existing import, merge settings with import variables
-     if ($settings['iid']) {
-        $import = user_import_select_import_data($settings['iid']);
-        $settings = array_merge($import, $settings);
-        if ($settings['setting'] == 'test' || $settings['setting'] == 'tested') $settings['iid'] = NULL;
-     } else {
-        $settings['pointer'] = 0;
-        $settings['processed'] = 0;
-        $settings['valid'] = 0;
-        $settings['setting'] = 'import';
-    }
-
-    $file = file_check_upload($settings['file_handle']);
-    $handle = @fopen($file->filepath, "r");
-    
-    // move pointer
-    if ($settings['pointer'] != 0) fseek ($handle, $settings['pointer']);
-    
-    $send_counter = 0;
-    
-    // get line
-    while ($data = fgetcsv ($handle, 1000000, ",")) {
-        
-        if ($send_counter > variable_get('user_import_max', 250)) {
-            $unfinished = TRUE;
-            break;
-        }
-        
-        // check if this is first line - if so should we skip?
-        if ($settings['processed'] == 0) $first_line_skip = $settings['first_line'];
-            
-        $empty_line = (count($data) == 1 && strlen($data[0]) == 0) ? TRUE : FALSE;      
-        
-        if (!$first_line_skip && !$empty_line) {
-            
-            $fields = NULL;
-            reset($settings['field_match']);
-            while (list ($file_column, $fid) = each ($settings['field_match'])) {
-
-                if ($fid == 'email') {
-                    $email = trim($data[$file_column]);
-                    $errors = user_import_validate_email($email);
-                }
-                
-                if ($fid != 0 && $fid != 'email') {
-                    $fields[$fid] = $data[$file_column];
-                }
-                
-                if ($settings['username'][$file_column] > 0) {
-                    $username_data[$file_column]= $data[$file_column];
-                    $username_order[$file_column] = $settings['username'][$file_column];
-                    $username_abbreviate[$file_column]= $settings['abbreviate'][$file_column];
-                }
-            }
-     
-            if (!$errors) {
-                
-                $username = user_import_create_username($username_order, $username_data, $username_abbreviate);
-                $pass = user_password();
-
-                $account = array(
-                "name" => $username,
-                "pass" => $pass,
-                "mail" => $email,
-                "init" => $email,
-                "timezone" => "-18000",
-                "status" => 1,
-                "roles" => array(_user_authenticated_id() => 2),
-                "contact" => $settings['contact']);
-    
-                $account = user_save('', $account);
-                watchdog('user', t('New user: %name %email.', array('%name' => theme('placeholder', $account->name), '%email' => theme('placeholder', '<'. $account->mail .'>'))), WATCHDOG_NOTICE, l(t('edit'), 'user/'. $account->uid .'/edit'));
-                
-                // import info to profile
-                if (is_array($fields)) {
-                    while (list ($fid, $content) = each ($fields)) {
-                        user_import_insert_profile($fid, $account->uid, trim($content));
-                    }
-                }      
-                
-                if ($settings['send_email']) user_import_send_email($account, $pass);
-                $settings['valid']++;
-                $send_counter++;
-            }
-            
-            $settings['processed']++;
-            $settings['pointer'] = ftell($handle);
-            $settings = user_import_set_import($settings);
-        
-            // save lines that have fatal errors
-            if ($errors) user_import_set_errors($settings, $fields, $email, $errors);
-            unset($errors);
-        }
-    }
-    
-    fclose ($handle);
-    if (!$unfinished) $settings['setting'] = 'imported';
-    user_import_set_import($settings);
-    return;
-}
-
-function user_import_test($settings) {
-
-     // if existing import, merge settings with import variables
-     if ($settings['iid']) {
-        $import = user_import_select_import_data($settings['iid']);
-        $settings = array_merge($import, $settings);
-        // deal with switch from import to test
-        if ($settings['setting'] == 'import' || $settings['setting'] == 'imported') {
-            drupal_set_message(t('Once importing has begun, cannot switch to testing.'), 'error');
-            return;
-        }
-     }
-    
-    if (!$settings['iid']) {
-        $settings['pointer'] = 0;
-        $settings['processed'] = 0;
-        $settings['valid'] = 0;
-        $settings['setting'] = 'test';
-    }
-    
-    $file = file_check_upload($settings['file_handle']);
-    $handle = @fopen($file->filepath, "r");
-    
-    // move pointer
-    if ($settings['pointer'] != 0) fseek ($handle, $settings['pointer']);
-
-    while ($data = fgetcsv ($handle, 10000000, ",")) {
-        
-        // check if this is first line - if so should we skip?
-        if ($settings['processed'] == 0) $first_line_skip = $settings['first_line'];
-        
-        $empty_line = (count($data) == 1 && strlen($data[0]) == 0) ? TRUE : FALSE;
-        
-        if (!$first_line_skip && !$empty_line) {
-        
-            $fields = NULL;
-            reset($settings['field_match']);
-            while (list ($file_column, $fid) = each ($settings['field_match'])) {
-            
-                if ($fid == 'email') {
-                    $email = trim($data[$file_column]);
-                    $errors = user_import_validate_email($email);
-                }
-                
-                if ($fid != 0 && $fid != 'email') $fields[$fid] = $data[$file_column];    
-            }
-    
-            if (!$errors) {
-                
-                $settings['valid']++;
-            }
-            
-            $settings['processed']++;
-        }
-        
-        $settings['pointer'] = ftell($handle);
-        $settings = user_import_set_import($settings);
-        
-        // save lines that have fatal errors
-        if ($errors) user_import_set_errors($settings, $fields, $email, $errors);
-        unset($errors);
-    }
-    
-    fclose ($handle);
-    $settings['setting'] = 'tested';
-    user_import_set_import($settings);
-    return;
-}
 
 // Create Username    
 function user_import_create_username($order, $data, $abbreviate) {
@@ -572,7 +401,7 @@ function user_import_validate_email($email = NULL) {
     if (!valid_email_address($email)) return 'invalid email';
     
     $result = db_result(db_query("SELECT uid from {users} where mail= '%s' LIMIT 1", $email));
-    if ($result ) return 'duplicate email';
+    if ($result) return 'duplicate email';
  
     return;
 }
@@ -742,19 +571,14 @@ function user_import_select_import_data($iid) {
 
 function user_import_cron() {
     
-    $imports = user_import_select_imports();
+    $imports = user_import_select_imports();    
+    if (!$imports) return;
     
-    if ($imports) {
-        foreach ($imports as $import) {
-            
-            if ($import['setting'] == 'import') {
-                user_import_import($import);
-            } elseif ($import['setting'] == 'test') {
-                user_import_test($import);
-            }
-        }
+    foreach ($imports as $import) {
+        
+        user_import_process($import);
     }
-    
+        
     return;
 }
 
@@ -796,7 +620,159 @@ function user_import_validate_maximum($user_import_max) {
     
     return $user_import_max;
 }
+
+// Clean file - in case of incompatable line endings
+function user_import_file_cleaner($filepath) {
+
+    $file = fopen($filepath,'r+');
+    while (!feof($file )){
+       $line = chop(fgets($file,4096));
+       $return = ereg_replace(chr(13) . chr(10),"\n", $line);
+       $return = ereg_replace(chr(13),"\n", $return);
+       fwrite($file, $return);
+    }
+    
+    fclose($file);
+    return;
+}
 	
-	
+function user_import_process($settings) {	
+    
+    $settings = _user_import_setting($settings);
+    
+    $file = file_check_upload($settings['file_handle']);
+    $handle = @fopen($file->filepath, "r");
+    
+    // move pointer to where we last finished
+    if ($settings['pointer'] != 0) fseek ($handle, $settings['pointer']);
+  
+    // start count of imports on this cron run
+    $send_counter = 0;
+    
+    while ($data = fgetcsv($handle, 10000000, ',')) {
+    
+        // if importing, check we are not over max number of imports per cron
+        if ($settings['setting'] == 'import' && $send_counter > variable_get('user_import_max', 250)) {
+            $finished = TRUE;
+            break;
+        }
+        
+        $empty_line = (count($data) == 1 && strlen($data[0]) == 0) ? TRUE : FALSE;
+       
+        // check if this is first line - if so should we skip?
+        if (!$empty_line) {
+            $first_line_skip = ($settings['processed'] == 0 && !$first_line_skip) ? $settings['first_line'] : NULL;
+        }
+
+        if ($first_line_skip != 1 && !$empty_line) {
+
+            unset($email);
+            unset($errors);
+            unset($fields);
+            reset($settings['field_match']);
+            
+            while (list ($file_column, $fid) = each ($settings['field_match'])) {
+            
+                if ($fid == 'email') {
+                    $email = trim($data[$file_column]);
+                    $errors = user_import_validate_email($email);
+                }
+        
+                if ($fid != 0 && $fid != 'email') $fields[$fid] = $data[$file_column];
+                
+                if ($settings['username'][$file_column] > 0) {
+                        $username_data[$file_column]= $data[$file_column];
+                        $username_order[$file_column] = $settings['username'][$file_column];
+                        $username_abbreviate[$file_column]= $settings['abbreviate'][$file_column];
+                } 
+            
+            }
+            
+            if (!$errors) {
+                
+                if ($settings['setting'] == 'import') {
+
+                    $username = user_import_create_username($username_order, $username_data, $username_abbreviate);
+                    $pass = user_password();
+    
+                    $account = array(
+                        "name" => $username,
+                        "pass" => $pass,
+                        "mail" => $email,
+                        "init" => $email,
+                        "timezone" => "-18000",
+                        "status" => 1,
+                        "roles" => array(_user_authenticated_id() => 2),
+                        "contact" => $settings['contact']);
+        
+                    $account = user_save('', $account);
+                    watchdog('user', t('New user: %name %email.', array('%name' => theme('placeholder', $account->name), '%email' => theme('placeholder', '<'. $account->mail .'>'))), WATCHDOG_NOTICE, l(t('edit'), 'user/'. $account->uid .'/edit'));
+                    
+                    // import info to profile
+                    if (is_array($fields)) {
+                        while (list ($fid, $content) = each ($fields)) {
+                            user_import_insert_profile($fid, $account->uid, trim($content));
+                        }
+                    }      
+                    
+                    if ($settings['send_email']) user_import_send_email($account, $pass);
+                    $send_counter++;
+
+                }
+                
+                $settings['valid']++;
+            }
+            
+            $settings['processed']++;
+
+            // save lines that have fatal errors
+            if ($errors) user_import_set_errors($settings, $fields, $email, $errors);
+        }
+        
+        $settings['pointer'] = ftell($handle);
+        if ($first_line_skip != 1 && !$empty_line) $settings = user_import_set_import($settings);
+    }
+    
+    fclose ($handle);
+    if ($settings['setting'] == 'import' && !$finished) $settings['setting'] = 'imported';
+    if ($settings['setting'] == 'test') $settings['setting'] = 'tested';
+    $settings = user_import_set_import($settings);
+    
+    return $settings;
+}
+
+function _user_import_setting($settings) {
+
+     // if existing import, merge settings with import variables
+     if ($settings['iid']) {
+        
+        $import = user_import_select_import_data($settings['iid']);
+
+        // prevent switch from import to test
+        if (($import['setting'] == 'import' || $import['setting'] == 'imported') && ($settings['setting'] == 'test' || $settings['setting'] == 'testing')) {
+            drupal_set_message(t('Once importing has begun, cannot switch to testing.'), 'error');
+            drupal_goto ('admin/settings/user_import/list');
+        }   
+        
+        // switching from testing to import
+        if ($settings['setting'] == 'import' && ($import['setting'] == 'test' || $import['setting'] == 'tested')) {
+            $settings['iid'] = NULL;
+            $import['setting'] = 'import';
+            $import['pointer'] = 0;
+            $import['processed'] = 0;
+            $import['valid'] = 0;
+        }
+        
+        // merge settings in db with new settings from form
+        $settings = array_merge($import, $settings);
+       
+     } else {
+        $settings['pointer'] = 0;
+        $settings['processed'] = 0;
+        $settings['valid'] = 0;
+    }
+    
+    return $settings;
+}
 
 ?>

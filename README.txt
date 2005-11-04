@@ -7,7 +7,7 @@ Drupal: 4.6.x
 ********************************************************************
 DESCRIPTION:
 
-Import users into Drupal from a csv file (comma seperated file).
+Import users into Drupal from a csv file (comma separated file).
 
 Features include:
 
@@ -64,7 +64,6 @@ Drupal package and read the online documentation.
 TO DO
 
   Previous/Next buttons to view more than just the first line of csv file when matching to profile fields.
-  Refine text descriptions and help.
 
 
 

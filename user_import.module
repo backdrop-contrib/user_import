@@ -152,7 +152,7 @@ function user_import_callback_add($iid = NULL) {
    
     switch ($operation) {
         case t('Test'):
-            user_import_check_add($edit['field_match']);
+            _user_import_validate_add($edit);
     
             if (!form_get_errors()) {
                 
@@ -164,7 +164,7 @@ function user_import_callback_add($iid = NULL) {
             break;
             
         case t('Import'):    
-            user_import_check_add($edit['field_match']);
+            _user_import_validate_add($edit);
             
             if (!form_get_errors()) {
                 $edit['setting'] = 'import';
@@ -203,6 +203,7 @@ function user_import_callback_add($iid = NULL) {
     if (!$file) {
         $upload .= form_hidden ('send_email' , 1);
         $upload .= form_hidden ('contact' , 1);
+        $upload .= form_hidden ('roles][2', 1);
         $upload .= form_hidden ('file_handle' , $file_name);
         $upload .= form_hidden ('file_handle' , $file_name);
         $upload .= form_file(t('CSV File'), $file_name, 50, t('Upload the CSV file to be imported.'), TRUE);
@@ -240,6 +241,7 @@ function user_import_callback_add($iid = NULL) {
     // add default and email address options
     $profile_fields[0] = '-------------';
     $profile_fields['email'] = t('Email Address') . '*';
+    $profile_fields['password'] = t('Password');
     asort($profile_fields);  
     
     $column = 0;
@@ -271,7 +273,16 @@ function user_import_callback_add($iid = NULL) {
     $group_text .= '<br /><strong>' . t('Username') . ': </strong>' . t("The Username will be built from CSV columns in the order selected.");
     $group_text .= '<br /><strong>' . t('Abbreviate') . ': </strong>' . t("Use the first letter of a field in uppercase for the Username, e.g. 'john' -> 'J'.");
     $group_text .= '<br />' . t("If no CSV fields are selected, the Username will be randomly generated.");
-    $options .= form_group(t('Field Match'), $fieldmatch, $group_text);      
+    $options .= form_group(t('Field Match'), $fieldmatch, $group_text);    
+     
+
+    $roles_data = user_roles();
+
+    while (list ($rid, $role_name) = each ($roles_data)) {
+        if ($rid != 1) $roles .= form_checkbox($role_name, 'roles][' . $rid, 1, $edit['roles'][$rid]);
+    }
+
+    $options .= form_group(t('Role Assign'), $roles, t('Select which role(s) imported users should be assigned.')); 
 
     $options .= form_submit(t('Test'));
     $options.= form_submit(t('Import'));
@@ -486,8 +497,10 @@ function user_import_list_profile_fields($return = 'string') {
 
 
 
-function user_import_check_add($field_match) {
+function _user_import_validate_add(&$edit) {
 
+   $field_match = $edit['field_match'];
+   
    // in case of injection (normaly $field_match will always be an array
    if (!is_array($field_match)) return form_set_error('field_match[1]',  t('At least one column of the csv file must be set as the email address.'));
    
@@ -504,6 +517,19 @@ function user_import_check_add($field_match) {
    if (!$email) {
         form_set_error('field_match[1]', t('One column of the csv file must be set as the email address.'));
    }
+   
+   // check at least one role has been chosen
+   $role_sum = 0;
+   
+   foreach ($edit['roles'] as $role) {
+        $role_sum = $role_sum + $role;
+   }
+   
+   if ($role_sum == 0) {
+        
+        $edit['roles'][2] = 1; 
+        form_set_error('roles[1]', t('At least one role must be set.'));
+   }
 
     return;    
 }
@@ -513,16 +539,16 @@ function user_import_set_import($settings) {
   if ($settings['iid']) {
   
     db_query("UPDATE {user_import} 
-        SET file_handle = '%s', pointer = '%d', processed = '%d', valid= '%d', first_line = '%d', contact = '%d', send_email = '%d', field_match = '%s', username = '%s', abbreviate = '%s', setting = '%s' 
+        SET file_handle = '%s', pointer = '%d', processed = '%d', valid= '%d', first_line = '%d', contact = '%d', send_email = '%d', field_match = '%s', username = '%s', abbreviate = '%s', roles = '%s', setting = '%s' 
         WHERE iid = '%d'
-        ", $settings['file_handle'], $settings['pointer'], $settings['processed'], $settings['valid'], $settings['first_line'], $settings['contact'],  $settings['send_email'], serialize($settings['field_match']), serialize($settings['username']), serialize($settings['abbreviate']), $settings['setting'], $settings['iid']);
+        ", $settings['file_handle'], $settings['pointer'], $settings['processed'], $settings['valid'], $settings['first_line'], $settings['contact'],  $settings['send_email'], serialize($settings['field_match']), serialize($settings['username']), serialize($settings['abbreviate']), serialize($settings['roles']), $settings['setting'], $settings['iid']);
         
   } else {
   
     db_query("INSERT INTO {user_import} 
-        (iid, file_handle, started, pointer, total, processed, valid, first_line, contact, send_email, field_match, username, abbreviate, setting) 
-        VALUES (NULL, '%s', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s')
-        ", $settings['file_handle'], time(), $settings['pointer'], $settings['total'],  $settings['processed'], $settings['valid'], $settings['first_line'], $settings['contact'],  $settings['send_email'], serialize($settings['field_match']), serialize($settings['username']), serialize($settings['abbreviate']), $settings['setting']);
+        (iid, file_handle, started, pointer, total, processed, valid, first_line, contact, send_email, field_match, username, abbreviate, roles, setting) 
+        VALUES (NULL, '%s', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s')
+        ", $settings['file_handle'], time(), $settings['pointer'], $settings['total'],  $settings['processed'], $settings['valid'], $settings['first_line'], $settings['contact'],  $settings['send_email'], serialize($settings['field_match']), serialize($settings['username']), serialize($settings['abbreviate']), serialize($settings['roles']), $settings['setting']);
         
     $settings['iid'] = db_result(db_query("SELECT LAST_INSERT_ID()"));
     
@@ -549,12 +575,14 @@ function user_import_select_imports($iid = NULL) {
         $import['field_match'] = unserialize($import['field_match']);
         $import['username'] = unserialize($import['username']);
         $import['abbreviate'] = unserialize($import['abbreviate']);
+        $import['roles'] = unserialize($import['roles']);
       } else {
         $results = db_query("SELECT * FROM {user_import}");
         while ($row = db_fetch_array($results)) {
             $row['field_match'] = unserialize($row['field_match']);
             $row['username'] = unserialize($row['username']);
             $row['abbreviate'] = unserialize($row['abbreviate']);
+            $row['roles'] = unserialize($row['roles']);
             $import[] = $row;
         }
 
@@ -640,6 +668,11 @@ function user_import_process($settings) {
     
     $settings = _user_import_setting($settings);
     
+    // get enabled roles
+    while (list ($rid, $set) = each ($settings['roles'])) {
+        if ($set == 1) $roles[] = $rid;
+    }
+    
     $file = file_check_upload($settings['file_handle']);
     $handle = @fopen($file->filepath, "r");
     
@@ -677,8 +710,12 @@ function user_import_process($settings) {
                     $email = trim($data[$file_column]);
                     $errors = user_import_validate_email($email);
                 }
+                
+                if ($fid == 'password') {
+                    $password = trim($data[$file_column]);
+                }
         
-                if ($fid != 0 && $fid != 'email') $fields[$fid] = $data[$file_column];
+                if ($fid != 0 && $fid != 'email' && $fid != 'password') $fields[$fid] = $data[$file_column];
                 
                 if ($settings['username'][$file_column] > 0) {
                         $username_data[$file_column]= $data[$file_column];
@@ -693,16 +730,16 @@ function user_import_process($settings) {
                 if ($settings['setting'] == 'import') {
 
                     $username = user_import_create_username($username_order, $username_data, $username_abbreviate);
-                    $pass = user_password();
+                    $password = ($password) ? $password : user_password();
     
                     $account = array(
                         "name" => $username,
-                        "pass" => $pass,
+                        "pass" => $password,
                         "mail" => $email,
                         "init" => $email,
                         "timezone" => "-18000",
                         "status" => 1,
-                        "roles" => array(_user_authenticated_id() => 2),
+                        "roles" => $roles,
                         "contact" => $settings['contact']);
         
                     $account = user_save('', $account);

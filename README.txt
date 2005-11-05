@@ -13,11 +13,13 @@ Features include:
 
 Creates an account for each user.
 Match csv columns to profile fields
-Can create Usernames based on data from file, e.g. "John" + "Smith" => "JohnSmith".
+Option to create Usernames based on data from file, e.g. "John" + "Smith" => "JohnSmith".
 Usernames can be made of abbreviated data from file, e.g. "John" + "Smith" => "JSmith".
-Can create random, human readable, Usernames.
-Creates random passwords for each new account.
-Can send welcome email, with account details to each new user.
+Option to create random, human readable, Usernames.
+Option to import passwords
+Option to create random passwords for each user.
+Can set user roles.
+Option to send welcome email, with account details to each new user.
 Can set each user's contact form to enabled
 Test mode option to check for errors.
 Processing can be triggered by cron or manually by an administrator.

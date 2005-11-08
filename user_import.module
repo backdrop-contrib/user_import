@@ -89,7 +89,7 @@ function user_import_callback_overview() {
         case t('Delete'):
             db_query("DELETE FROM {user_import} WHERE iid = '%d'", $edit['iid']);
             db_query("DELETE FROM {user_import_errors} WHERE iid = '%d'", $edit['iid']);
-            $message = t("Import has been cancelled.");
+            $message = t("Imported file and info about the import have been deleted.");
             $file = file_check_upload($edit['file_handle']);
             if ($file) {
                 file_delete($file->filepath);
@@ -443,12 +443,12 @@ function theme_user_import_duplicate($user_data) {
 }
 
 // Send email when account is created    
-function user_import_send_email($account, $pass) {
+function user_import_send_email($account, $password) {
 
     global $base_url;
     $from = variable_get('site_mail', ini_get('sendmail_from'));
 
-    $variables = array('%username' => $account->name, '%site' => variable_get('site_name', 'drupal'), '%password' => $pass, '%uri' => $base_url, '%uri_brief' => substr($base_url, strlen('http://')), '%mailto' => $account->mail, '%date' => format_date(time()), '%login_uri' => url('user', NULL, NULL, TRUE), '%edit_uri' => url('user/'. $account->uid .'/edit', NULL, NULL, TRUE));
+    $variables = array('%username' => $account->name, '%site' => variable_get('site_name', 'drupal'), '%password' => $password, '%uri' => $base_url, '%uri_brief' => substr($base_url, strlen('http://')), '%mailto' => $account->mail, '%date' => format_date(time()), '%login_uri' => url('user', NULL, NULL, TRUE), '%edit_uri' => url('user/'. $account->uid .'/edit', NULL, NULL, TRUE));
 
     $subject = _user_mail_text('welcome_subject', $variables);
     $body = _user_mail_text('welcome_body', $variables);
@@ -700,6 +700,7 @@ function user_import_process($settings) {
         if ($first_line_skip != 1 && !$empty_line) {
 
             unset($email);
+            unset($password);
             unset($errors);
             unset($fields);
             reset($settings['field_match']);
@@ -730,7 +731,7 @@ function user_import_process($settings) {
                 if ($settings['setting'] == 'import') {
 
                     $username = user_import_create_username($username_order, $username_data, $username_abbreviate);
-                    $password = ($password) ? $password : user_password();
+                    if (!$password) $password = user_password();
     
                     $account = array(
                         "name" => $username,
@@ -744,7 +745,7 @@ function user_import_process($settings) {
         
                     $account = user_save('', $account);
                     watchdog('user', t('New user: %name %email.', array('%name' => theme('placeholder', $account->name), '%email' => theme('placeholder', '<'. $account->mail .'>'))), WATCHDOG_NOTICE, l(t('edit'), 'user/'. $account->uid .'/edit'));
-                    
+                 
                     // import info to profile
                     if (is_array($fields)) {
                         while (list ($fid, $content) = each ($fields)) {
@@ -752,7 +753,7 @@ function user_import_process($settings) {
                         }
                     }      
                     
-                    if ($settings['send_email']) user_import_send_email($account, $pass);
+                    if ($settings['send_email']) user_import_send_email($account, $password);
                     $send_counter++;
 
                 }

@@ -128,7 +128,7 @@ function user_import_callback_overview() {
             $form = theme('table', $header, $row);
     
             $form .= form_hidden ('iid' , $import['iid']);
-            $form .= form_submit(t('Continue Processing'));
+            if ($import['setting'] == 'test' || $import['setting']  == 'import') $form .= form_submit(t('Continue Processing'));
             $form .= form_submit(t('Settings'));
             $form .= form_submit(t('Delete'));
             
@@ -557,14 +557,14 @@ function user_import_set_import($settings) {
   return $settings;
 }
 
-function user_import_set_errors($settings, $data, $email, $error) {
+function user_import_set_errors($import_id, $data, $email, $error) {
 
-    if (is_array($data)) $field_match = array_merge($data, $email);
+    $data['email'] = $email;
 
     db_query("INSERT INTO {user_import_errors} 
         (iid, data, error) 
         VALUES ('%d', '%s', '%s')
-        ", $settings['iid'], serialize($field_match), $error);
+        ", $import_id, serialize($data), $error);
      return;
 }
 
@@ -731,7 +731,7 @@ function user_import_process($settings) {
                 if ($settings['setting'] == 'import') {
 
                     $username = user_import_create_username($username_order, $username_data, $username_abbreviate);
-                    if (!$password) $password = user_password();
+                    if (empty($password)) $password = user_password();
     
                     $account = array(
                         "name" => $username,
@@ -763,12 +763,14 @@ function user_import_process($settings) {
             
             $settings['processed']++;
 
-            // save lines that have fatal errors
-            if ($errors) user_import_set_errors($settings, $fields, $email, $errors);
+            
         }
         
         $settings['pointer'] = ftell($handle);
         if ($first_line_skip != 1 && !$empty_line) $settings = user_import_set_import($settings);
+        
+        // save lines that have fatal errors
+        if ($errors) user_import_set_errors($settings['iid'], $fields, $email, $errors);
     }
     
     fclose ($handle);

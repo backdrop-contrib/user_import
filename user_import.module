@@ -604,7 +604,7 @@ function user_import_cron() {
     
     foreach ($imports as $import) {
         
-        user_import_process($import);
+        if ($import['setting'] == 'test' || $import['setting'] == 'import') user_import_process($import);
     }
         
     return;
@@ -789,9 +789,11 @@ function _user_import_setting($settings) {
         $import = user_import_select_import_data($settings['iid']);
 
         // prevent switch from import to test
-        if (($import['setting'] == 'import' || $import['setting'] == 'imported') && ($settings['setting'] == 'test' || $settings['setting'] == 'testing')) {
-            drupal_set_message(t('Once importing has begun, cannot switch to testing.'), 'error');
-            drupal_goto ('admin/settings/user_import/list');
+        if ($settings['setting'] == 'test' || $settings['setting'] == 'testing') {
+            if ($import['setting'] == 'import' || $import['setting'] == 'imported') {
+                drupal_set_message(t('Once importing has begun, cannot switch to testing.'), 'error');
+                drupal_goto ('admin/settings/user_import/list');
+            }
         }   
         
         // switching from testing to import

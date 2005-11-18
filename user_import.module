@@ -342,17 +342,21 @@ function user_import_callback_configure() {
     
     switch ($operation) {
         case t('Save'):
-            $user_import_max = user_import_validate_maximum($edit['user_import_max']);
-            variable_set('user_import_max', $user_import_max);
+            $edit = user_import_validate_configuration($edit);
+            variable_set('user_import_max', $edit['user_import_max']);
+            variable_set('user_import_line_max', $edit['user_import_line_max']);
             if (!form_get_errors()) drupal_set_message(t("Settings have been saved."));
             break;
         
         default:
-            $user_import_max = variable_get('user_import_max', 250);
+            $edit['user_import_max'] = variable_get('user_import_max', 250);
+            $edit['user_import_line_max'] = variable_get('user_import_line_max', 1000);
             break;
     }
     
-    $form .= form_textfield(t('Maximum Users/Process'), 'user_import_max', $user_import_max, 10, 10, t('Maximum number of users to import each time the file is processed, useful for controling the rate at which emails are sent out.'));
+    $form .= form_textfield(t('Maximum Users/Process'), 'user_import_max', $edit['user_import_max'], 10, 10, t('Maximum number of users to import each time the file is processed, useful for controling the rate at which emails are sent out.'));
+    $form .= form_textfield(t('Maximum length of line'), 'user_import_line_max', $edit['user_import_line_max'], 10, 10, t('The default is set at 1,000 characters, if a line in your csv is longer than this you should set a higher maximum here. Setting higher maximums will slow down imports.'));
+    
     $form .= form_submit(t('Save'));
     $output .= form($form);
     
@@ -637,16 +641,35 @@ function user_import_random_username() {
     return $username;
 }
 
-function user_import_validate_maximum($user_import_max) {
+function user_import_validate_configuration($edit) {
 
-    $user_import_max = check_plain($user_import_max);
-    
-    if ($user_import_max && !is_numeric($user_import_max)) {
-        $user_import_max = NULL;
-        form_set_error('user_import_max', t('Value must be a number.'));
+    if (!is_numeric($edit['user_import_max'])) {
+        $edit['user_import_max'] = 250;
+        form_set_error('user_import_max', t('Value must be a number. Default has been set.'));
+    }
+    else {
+        if ($edit['user_import_max'] < 10) {
+            $edit['user_import_max'] = 10;
+            form_set_error('user_import_max', t("Value should be at least 10."));
+        }
     }
     
-    return $user_import_max;
+    if (!is_numeric($edit['user_import_line_max'])) {
+        $edit['user_import_line_max'] = 1000;
+        form_set_error('user_import_line_max', t('Value must be a number. Default has been set.'));
+    }
+    else{
+        if ($edit['user_import_line_max'] < 1000) {
+            $edit['user_import_line_max'] = 1000;
+            form_set_error('user_import_line_max', t("Value shouldn't be lower than 1,000."));
+        }
+        if ($edit['user_import_line_max'] > 1000000) {
+            $edit['user_import_line_max'] = 1000;
+            form_set_error('user_import_line_max', t("Value shouldn't be higher than 1,000,000."));
+        }
+    }
+    
+    return $edit;
 }
 
 // Clean file - in case of incompatable line endings
@@ -666,6 +689,7 @@ function user_import_file_cleaner($filepath) {
 	
 function user_import_process($settings) {	
     
+    $user_import_line_max = variable_get('user_import_line_max', 1000);
     $settings = _user_import_setting($settings);
     
     // get enabled roles
@@ -682,7 +706,7 @@ function user_import_process($settings) {
     // start count of imports on this cron run
     $send_counter = 0;
     
-    while ($data = fgetcsv($handle, 10000000, ',')) {
+    while ($data = fgetcsv($handle, $user_import_line_max, ',')) {
     
         // if importing, check we are not over max number of imports per cron
         if ($settings['setting'] == 'import' && $send_counter > variable_get('user_import_max', 250)) {

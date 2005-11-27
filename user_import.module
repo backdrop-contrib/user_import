@@ -614,11 +614,13 @@ function _user_import_validate_add(&$edit) {
         form_set_error('roles[1]', t('At least one role must be set.'));
    }
    
-   $edit['name'] = rtrim($edit['name']);
-   $edit['name'] = check_plain($edit['name']);
-   
-   if (strlen($edit['name']) < 1 || strlen($edit['name']) > 25) {
-    form_set_error('name', t('Name of saved settings must be between 1 and 25.'));
+   if ($edit['name']) {
+       $edit['name'] = rtrim($edit['name']);
+       $edit['name'] = check_plain($edit['name']);
+       
+       if (strlen($edit['name']) < 1 || strlen($edit['name']) > 25) {
+        form_set_error('name', t('Name of saved settings must be between 1 and 25.'));
+       }
    }
 
     return;    

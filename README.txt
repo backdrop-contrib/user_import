@@ -63,9 +63,20 @@ Drupal package and read the online documentation.
   
   
 ********************************************************************
-TO DO
+USAGE
 
-  Previous/Next buttons to view more than just the first line of csv file when matching to profile fields.
+To set permissions of who can import users into the site, navigate to:
+
+'administer' 
+    -- 'access control' (admin/access)
+    
+
+To import users, navigate to:
+
+'administer'
+    -- 'settings'
+        -- 'user imports'  (admin/settings/user_import)
+
 
 
 

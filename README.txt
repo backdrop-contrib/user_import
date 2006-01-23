@@ -78,6 +78,9 @@ To import users, navigate to:
         -- 'user imports'  (admin/settings/user_import)
 
 
+********************************************************************
+ACKNOWLEDGEMENT
 
+Initial starting point for this module was a script by David McIntosh (neofactor.com).
 
 

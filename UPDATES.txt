@@ -1,7 +1,19 @@
-// v 1.8 2005/11/25 23:43:05
+********************************************************************
+     U S E R   I M P O R T    M O D U L E    U P D A T E S
+********************************************************************
+Name: enewsletter module
+Author: Robert Castelo <services at cortextcommunications dot com>
+Drupal: 4.7.x
+********************************************************************
+DATABASE UPDATES:
 
-ALTER  TABLE  `user_import`  ADD  `name` VARCHAR( 25  )  NOT  NULL  AFTER  `iid` ;
 
-// v 1.2 2005/11/04 17:16:28
+Drupal: 4.6.X => 4.7.x
 
-ALTER  TABLE  `user_import`  ADD  `roles` VARCHAR( 255  )  NOT  NULL  AFTER  `abbreviate` ;
+ALTER TABLE `user_import` ADD `filename` VARCHAR( 50 ) NOT NULL AFTER `name` ,
+ADD `oldfilename` VARCHAR( 50 ) NOT NULL AFTER `filename` ,
+ADD `filepath` TINYTEXT NOT NULL AFTER `oldfilename` ;
+
+ALTER TABLE `user_import` DROP `file_handle` ,
+DROP `username` ,
+DROP `abbreviate` ;

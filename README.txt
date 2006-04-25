@@ -3,7 +3,7 @@
 ********************************************************************
 Name: user import module
 Author: Robert Castelo <www.cortextcommunications.com>
-Drupal: 4.6.x
+Drupal: 4.7.x
 ********************************************************************
 DESCRIPTION:
 

@@ -3,7 +3,7 @@
 
 /**
  * @file
- * Import users from a coma seperated file (csv).
+ * Import users from a comma separated file (csv).
  */
 
 /**
@@ -12,9 +12,9 @@
 function user_import_help($section) {
   switch ($section) {
     case 'admin/modules#description':
-      return t('Import users from a coma seperated file (csv).');
+      return t('Import users from a comma separated file (csv).');
     case 'admin/settings/user_import':
-      return t("Import users from a coma seperated file (csv). Click 'Import' to start a new import.");
+      return t("Import users from a comma separated file (csv). Click 'Import' to start a new import.");
   }
 }
 

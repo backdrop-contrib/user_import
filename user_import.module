@@ -3,7 +3,7 @@
 
 /**
  * @file
- * Import users from a comma separated file (csv).
+ * Import users from a coma seperated file (csv).
  */
 
 /**
@@ -12,9 +12,9 @@
 function user_import_help($section) {
   switch ($section) {
     case 'admin/modules#description':
-      return t('Import users from a comma separated file (csv).');
+      return t('Import users from a coma seperated file (csv).');
     case 'admin/settings/user_import':
-      return t("Import users from a comma separated file (csv). Click 'Import' to start a new import.");
+      return t("Import users from a coma seperated file (csv). Click 'Import' to start a new import.");
   }
 }
 
@@ -960,31 +960,51 @@ function user_import_configure() {
 
 // Create Username    
 function _user_import_create_username($order, $data, $abbreviate, $username_space) {
-
-    if ($data) {
     
-        asort($order);
-        reset($order);
-    
-        while (list ($file_column, $sequence) = each ($order)) {
-            
-            if (!empty($username) && !empty($username_space)) $username .= ' ';
-            $username .= ($abbreviate[$file_column] == 1) ? trim(drupal_strtoupper(chr(ord($data[$file_column])))) : trim($data[$file_column]);
-        }
+    asort($order);
+    reset($order);
 
-    } 
-    else {
-        $username = _user_import_random_username();
+    while (list ($file_column, $sequence) = each ($order)) {
+        
+        if (!empty($username) && !empty($username_space)) $username .= ' ';
+        $username .= ($abbreviate[$file_column] == 1) ? trim(drupal_strtoupper(chr(ord($data[$file_column])))) : trim($data[$file_column]);
     }
     
-    _user_import_validate_username($username);
+    if (empty($username)) $username = _user_import_random_username();
+    
+    _user_import_sanitise_username($username);
     
     return $username;
 }
-    
-// Check for a duplicate in Username    
-function _user_import_validate_username(&$username) {
+      
+function _user_import_sanitise_username(&$username) {
 
+    //
+    // conform to Drupal username rules
+    //
+    
+    static $sanitised = 0;
+    
+    if ($sanitised == 0) {
+  
+        // username cannot contain an illegal character
+        $username = preg_replace('/[^a-zA-Z0-9 ]/', ' ', $username);
+        // username cannot contain multiple spaces in a row
+        $username = preg_replace('/[ ]+/', ' ', $username);   
+        
+        // username must be less than 56 characters
+        $username = substr($username, 0, 56);
+        
+        // username cannot begin or end with a space
+        $username = trim($username);
+
+        $sanitised = 1;
+    }
+
+    //
+    // deal with duplicate usernames
+    //
+    
     $count = db_result(db_query("SELECT COUNT(uid) from {users} where name = '%s'", $username));
     
     // add number at end of username if it already exists
@@ -993,8 +1013,10 @@ function _user_import_validate_username(&$username) {
         $username = $username . $count;
         $name_in_use = db_result(db_query("SELECT uid from {users} where name = '%s' LIMIT 1", $username));
         // loop until name is valid
-        if (!empty($name_in_use)) _user_import_validate_username($username);
+        if (!empty($name_in_use)) _user_import_sanitise_username($username);
     }
+    
+    $sanitised = 0;
 
     return;
 }

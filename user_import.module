@@ -947,14 +947,44 @@ function user_import_configure() {
             '#default_value' => variable_get('user_import_settings', 0),
             '#options' => $saved_settings,
         );
-    } 
+    }
+    
+    $form['check_names'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Check Usernames'),
+        '#description' => t('Previous versions of User Import module may have created incorrect usernames, use this feature to check.'),
+    );
+    
+    $check_usernames = variable_get('user_export_checked_usernames', 0);
+    
+    if (!empty($check_usernames)) {
+        
+        variable_set('user_export_checked_usernames', 0);
+        $errors = user_import_usernames_invalid();
+        
+        $form['check_names'][] = array(
+        '#value' => $errors,
+        );
+    }
+    
+    $form['check_names'][] = array(
+        '#type' => 'submit', 
+        '#value' => t('Check'),
+        );
+    
+    $form['check_names'][] = array(
+        '#type' => 'submit', 
+        '#value' => t('Delete'),
+        );
 
     $form['submit'] = array(
         '#type' => 'submit', 
         '#value' => t('Save'),
         );
     
-    return drupal_get_form('user_import_configure', $form);
+    $output = drupal_get_form('user_import_configure', $form);
+    
+    return $output;
 }
 
 
@@ -1016,6 +1046,7 @@ function _user_import_sanitise_username(&$username) {
         if (!empty($name_in_use)) _user_import_sanitise_username($username);
     }
     
+    
     $sanitised = 0;
 
     return;
@@ -1033,6 +1064,8 @@ function _user_import_validate_email($email = NULL) {
  
     return;
 }
+
+
 
 
 function _user_import_save_profile($field, $uid, $value) {
@@ -1245,12 +1278,21 @@ function user_import_configure_validate($form_id, &$form) {
 
 function user_import_configure_submit($form_id, $form_values) { 
 
-    if (form_get_errors()) return;
     settype($form_values['user_import_max'], 'integer');
     settype($form_values['user_import_line_max'], 'integer');
     variable_set('user_import_max', $form_values['user_import_max']);
     variable_set('user_import_line_max', $form_values['user_import_line_max']);
     variable_set('user_import_settings', $form_values['user_import_settings']);
+    
+    if ($_POST['op'] == t('Check')) {
+       variable_set('user_export_checked_usernames', 1);
+       return;
+    }
+    
+    if ($_POST['op'] == t('Delete')) {
+       user_import_usernames_invalid(TRUE);
+    }
+    
     drupal_set_message(t('Configuration settings have been saved.'));
     drupal_goto('admin/settings/user_import');
 }
@@ -1337,8 +1379,9 @@ function _user_import_process($settings) {
                 if (!$errors) {
                     
                     if ($settings['setting'] == 'import') {
-    
+                        
                         $username = _user_import_create_username($username_order, $username_data, $username_abbreviate, $settings['username_space']);
+                        
                         if (empty($password)) $password = user_password();
                         if ($settings['contact'] == 1) $contact = 1;
         
@@ -1396,6 +1439,31 @@ function _user_import_process($settings) {
     $settings = _user_import_settings_save($settings);
     
     return $settings;
+}
+
+function user_import_usernames_invalid($delete = NULL) {
+    
+    $users = db_query("SELECT uid, name, mail from {users} WHERE uid != 0 AND uid != 1");
+    
+    while ($user = db_fetch_object($users)) {
+        
+        $error = user_validate_name($user->name);
+        
+        if (!empty($error)) {
+            $errors[$user->uid]['uid'] = $user->uid;
+            $errors[$user->uid]['mail'] = $user->mail;
+            $errors[$user->uid]['name'] = $user->name;
+            $errors[$user->uid]['error'] = $error;
+            
+            if (!empty($delete)) {
+                $form_values['account'] = $user;
+                user_confirm_delete_submit($form_id, $form_values);
+            }
+        }
+    }
+    
+    $output = theme('user_import_username_errors', $errors);
+    return $output;
 }
 
 function _user_import_file_deletion($filepath, $filename, $old_filename, $message = TRUE) {
@@ -1595,4 +1663,16 @@ function _user_import_organic_groups($groups_selected, $uid) {
     }
     
     return;
+}
+
+function theme_user_import_username_errors($errors) {
+    
+    if (empty($errors)) {
+        $output = '<p><strong>' . t('All usernames are OK.') . '</strong></p>';
+    } else {
+        $header = array(t('User ID'), t('Email'), t('Username'), t('Error'));
+        $output = theme('table', $header, $errors);
+    }
+    
+    return $output;
 }

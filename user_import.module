@@ -3,7 +3,11 @@
 
 /**
  * @file
- * Import users from a coma seperated file (csv).
+ * Import users from a comma separated file (csv).
+ */
+
+/**
+ * - - - - - - - -  HOOKS - - - - - - - - 
  */
 
 /**
@@ -11,13 +15,10 @@
  */
 function user_import_help($section) {
   switch ($section) {
-    case 'admin/modules#description':
-      return t('Import users from a coma seperated file (csv).');
-    case 'admin/settings/user_import':
-      return t("Import users from a coma seperated file (csv). Click 'Import' to start a new import.");
+    case 'admin/user/user_import':
+      return t("Import users from a comma separated file (csv). Click 'Import' to start a new import.");
   }
 }
-
 
 /**
  * Implementation of hook_perm().
@@ -25,7 +26,6 @@ function user_import_help($section) {
 function user_import_perm() {
   return array('import users');
 }
-
 
 /**
  * Implementation of hook_menu().
@@ -38,30 +38,54 @@ function user_import_menu($may_cache) {
      if ($may_cache) {     
      
         $items[] = array(
-            'path' => 'admin/settings/user_import', 
-            'title' => t('user imports'), 
+            'path' => 'admin/user/user_import', 
+            'title' => t('User Imports'), 
             'callback' => 'user_import_list',
             'access' => user_access('import users'),
             );
         $items[] = array(
-            'path' => 'admin/settings/user_import/list', 
-            'title' => t('list imports'), 
+            'path' => 'admin/user/user_import/list', 
+            'title' => t('List Imports'), 
             'access' => user_access('import users'),
             'weight' => -10,
             'type' => MENU_DEFAULT_LOCAL_TASK
             );
         $items[] = array(
-          'path' => 'admin/settings/user_import/add', 
-          'title' => t('import'),
+          'path' => 'admin/user/user_import/add', 
+          'title' => t('Import'),
           'callback' => 'user_import_preferences',
           'access' => user_access('import users'),
           'weight' => -5,
           'type' => MENU_LOCAL_TASK
         );
         $items[] = array(
-          'path' => 'admin/settings/user_import/configure', 
-          'title' => t('configure'),
-          'callback' => 'user_import_configure',
+          'path' => 'admin/user/user_import/continue', 
+          'title' => t('Continue'),
+          'callback' => 'user_import_continue',
+          'access' => user_access('import users'),
+          'type' => MENU_CALLBACK
+        );
+        $items[] = array(
+          'path' => 'admin/user/user_import/import', 
+          'title' => t('Import'),
+          'callback' => 'user_import_import',
+          'access' => user_access('import users'),
+          'type' => MENU_CALLBACK
+        );
+        $items[] = array(
+          'path' => 'admin/user/user_import/delete', 
+          'title' => t('Delete Import'),
+          'callback' => 'user_import_delete',
+          'access' => user_access('import users'),
+          'type' => MENU_CALLBACK
+        );
+        
+        
+        $items[] = array(
+          'path' => 'admin/user/user_import/configure', 
+          'title' => t('Configure'),
+          'callback' => 'drupal_get_form',
+          'callback arguments' => array('user_import_configure_form'),
           'access' => user_access('import users'),
           'type' => MENU_LOCAL_TASK
         );
@@ -70,154 +94,190 @@ function user_import_menu($may_cache) {
   return $items;
 }
 
-
-function user_import_list($action = NULL, $import_id = NULL) {
-  
-    // clear incomplete imports
-    _user_import_incomplete_deletion();
-
-    if ($import_id && is_numeric($import_id)) {
-        
-        $import = _user_import_settings_select($import_id);
-        
-        switch ($action) {
-            case 'delete':
-                _user_import_settings_deletion($import_id);
-                _user_import_file_deletion($import['filepath'], $import['filename'], $import['oldfilename']);
-                break;
-                
-            case 'continue':
-                _user_import_process($import);
-                break;
-                
-            case 'import':
-                _user_import_initialise_import($import);
-                break;
-                
-            case 'errors':
-                $output = theme('user_import_errors', $import);
-                break;
-        }
-    }
-
-    if (empty($output)) {
-        $output = theme_user_import_list();
-        $output .= user_import_templates_form_deletion();
-    }
+function user_import_cron() {
     
-    return $output;    
-}
-
-
-function theme_user_import_list() {
-
-    $imports = _user_import_settings_select();
+    $imports = _user_import_settings_select();    
+    if (!$imports) return;
     
-    if (!$imports) return ' ';
-
     foreach ($imports as $import) {
-
-        // header labels
-        $import_label = ($import['setting'] == 'tested' || $import['setting'] == 'test') ? t('importable') : t('imported');
-        $header = array(t('file'), t('started'), t('processed'), $import_label, t('errors'), t('status'));
-                    
-        // info row
-        $errors = db_result(db_query("SELECT COUNT(import_id) FROM {user_import_errors} WHERE import_id = %d", $import['import_id']));         
-        $errors_link = ($errors == 0) ? '0': l($errors, 'admin/settings/user_import/errors/' . $import['import_id']);           
         
-        $rows[0] = array(
-            check_plain($import['oldfilename']),
-            format_date($import['started'], 'small'),
-            array("data" => $import['processed'], "align" => 'center'),
-            array("data" => $import['valid'], "align" => 'center'),
-            array("data" => $errors_link, "align" => 'center'),
-            $import['setting'],
-        );
-        
-        $output .= theme('table', $header, $rows);
-        
-        // action buttons
-        $settings_link = l(t('Settings'), 'admin/settings/user_import/add/' . $import['import_id']);
-        $delete_link = l(t('Delete'), 'admin/settings/user_import/delete/' . $import['import_id']);
-        $continue_link = l(t('Continue Processing'), 'admin/settings/user_import/continue/' . $import['import_id']);
-        $import_link = l(t('Import'), 'admin/settings/user_import/import/' . $import['import_id']);
-        
-        $output .= $settings_link  . ' | ';   
-        $output .= $delete_link;   
-        if ($import['setting'] == 'tested' || $import['setting'] == 'test') $output .= ' | ' . $import_link;
-        if ($import['setting'] == 'test' || $import['setting']  == 'import') $output .= ' | ' . $continue_link;
-    } 
-    
-    return $output;
-}
-
-
-function user_import_templates_form_deletion() {
-
-    $imports = _user_import_settings_select(NULL, TRUE);
-    
-    if (!$imports) return ' ';
-
-    foreach ($imports as $import) {
-
-        $templates[$import['import_id']] = $import['name'];
+        if ($import['setting'] == 'test' || $import['setting'] == 'import') _user_import_process($import);
     }
-    
-    $form['settings_templates'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Settings Templates'),
-        '#collapsible' => TRUE,
-        '#collapsed' => TRUE,
-    );
-    
-    $form['settings_templates']['templates'] = array(
-        '#type' => 'checkboxes',
-        '#title' => t('Delete Templates'),
-        '#options' => $templates,
-    );
-    
-    $form['settings_templates'][] = array(
-        '#type' => 'submit', 
-        '#value' => t('Delete'),
-    );
-    
-    $output = drupal_get_form('user_import_templates_form_deletion', $form);  
-
-    return $output; 
-}
-
-
-function user_import_templates_form_deletion_submit($form_id, $form_values) {
-
-    foreach ($form_values['templates'] as $import_id) {
         
-        if (!empty($import_id)) {
-        
-            $template = _user_import_settings_select($import_id);
-            if (!empty($deleted)) $deleted .= ', ';
-            $deleted .= $template['name'];       
-            _user_import_settings_deletion($import_id);
-        }
-    }
-    
-    if (empty($deleted)) $deleted = t('none'); 
-    
-    drupal_set_message(t('Settings templates deleted: %deleted', array('%deleted' => check_plain($deleted))));
-    
     return;
 }
 
+// - - - - - - - -  FORMS - - - - - - - - 
 
-function user_import_preferences($import_id = NULL, $template_id = NULL) {
+function user_import_configure_form() { 
+        
+    $form['email'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Email'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+    );
 
-    $output = (empty($import_id)) ? user_import_add() : user_import_edit($import_id, $template_id);
-    return $output;
+    $form['email']['user_import_max'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Maximum Users/Process'),
+        '#default_value' => variable_get('user_import_max', 250),
+        '#size' => 10,
+        '#maxlength' => 10,
+        '#description' => t('Maximum number of users to import each time the file is processed, useful for controling the rate at which emails are sent out.'),
+    );
+    
+    $form['email']['user_import_line_max'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Maximum length of line'),
+        '#default_value' =>  variable_get('user_import_line_max', 1000),
+        '#size' => 10,
+        '#maxlength' => 10,
+        '#description' => t('The default is set at 1,000 characters, if a line in your csv is longer than this you should set a higher maximum here. Setting higher maximums will slow down imports.'),
+    );
+    
+    
+    $saved_templates = _user_import_settings_select(NULL, 'GET TEMPLATES');
+    
+    if (!empty($saved_templates)) {
+ 
+        $form['settings_templates'] = array(
+            '#type' => 'fieldset',
+            '#title' => t('Settings Templates'),
+            '#collapsible' => TRUE,
+            '#collapsed' => TRUE,
+        );
+        
+        $templates_list = array('-- none --');
+        
+        foreach ($saved_templates AS $template) {
+            $templates_list[$template['import_id']] = $template['name'];
+            $templates_delete[$template['import_id']] = $template['name'];
+        }
+        
+        $form['settings_templates']['user_import_settings'] = array( 
+            '#type' => 'select',
+            '#title' => t('Default Settings'),
+            '#description' => t('Select if you want to use a previously saved set of settings as default for all imports.'),
+            '#default_value' => variable_get('user_import_settings', 0),
+            '#options' => $templates_list,
+        );
+
+        
+        $form['settings_templates']['templates'] = array(
+            '#type' => 'checkboxes',
+            '#title' => t('Delete Templates'),
+            '#options' => $templates_delete,
+        );
+    
+    }
+    
+    $check_usernames = variable_get('user_export_checked_usernames', 0);
+    
+    $form['check_names'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Check Existing Usernames'),
+        '#collapsible' => TRUE,
+        '#collapsed' => empty($check_usernames) ? TRUE : FALSE,
+        '#description' => t('Previous versions of User Import module may have created incorrect usernames, use this feature to check.'),
+    );
+    
+    if (!empty($check_usernames)) {
+        
+        variable_set('user_export_checked_usernames', 0);
+        $errors = user_import_usernames_invalid();
+        
+        $form['check_names'][] = array(
+            '#value' => $errors,
+        );
+        
+        $form['check_names'][] = array(
+            '#type' => 'submit', 
+            '#value' => t('Check'),
+        );
+        
+        if ($errors != '<p><strong>' . t('All usernames are OK.') . '</strong></p>') {
+            $form['check_names'][] = array(
+                '#type' => 'submit', 
+                '#value' => t('Delete'),
+            );
+        }
+        
+        
+        
+    } else {
+
+        $form['check_names'][] = array(
+            '#type' => 'submit', 
+            '#value' => t('Check'),
+        );
+    }
+
+
+    $form['submit'] = array(
+        '#type' => 'submit', 
+        '#value' => t('Save'),
+        );
+    
+    return $form;
+}
+function user_import_configure_form_validate($form_id, &$form) {
+
+    if (is_numeric($form['user_import_max'])) {
+        if ($form['user_import_max'] < 10) form_set_error('user_import_max', t("Value should be at least 10."));       
+    } 
+    else {
+        form_set_error('user_import_max', t('Value must be a number.'));
+    }
+    
+    if (is_numeric($form['user_import_line_max'])) {
+        if ($form['user_import_line_max'] < 1000) form_set_error('user_import_line_max', t("Value must be higher than 1000."));
+        if ($form['user_import_line_max'] > 1000000) form_set_error('user_import_line_max', t("Value must be lower than 1,000,000."));
+    } 
+    else {
+        form_set_error('user_import_line_max', t('Value must be a number.'));
+    }
+    
+    return;
+}
+function user_import_configure_form_submit($form_id, $form_values) { 
+
+    settype($form_values['user_import_max'], 'integer');
+    settype($form_values['user_import_line_max'], 'integer');
+    variable_set('user_import_max', $form_values['user_import_max']);
+    variable_set('user_import_line_max', $form_values['user_import_line_max']);
+    variable_set('user_import_settings', $form_values['user_import_settings']);
+    
+    if (!empty($form_values['templates'])) {
+
+        foreach ($form_values['templates'] as $import_id) {
+            
+            if (!empty($import_id)) {
+            
+                $template = _user_import_settings_select($import_id);
+                if (!empty($deleted)) $deleted .= ', ';
+                $deleted .= $template['name'];       
+                _user_import_settings_deletion($import_id);
+            }
+        }
+    }
+    
+    if (!empty($deleted)) drupal_set_message(t('Settings templates deleted: @deleted', array('@deleted' => $deleted)));
+    
+    if ($form_values[op] == t('Check')) {
+       variable_set('user_export_checked_usernames', 1);
+       return;
+    }
+    
+    if ($form_values[op] == t('Delete')) {
+       user_import_usernames_invalid(TRUE);
+    }
+    
+    drupal_set_message(t('Configuration settings have been saved.'));
+    drupal_goto('admin/user/user_import');
 }
 
-
-function user_import_add($import_id = NULL) {
-
-    $form = array();
+function user_import_add_form($import_id = NULL) {
 
     $ftp_files = _user_import_ftp_files();
     
@@ -230,7 +290,7 @@ function user_import_add($import_id = NULL) {
             '#description' => t("Upload a CSV file."),
         );
         
-        if (function_exists('file_upload_max_size')) $file_size = t('Maximum file size: %size MB.', array('%size' => file_upload_max_size()));
+        if (function_exists('file_upload_max_size')) $file_size = t('Maximum file size: !size MB.', array('!size' => file_upload_max_size()));
 
         $form['browser']['file_upload'] = array(
             '#type' => 'file',
@@ -286,14 +346,11 @@ function user_import_add($import_id = NULL) {
     );    
     
     // Set form parameters so we can accept file uploads.
-    $form['#attributes'] = array('enctype' => 'multipart/form-data');
-    
-    $output = drupal_get_form('user_import_add', $form);  
+    $form['#attributes'] = array('enctype' => 'multipart/form-data'); 
 
-    return $output;    
+    return $form;    
 }
-
-function user_import_add_validate($form_id, $form_values) {
+function user_import_add_form_validate($form_id, $form_values) {
 
     $file = _user_import_file(NULL, $form_values['file_ftp']);
 
@@ -304,9 +361,7 @@ function user_import_add_validate($form_id, $form_values) {
     
     return;
 }
-
-
-function user_import_add_submit($form_id, $form_values) {
+function user_import_add_form_submit($form_id, $form_values) {
 
     $file = _user_import_file(NULL, $form_values['file_ftp']);
     $form_values['filename'] = $file->filename;
@@ -316,14 +371,14 @@ function user_import_add_submit($form_id, $form_values) {
     
     // create import setting
     $import = _user_import_settings_save($form_values, $messages = NULL);
-    if (!empty($form_values['import_template_select'])) $settings_template = '/' . check_plain($form_values['import_template_select']);
+    if (!empty($form_values['import_template_select'])) $settings_template = check_plain($form_values['import_template_select']);
     
-    drupal_goto('admin/settings/user_import/add/' . $import['import_id'] . $settings_template);
+    drupal_goto('admin/user/user_import/add/' . $import['import_id'] . '/' . $settings_template);
     
     return;
 }
 
-function user_import_edit($import_id, $template_id = NULL) {
+function user_import_edit_form($import_id, $template_id = NULL) {
 
     $form = array();
     $import  = _user_import_settings_select($import_id);
@@ -361,15 +416,353 @@ function user_import_edit($import_id, $template_id = NULL) {
         '#type' => 'submit', 
         '#value' => t('Import'),
     );
+    
     $form['cancel'] = array(
         '#type' => 'submit', 
         '#value' => t('Cancel'),
-    );
-    
-    $output = drupal_get_form('user_import_edit', $form);  
+    ); 
 
-    return $output;  
+    return $form;  
 }
+function user_import_edit_form_validate($form_id, $form_values) {
+
+    switch ($form_values[op]) {
+        
+        case t('Remove file'):
+
+            _user_import_settings_deletion($form_values['import_id']);
+            _user_import_file_deletion($form_values['filepath'], $form_values['filename'], $form_values['oldfilename']);
+            drupal_goto ('admin/user/user_import/add');
+            
+            break;
+            
+        case t('Cancel'):
+
+            // if import was being added - delete file
+            if ($form_values['setting'] == 'file set') {
+                _user_import_settings_deletion($form_values['import_id']);
+                _user_import_file_deletion($form_values['filepath'], $form_values['filename'], $form_values['oldfilename']);
+            }
+            drupal_goto ('admin/user/user_import');
+            break;
+            
+        // save settings
+        case t('Save As New'):
+        
+            $template_name = trim($form_values['new_name']);
+        
+        case t('Save'):
+        
+            if (empty($template_name)) $template_name = trim($form_values['name']);
+            
+            if (empty($template_name)) form_set_error('name', t('A name needs to be set to save this settings template.'));
+            
+            // check settings template name is unique
+            $unique_name = db_result(db_query("SELECT COUNT(import_id) FROM {user_import} WHERE name = '%s'", $template_name));
+            
+            if (!empty($unique_name)) form_set_error('name', t("'%name' is already in use by another settings template.", array('%name' => $template_name)));
+               
+        case t('Test'):
+        case t('Import'):
+
+            $fields = array();
+           
+            while (list ($row, $values) = each ($form_values['field_match'])) {
+        
+                // check each field is unique
+                if ($values['field_match'] != '0' && in_array($values['field_match'], $fields)) {
+                    
+                    form_set_error('field_match', t('Database fields can only be matched to one column of the csv file.'));
+                }
+                
+                $fields[$values['field_match']] = $values['field_match'];
+                
+                // check email address has been selected
+                if ($values['field_match'] == 'email') $email = TRUE;
+            }
+           
+            if (!$email) form_set_error('email', t('One column of the csv file must be set as the email address.'));
+        
+            if ($form_values['name']) {
+               $form_values['name'] = rtrim($form_values['name']);
+               
+               if (drupal_strlen($form_values['name']) < 1 || drupal_strlen($form_values['name']) > 25) {
+                form_set_error('name', t('Name of saved settings must be 25 characters or less.'));
+               }
+            }
+            break;
+    }
+    
+    return;
+}
+function user_import_edit_form_submit($form_id, $form_values) {
+    
+    switch ($form_values[op]) {
+    
+        // save settings
+        case t('Save As New'):
+            $form_values['name'] = $form_values['new_name'];
+            
+        case t('Save'):
+            
+            // save settings for inport
+            _user_import_settings_save($form_values);
+            
+            // save settings for template
+            $import_return = 'admin/user/user_import/add/' . $form_values['import_id'];
+            $form_values['setting'] = 'template';
+            unset($form_values['import_id']);
+            _user_import_initialise_import($form_values);
+            
+            // reload settings page
+            drupal_set_message (t("'%name' was saved as a settings template.", array('%name' => $form_values['name'])));
+            drupal_goto($import_return);
+            break;
+
+        case t('Update'):
+          
+            // get template id
+            $template_id = db_result(db_query("SELECT import_id from {user_import} where setting = 'template' AND name= '%s' LIMIT 1", $form_values['name']));
+            
+            // save settings for import
+            _user_import_settings_save($form_values);
+            
+            // save settings for template
+            $import_return = 'admin/user/user_import/add' . $form_values['import_id'];
+            $form_values['setting'] = 'template';
+            $form_values['import_id'] = $template_id;
+            _user_import_initialise_import($form_values);
+            
+            // reload settings page
+            drupal_set_message (t("'%name' settings template was updated.", array('%name' => $form_values['name'])));
+            drupal_goto($import_return);
+            break; 
+            
+        case t('Test'):
+            if ($form_values['setting'] == 'file set') $filepath = file_move($form_values['filepath'], file_directory_path() . '/' . $form_values['filename']);
+            $form_values['setting'] = 'test';
+            drupal_set_message(t('Tested'));
+            break;
+            
+        case t('Import'):
+            if ($form_values['setting'] == 'file set') $filepath = file_move($form_values['filepath'], file_directory_path() . '/' . $form_values['filename']);
+            $form_values['setting'] = 'import';
+            drupal_set_message (t('Imported'));
+            break;            
+    }  
+    
+    $form_values = _user_import_settings_save($form_values, 'display message');
+
+    $form_values['save']['update'] = NULL;
+    $form_values['import_template_id'] = NULL;
+    $form_values['save']['name'] = NULL;
+    _user_import_process($form_values);
+    drupal_goto ('admin/user/user_import');
+
+    return;
+}
+
+
+// - - - - - - - -  PAGES - - - - - - - - 
+
+function user_import_preferences($import_id = NULL, $template_id = NULL) {
+
+    if (empty($import_id)) {
+        $output .= drupal_get_form('user_import_add_form');
+    } else {
+        $output .= drupal_get_form('user_import_edit_form', $import_id, $template_id);
+    }
+    
+    return $output;
+}
+
+function user_import_list($action = NULL, $import_id = NULL) {
+  
+    // clear incomplete imports
+    _user_import_incomplete_deletion();
+    
+    if (!empty($import_id) && is_numeric($import_id)) {
+		
+		$import = _user_import_settings_select($import_id);
+		$output = theme('user_import_errors', $import);
+		
+    } else {
+    	
+    	$output =  theme_user_import_list();
+    }
+
+    
+    
+    return $output;    
+}
+
+function user_import_continue($import_id = NULL) {
+
+    if (!empty($import_id) && is_numeric($import_id)) {
+        
+		$import = _user_import_settings_select($import_id);
+		_user_import_process($import);
+    }
+    
+    drupal_goto('admin/user/user_import');
+}
+
+function user_import_import($import_id = NULL) {
+
+    if (!empty($import_id) && is_numeric($import_id)) {
+        
+		$import = _user_import_settings_select($import_id);
+		_user_import_initialise_import($import);
+    }
+    
+    drupal_goto('admin/user/user_import');
+}
+
+function user_import_errors($import_id = NULL) {
+
+    if (empty($import_id) || !is_numeric($import_id)) drupal_goto('admin/user/user_import');
+        
+    $import = _user_import_settings_select($import_id);
+    $output = theme('user_import_errors', $import);
+    return $output;
+}
+
+function user_import_delete($import_id = NULL) {
+
+    if (empty($import_id) || !is_numeric($import_id)) drupal_goto('admin/user/user_import');
+        
+    $import = _user_import_settings_select($import_id);
+    
+    _user_import_settings_deletion($import_id);
+    _user_import_file_deletion($import['filepath'], $import['filename'], $import['oldfilename']);
+    drupal_goto('admin/user/user_import');
+    return;
+}
+
+
+// - - - - - - - -  THEMES - - - - - - - - 
+
+function theme_user_import_list() {
+
+    $imports = _user_import_settings_select();
+    
+    if (!$imports) return ' ';
+
+    foreach ($imports as $import) {
+
+        // header labels
+        $import_label = ($import['setting'] == 'tested' || $import['setting'] == 'test') ? t('importable') : t('imported');
+        $header = array(t('file'), t('started'), t('processed'), $import_label, t('errors'), t('status'));
+                    
+        // info row
+        $errors = db_result(db_query("SELECT COUNT(import_id) FROM {user_import_errors} WHERE import_id = %d", $import['import_id']));         
+        $errors_link = ($errors == 0) ? '0': l($errors, 'admin/user/user_import/errors/' . $import['import_id']);           
+        
+        $rows[0] = array(
+            check_plain($import['oldfilename']),
+            format_date($import['started'], 'small'),
+            array("data" => $import['processed'], "align" => 'center'),
+            array("data" => $import['valid'], "align" => 'center'),
+            array("data" => $errors_link, "align" => 'center'),
+            $import['setting'],
+        );
+        
+        $output .= theme('table', $header, $rows);
+        
+        // action buttons
+        $settings_link = l(t('Settings'), 'admin/user/user_import/add/' . $import['import_id']);
+        $delete_link = l(t('Delete'), 'admin/user/user_import/delete/' . $import['import_id']);
+        $continue_link = l(t('Continue Processing'), 'admin/user/user_import/continue/' . $import['import_id']);
+        $import_link = l(t('Import'), 'admin/user/user_import/import/' . $import['import_id']);
+        
+        $output .= $settings_link  . ' | ';   
+        $output .= $delete_link;   
+        if ($import['setting'] == 'tested' || $import['setting'] == 'test') $output .= ' | ' . $import_link;
+        if ($import['setting'] == 'test' || $import['setting']  == 'import') $output .= ' | ' . $continue_link;
+    } 
+    
+    return $output;
+}
+
+function theme_user_import_edit_form($form) {
+    
+    $header = array(t('csv column'), t('Drupal fields'), t('username'), t('abbreviate'));
+    
+    foreach (element_children($form['field_match']) as $key) {
+
+        $rows[] = array(
+            drupal_render($form['field_match'][$key]['csv']),
+            drupal_render($form['field_match'][$key]['field_match']),
+            drupal_render($form['field_match'][$key]['username']),
+            drupal_render($form['field_match'][$key]['abbreviate']),
+        );
+    }
+    
+    $form['field_match']['#value'] = theme('table', $header, $rows);
+
+    $output .= drupal_render($form['remove']);
+    $output .= drupal_render($form['options']);
+    $output .= drupal_render($form['field_match']);
+    $output .= drupal_render($form);
+    return $output;
+}
+
+function theme_user_import_errors($import) {
+
+    $errors = 0;
+    
+    $output .= '<h3>' . t('Import Errors') . '</h3>';
+    $output .= '<p>' . t('<strong>CSV File:</strong> %file', array('%file' => $import['oldfilename'])) . '<br />';
+    
+    // get profile fields
+    $profile_fields = _user_import_profile('fid', 'title');
+    
+    // add email address options
+    $profile_fields['email'] = t('Email Address');
+    asort($profile_fields);
+
+    foreach ($import['field_match'] as $settings) {     
+        if ($settings['field_match'] != '0') $header[] = $profile_fields[$settings['field_match']];
+    }
+
+    $results = db_query("SELECT * FROM {user_import_errors} WHERE import_id = %d", $import['import_id']);
+    while ($line = db_fetch_array($results)) {
+        $line['data'] = unserialize($line['data']);
+        $file_lines[] = $line;
+    }
+
+    foreach ($file_lines as $file_line) {
+        
+        $errors++;
+        $row = NULL;
+        foreach ($file_line['data'] as $file_cell) {
+            $row[] = array("data" => drupal_substr($file_cell, 0, 40), "align" => "left");
+        }
+        
+        $row[] = $file_line['error'];
+        $rows[] = $row;
+    }
+
+    $output .= t('<strong>Errors:</strong> !errors', array('!errors' => $errors)) . '</p>';
+    $header[] = t('error');
+    
+    $output .= theme('table', $header, $rows);    
+    return $output;
+}
+
+function theme_user_import_username_errors($errors) {
+    
+    if (empty($errors)) {
+        $output = '<p><strong>' . t('All usernames are OK.') . '</strong></p>';
+    } else {
+        $header = array(t('User ID'), t('Email'), t('Username'), t('Error'));
+        $output = theme('table', $header, $errors);
+    }
+    
+    return $output;
+}
+
+// - - - - - - - -  MISC - - - - - - - - 
 
 function user_import_edit_file_fields(&$form, $import) {
     
@@ -414,7 +807,6 @@ function user_import_edit_remove_fields(&$form, $import) {
 
     return;
 }
-
 
 function user_import_edit_settings_fields(&$form, $import) { 
         
@@ -466,7 +858,7 @@ function user_import_edit_settings_fields(&$form, $import) {
     $roles_data = user_roles();
     // remove 'anonymous user' option
     while (list ($rid, $role_name) = each ($roles_data)) {
-        if ($role_name != 'anonymous user') $roles[$rid] = $role_name;
+        if ($role_name != 'anonymous user' && $role_name != 'authenticated user') $roles[$rid] = $role_name;
     }
     
     // roles selected
@@ -481,7 +873,7 @@ function user_import_edit_settings_fields(&$form, $import) {
     $form['role_selection'] = array(
         '#type' => 'fieldset',
         '#title' => t('Role Assign'),
-        '#description' => t('Select which role(s) imported users should be assigned.'),
+        '#description' => t("Select which role(s) imported users should be assigned. The role 'authenticated user' is assigned automatically."),
         '#collapsible' => TRUE,
         '#collapsed' => $collapsed,
     );
@@ -492,31 +884,37 @@ function user_import_edit_settings_fields(&$form, $import) {
         '#default_value' => $roles_selected,
     );
     
-    if (module_exist('og')) {
+    if (module_exists('og')) {
     
         $groups = user_import_get_groups();
+        
+        $groups_description = empty($groups) ? t('No Groups have been defined.') : t('Select which group(s) imported users should be assigned.');
         
         $form['group_assign'] = array(
             '#type' => 'fieldset',
             '#title' => t('Group Assign'),
-            '#description' => t('Select which group(s) imported users should be assigned.'),
+            '#description' => $groups_description,
             '#collapsible' => TRUE,
             '#collapsed' => $collapsed, 
         );
         
-        $form['group_assign']['groups'] = array(
-            '#type' => 'checkboxes',
-            '#title' => t('Groups'),
-            '#options' => $groups,
-            '#default_value' => $import['options']['groups'],
-        );
+        if (!empty($groups)) {
+
+			$form['group_assign']['groups'] = array(
+				'#type' => 'checkboxes',
+				'#title' => t('Groups'),
+				'#options' => $groups,
+				'#default_value' => $import['options']['groups'],
+			);
+        
+        }
     
     }
     
     $form['email_message'] = array(
         '#type' => 'fieldset',
         '#title' => t('Email Message'),
-        '#description' => t('Welcome message to be sent to imported users. Leave blank to use the default %message.<br /><strong>Warning</strong>: if you copy and paste directly from Word some characters may get garbled.', array('%message' => l('message', 'admin/settings/user'))),
+        '#description' => t('Welcome message to be sent to imported users. Leave blank to use the default !message.<br /><strong>Warning</strong>: if you copy and paste directly from Word some characters may get garbled.', array('!message' => l('message', 'admin/user/settings'))),
         '#collapsible' => TRUE,
         '#collapsed' => $collapsed,
     );
@@ -594,7 +992,7 @@ function user_import_edit_template_fields(&$form, $import) {
         $form['save']['update'] = array(
             '#type' => 'fieldset',
             '#title' => t('Update'),
-            '#description' => t("Update '%name' settings template", array('%name' => check_plain($import['name']))),
+            '#description' => t("Update '%name' settings template", array('%name' => $import['name'])),
         );
         
         $form['save']['update']['submit'] = array(
@@ -644,15 +1042,15 @@ function user_import_edit_match_fields(&$form, $import) {
     $row = 0;
     $sort = array(t('no'), 1, 2, 3, 4);
     
-    $group_text = t("Match columns in CSV file to profile fields, leave as '----' if there is no match.");
-    $group_text .= '<br /><strong>' . t('Username') . ': </strong>' . t("The Username will be built from CSV columns in the order selected.");
-    $group_text .= '<br /><strong>' . t('Abbreviate') . ': </strong>' . t("Use the first letter of a field in uppercase for the Username, e.g. 'john' -> 'J'.");
-    $group_text .= '<br />' . t("If no CSV fields are selected, the Username will be randomly generated.");
+    $fieldmatch_description = t("Match columns in CSV file to profile fields, leave as '----' if there is no match.");
+    $fieldmatch_description .= '<br /><strong>' . t('Username') . ': </strong>' . t("The Username will be built from CSV columns in the order selected.");
+    $fieldmatch_description .= '<br /><strong>' . t('Abbreviate') . ': </strong>' . t("Use the first letter of a field in uppercase for the Username, e.g. 'john' -> 'J'.");
+    $fieldmatch_description .= '<br />' . t("If no CSV fields are selected, the Username will be randomly generated.");
     
     $form['field_match'] = array(
         '#type' => 'fieldset',
         '#title' => t('Field Match'),
-        '#description' => $group_text,
+        '#description' => $fieldmatch_description,
         '#collapsible' => TRUE,
         '#collapsed' => $collapsed, 
         '#tree' => TRUE,
@@ -692,303 +1090,7 @@ function user_import_edit_match_fields(&$form, $import) {
    
     return;
 }
-
-
-function user_import_edit_validate($form_id, $form_values) {
-
-    switch ($_POST['op']) {
-        
-        case t('Remove file'):
-
-            _user_import_settings_deletion($form_values['import_id']);
-            _user_import_file_deletion($form_values['filepath'], $form_values['filename'], $form_values['oldfilename']);
-            drupal_goto ('admin/settings/user_import/add');
-            
-            break;
-            
-        case t('Cancel'):
-
-            // if import was being added - delete file
-            if ($form_values['setting'] == 'file set') {
-                _user_import_settings_deletion($form_values['import_id']);
-                _user_import_file_deletion($form_values['filepath'], $form_values['filename'], $form_values['oldfilename']);
-            }
-            drupal_goto ('admin/settings/user_import');
-            break;
-            
-        // save settings
-        case t('Save As New'):
-        
-            $template_name = trim($form_values['new_name']);
-        
-        case t('Save'):
-        
-            if (empty($template_name)) $template_name = trim($form_values['name']);
-            
-            if (empty($template_name)) form_set_error('name', t('A name needs to be set to save this settings template.'));
-            
-            // check settings template name is unique
-            $unique_name = db_result(db_query("SELECT COUNT(import_id) FROM {user_import} WHERE name = '%s'", $template_name));
-            
-            if (!empty($unique_name)) form_set_error('name', t("'%name' is already in use by another settings template.", array('%name' => $template_name)));
-               
-        case t('Test'):
-        case t('Import'):
-
-            $fields = array();
-           
-            while (list ($row, $values) = each ($form_values['field_match'])) {
-        
-                // check each field is unique
-                if ($values['field_match'] != '0' && in_array($values['field_match'], $fields)) {
-                    
-                    form_set_error('field_match', t('Database fields can only be matched to one column of the csv file.'));
-                }
-                
-                $fields[$values['field_match']] = $values['field_match'];
-                
-                // check email address has been selected
-                if ($values['field_match'] == 'email') $email = TRUE;
-            }
-           
-            if (!$email) form_set_error('email', t('One column of the csv file must be set as the email address.'));
-
-            // check at least one role has been chosen 
-            foreach ($form_values['roles'] as $role) {
-                if ($role > 1) $roles = TRUE;
-            }
-           
-            if (empty($roles)) form_set_error('roles', t('At least one role must be set.'));
-        
-            if ($form_values['name']) {
-               $form_values['name'] = rtrim($form_values['name']);
-               
-               if (drupal_strlen($form_values['name']) < 1 || drupal_strlen($form_values['name']) > 25) {
-                form_set_error('name', t('Name of saved settings must be 25 characters or less.'));
-               }
-            }
-            break;
-    }
-    
-    return;
-}
-
-function theme_user_import_edit($form) {
-    
-    $header = array(t('csv column'), t('Drupal fields'), t('username'), t('abbreviate'));
-    
-    foreach (element_children($form['field_match']) as $key) {
-
-        $rows[] = array(
-            form_render($form['field_match'][$key]['csv']),
-            form_render($form['field_match'][$key]['field_match']),
-            form_render($form['field_match'][$key]['username']),
-            form_render($form['field_match'][$key]['abbreviate']),
-        );
-    }
-    
-    $form['field_match']['#value'] = theme('table', $header, $rows);
-
-    $output .= form_render($form['remove']);
-    $output .= form_render($form['options']);
-    $output .= form_render($form['field_match']);
-    $output .= form_render($form);
-    return $output;
-}
-
-
-function user_import_edit_submit($form_id, $form_values) {
-
-    // if import is being added - move file out of tmp directory
-    if ($form_values['setting'] == 'file set') {
-        file_copy($form_values['filepath'], file_directory_path() . '/' . $form_values['filename']);
-        $form_values['filename'] = str_replace(file_directory_path() . '/', '', $form_values['filepath']);
-    }
-    
-    switch ($_POST['op']) {
-    
-        // save settings
-        case t('Save As New'):
-            $form_values['name'] = $form_values['new_name'];
-            
-        case t('Save'):
-            
-            // save settings for inport
-            _user_import_settings_save($form_values);
-            
-            // save settings for template
-            $import_return = 'admin/settings/user_import/add/' . $form_values['import_id'];
-            $form_values['setting'] = 'template';
-            unset($form_values['import_id']);
-            _user_import_initialise_import($form_values);
-            
-            // reload settings page
-            drupal_set_message (t("'%name' was saved as a settings template.", array('%name' => check_plain($form_values['name']))));
-            drupal_goto($import_return);
-            break;
-
-        case t('Update'):
-          
-            // get template id
-            $template_id = db_result(db_query("SELECT import_id from {user_import} where setting = 'template' AND name= '%s' LIMIT 1", $form_values['name']));
-            
-            // save settings for import
-            _user_import_settings_save($form_values);
-            
-            // save settings for template
-            $import_return = 'admin/settings/user_import/add/' . $form_values['import_id'];
-            $form_values['setting'] = 'template';
-            $form_values['import_id'] = $template_id;
-            _user_import_initialise_import($form_values);
-            
-            // reload settings page
-            drupal_set_message (t("'%name' settings template was updated.", array('%name' => check_plain($form_values['name']))));
-            drupal_goto($import_return);
-            break; 
-            
-        case t('Test'):
-            $form_values['setting'] = 'test';
-            drupal_set_message(t('Tested'));
-            break;
-            
-        case t('Import'):
-            $form_values['setting'] = 'import';
-            drupal_set_message (t('Imported'));
-            break;            
-    }  
-    
-    $form_values = _user_import_settings_save($form_values, 'display message');
-
-    $form_values['save']['update'] = NULL;
-    $form_values['import_template_id'] = NULL;
-    $form_values['save']['name'] = NULL;
-    _user_import_process($form_values);
-    drupal_goto ('admin/settings/user_import');
-
-    return;
-}
-
-
-function theme_user_import_errors($import) {
-
-    $errors = 0;
-    
-    $output .= '<p>' . t('<strong>CSV File:</strong> %file', array('%file' => check_plain($import['oldfilename']))) . '<br />';
-    
-    // get profile fields
-    $profile_fields = _user_import_profile('fid', 'title');
-    
-    // add email address options
-    $profile_fields['email'] = t('Email Address');
-    asort($profile_fields);
-
-    foreach ($import['field_match'] as $settings) {     
-        if ($settings['field_match'] != '0') $header[] = $profile_fields[$settings['field_match']];
-    }
-
-    $results = db_query("SELECT * FROM {user_import_errors} WHERE import_id = %d", $import['import_id']);
-    while ($line = db_fetch_array($results)) {
-        $line['data'] = unserialize($line['data']);
-        $file_lines[] = $line;
-    }
-
-    foreach ($file_lines as $file_line) {
-        
-        $errors++;
-        $row = NULL;
-        foreach ($file_line['data'] as $file_cell) {
-            $row[] = array("data" => drupal_substr($file_cell, 0, 40), "align" => "left");
-        }
-        
-        $row[] = $file_line['error'];
-        $rows[] = $row;
-    }
-
-    $output .= t('<strong>Errors:</strong> %errors', array('%errors' => $errors)) . '</p>';
-    $header[] = t('error');
-    
-    $output .= theme('table', $header, $rows);    
-    return $output;
-}
-
-function user_import_configure() { 
-        
-    $form['user_import_max'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Maximum Users/Process'),
-        '#default_value' => variable_get('user_import_max', 250),
-        '#size' => 10,
-        '#maxlength' => 10,
-        '#description' => t('Maximum number of users to import each time the file is processed, useful for controling the rate at which emails are sent out.'),
-    );
-    
-    $form['user_import_line_max'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Maximum length of line'),
-        '#default_value' =>  variable_get('user_import_line_max', 1000),
-        '#size' => 10,
-        '#maxlength' => 10,
-        '#description' => t('The default is set at 1,000 characters, if a line in your csv is longer than this you should set a higher maximum here. Setting higher maximums will slow down imports.'),
-    );
-    
-    
-    $settings = _user_import_settings_select(NULL, 'get_saved');
-    if ($settings) {
- 
-        $saved_settings = array('-- none --');
-        foreach ($settings AS $settings_set) {
-            $saved_settings[$settings_set['import_id']] = $settings_set['name'];
-        }
-        
-        $form['user_import_settings'] = array( 
-            '#type' => 'select',
-            '#title' => t('Default Settings'),
-            '#description' => t('Select if you want to use a previously saved set of settings as default for all imports.'),
-            '#default_value' => variable_get('user_import_settings', 0),
-            '#options' => $saved_settings,
-        );
-    }
-    
-    $form['check_names'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Check Usernames'),
-        '#description' => t('Previous versions of User Import module may have created incorrect usernames, use this feature to check.'),
-    );
-    
-    $check_usernames = variable_get('user_export_checked_usernames', 0);
-    
-    if (!empty($check_usernames)) {
-        
-        variable_set('user_export_checked_usernames', 0);
-        $errors = user_import_usernames_invalid();
-        
-        $form['check_names'][] = array(
-        '#value' => $errors,
-        );
-    }
-    
-    $form['check_names'][] = array(
-        '#type' => 'submit', 
-        '#value' => t('Check'),
-        );
-    
-    $form['check_names'][] = array(
-        '#type' => 'submit', 
-        '#value' => t('Delete'),
-        );
-
-    $form['submit'] = array(
-        '#type' => 'submit', 
-        '#value' => t('Save'),
-        );
-    
-    $output = drupal_get_form('user_import_configure', $form);
-    
-    return $output;
-}
-
-
-// Create Username    
+  
 function _user_import_create_username($order, $data, $abbreviate, $username_space) {
     
     asort($order);
@@ -1018,7 +1120,7 @@ function _user_import_sanitise_username(&$username) {
     if ($sanitised == 0) {
   
         // username cannot contain an illegal character
-        $username = preg_replace('/[^a-zA-Z0-9 ]/', ' ', $username);
+        $username = preg_replace('/[^a-zA-Z0-9@._\- ]/', ' ', $username);
         // username cannot contain multiple spaces in a row
         $username = preg_replace('/[ ]+/', ' ', $username);   
         
@@ -1052,7 +1154,6 @@ function _user_import_sanitise_username(&$username) {
     return;
 }
 
-// Check for a duplicate email address
 function _user_import_validate_email($email = NULL) {
 
     if (!$email) return 'no email';
@@ -1065,16 +1166,12 @@ function _user_import_validate_email($email = NULL) {
     return;
 }
 
-
-
-
 function _user_import_save_profile($field, $uid, $value) {
     
     $profile = db_query("INSERT INTO {profile_values} (fid,uid,value) VALUES(%d,%d,'%s')", $field, $uid, $value);
     return;
 }
 
-// Send email when account is created    
 function _user_import_send_email($account, $password, $profile, $subject, $body) {
 
     global $base_url;
@@ -1092,13 +1189,13 @@ function _user_import_send_email($account, $password, $profile, $subject, $body)
 
     $subject = (empty($subject)) ? _user_mail_text('welcome_subject', $variables) : strtr($subject, $variables);
     $body = (empty($body)) ? _user_mail_text('welcome_body', $variables) : strtr($body, $variables);
-    user_mail($account->mail, $subject, $body, "From: $from\nReply-to: $from\nX-Mailer: Drupal\nReturn-path: $from\nErrors-to: $from");
+    drupal_mail('user_import_send_email', $account->mail, $subject, $body, $from);
     return;
 }
 
 function _user_import_profile($key = 'fid', $return_value = NULL) {
     
-    if (!module_exist('profile')) return; 
+    if (!module_exists('profile')) return; 
     
     static $fields_static;
     
@@ -1134,7 +1231,6 @@ function _user_import_profile($key = 'fid', $return_value = NULL) {
     return $fields;
 }
 
-
 function _user_import_settings_save($settings, $messages = NULL) {
  
      // move settings into 'options' column
@@ -1166,7 +1262,6 @@ function _user_import_settings_save($settings, $messages = NULL) {
     
     return $settings;
 }
-
 
 function _user_import_errors_save($import_id, $data, $email, $error) {
 
@@ -1206,27 +1301,12 @@ function _user_import_settings_select($import_id = NULL, $template = FALSE) {
     return $import;      
 }
 
-
-function user_import_cron() {
-    
-    $imports = _user_import_settings_select();    
-    if (!$imports) return;
-    
-    foreach ($imports as $import) {
-        
-        if ($import['setting'] == 'test' || $import['setting'] == 'import') _user_import_process($import);
-    }
-        
-    return;
-}
-
 function _user_import_settings_deletion($import_id) {
 
     db_query("DELETE FROM {user_import} WHERE import_id = %d", $import_id);
     db_query("DELETE FROM {user_import_errors} WHERE import_id = %d", $import_id);
     return;
 }
-
 
 function _user_import_random_username() {
 
@@ -1253,48 +1333,6 @@ function _user_import_random_username() {
     }
     
     return $username;
-}
-
-
-function user_import_configure_validate($form_id, &$form) {
-
-    if (is_numeric($form['user_import_max'])) {
-        if ($form['user_import_max'] < 10) form_set_error('user_import_max', t("Value should be at least 10."));       
-    } 
-    else {
-        form_set_error('user_import_max', t('Value must be a number.'));
-    }
-    
-    if (is_numeric($form['user_import_line_max'])) {
-        if ($form['user_import_line_max'] < 1000) form_set_error('user_import_line_max', t("Value must be higher than 1000."));
-        if ($form['user_import_line_max'] > 1000000) form_set_error('user_import_line_max', t("Value must be lower than 1,000,000."));
-    } 
-    else {
-        form_set_error('user_import_line_max', t('Value must be a number.'));
-    }
-    
-    return;
-}
-
-function user_import_configure_submit($form_id, $form_values) { 
-
-    settype($form_values['user_import_max'], 'integer');
-    settype($form_values['user_import_line_max'], 'integer');
-    variable_set('user_import_max', $form_values['user_import_max']);
-    variable_set('user_import_line_max', $form_values['user_import_line_max']);
-    variable_set('user_import_settings', $form_values['user_import_settings']);
-    
-    if ($_POST['op'] == t('Check')) {
-       variable_set('user_export_checked_usernames', 1);
-       return;
-    }
-    
-    if ($_POST['op'] == t('Delete')) {
-       user_import_usernames_invalid(TRUE);
-    }
-    
-    drupal_set_message(t('Configuration settings have been saved.'));
-    drupal_goto('admin/settings/user_import');
 }
 
 // Clean file - in case of incompatable line endings
@@ -1369,7 +1407,6 @@ function _user_import_process($settings) {
                     
                     if ($setting['username'] > 0) {
                             
-                            
                             $username_data[$column_id]= $data[$column_id];
                             $username_order[ $column_id ] = $setting['username'];
                             $username_abbreviate[$column_id]= $setting['abbreviate'];
@@ -1384,7 +1421,7 @@ function _user_import_process($settings) {
                         
                         if (empty($password)) $password = user_password();
                         if ($settings['contact'] == 1) $contact = 1;
-        
+
                         $account = array(
                             'name' => $username,
                             'pass' => $password,
@@ -1587,7 +1624,7 @@ function _user_import_file_open($filepath, $filename) {
     $handle = @fopen($filepath, "r");
                         
     if (!$handle) {
-        form_set_error('file', t("Could not find the csv file '%filename'", array('%filename' => check_plain($filename))), 'error');
+        form_set_error('file', t("Could not find the csv file '%filename'", array('%filename' => $filename)), 'error');
         return t("Please add your file again.");
     }
     return $handle;
@@ -1598,7 +1635,7 @@ function _user_import_file_row($filename, $handle) {
     
     $data_row = @fgetcsv ($handle, 1000000, ",");
     if (!$data_row) {
-        form_set_error('file', t("Could not get data, the file '%filename' is either empty or has incompatible line endings.", array('%filename' => check_plain($filename))), 'error');
+        form_set_error('file', t("Could not get data, the file '%filename' is either empty or has incompatible line endings.", array('%filename' => $filename)), 'error');
     }
     return $data_row;
 }
@@ -1610,7 +1647,7 @@ function _user_import_ftp_files() {
   $filenames[] = t('none');
   
   while ($file = readdir($directory)) {
-    if ($file != '.' && $file != '..' && $file != '.DS_Store' && $file != 'CVS' && $file != 'README.txt' && $file != 'UPDATES.txt' && $file != 'user_import.module' && $file != 'user_import.mysql' && $file != 'user_import.install') $filenames[] = $file;
+    if ($file != '.' && $file != '..' && $file != '.DS_Store' && $file != 'CVS' && $file != 'README.txt' && $file != 'UPDATES.txt' && $file != 'user_import.module' && $file != 'user_import.mysql' && $file != 'user_import.install' && $file != 'user_import.info') $filenames[] = $file;
   }
   
   closedir($directory);
@@ -1652,9 +1689,11 @@ function user_import_get_groups() {
 // add user to groups
 function _user_import_organic_groups($groups_selected, $uid) {
 
-    if (!module_exist('og')) return;
+    if (!module_exists('og')) return;
      
     $organic_groups = user_import_get_groups();
+    if(empty($organic_groups)) return;
+    
     $og_args = array('is_active' => 1, 'is_admin' => 0, 'mail_type' => 0, 'created' => time());
 
     while(list($gid, $title) = each($organic_groups)) {
@@ -1665,14 +1704,3 @@ function _user_import_organic_groups($groups_selected, $uid) {
     return;
 }
 
-function theme_user_import_username_errors($errors) {
-    
-    if (empty($errors)) {
-        $output = '<p><strong>' . t('All usernames are OK.') . '</strong></p>';
-    } else {
-        $header = array(t('User ID'), t('Email'), t('Username'), t('Error'));
-        $output = theme('table', $header, $errors);
-    }
-    
-    return $output;
-}

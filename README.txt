@@ -3,7 +3,7 @@
 ********************************************************************
 Name: user import module
 Author: Robert Castelo <www.cortextcommunications.com>
-Drupal: 4.7.x
+Drupal: 5.x
 ********************************************************************
 DESCRIPTION:
 
@@ -32,6 +32,7 @@ Features include:
 * Designed to be massively scalable.
 
 Supported CSV File Formats:
+
 Make sure csv file has been saved with 'Windows' line endings.
 If file import fails with "File copy failed: source file does not exist." try
 setting the file extension to .txt.
@@ -50,13 +51,13 @@ INSTALLATION:
 Note: It is assumed that you have Drupal up and running.  Be sure to
 check the Drupal web site if you need assistance.
 
-1. Place the entire user_import directory into your Drupal modules/
-   directory.
+1. Place the entire user_import directory into your Drupal directory:
+   sites/all/modules/
    
 
 2. Enable the user_import modules by navigating to:
 
-     administer > modules
+   administer > build > modules
      
   Click the 'Save configuration' button at the bottom to commit your
   changes.
@@ -67,17 +68,18 @@ USAGE
 
 1. To set permissions of who can import users into the site, navigate to:
 
-'administer' 
-    -- 'access control' (admin/access)
+'Administer' 
+    -- 'User management'
+        -- 'Access control' (admin/user/access)
     
 
 2. To import users, navigate to:
 
-'administer'
-    -- 'settings'
-        -- 'user imports'  (admin/settings/user_import)
+'Administer'
+    -- 'User management'
+        -- 'User imports'  (admin/user/user_import)
         
-3. Select 'Import' tab.
+3. Select 'Import' tab (admin/user/user_import/add)
 
 4. Press the 'browse' button to select a file to import,
     or select a file already added through FTP.
@@ -126,7 +128,9 @@ AUTHOR CONTACT
 ********************************************************************
 ACKNOWLEDGEMENT
 
-- Initial starting point for this module was a script by David McIntosh (neofactor.com).
+- Initial reference point for this module was a script by David McIntosh (neofactor.com).
 
 
 - Documentation help Steve (spatz4000)
+- patch by mfredrickson
+- patch by idealso

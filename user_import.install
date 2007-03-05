@@ -80,3 +80,15 @@ function user_import_update_3() {
   return $ret;
 }
 
+/**
+* Implementation of hook_uninstall().
+*/
+function user_import_uninstall() {
+  db_query('DROP TABLE {user_import}');
+  db_query('DROP TABLE {user_import_errors}');
+  variable_del('user_import_settings');
+  variable_del('user_import_max');
+  variable_del('user_import_line_max');
+  variable_del('user_export_checked_usernames');
+}
+

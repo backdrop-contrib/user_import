@@ -1,0 +1,7 @@
+; $Id$
+name = User Import
+description = Import users into Drupal from a CSV file.
+version = "$Name$"
+
+
+

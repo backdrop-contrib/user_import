@@ -924,7 +924,7 @@ function user_import_edit_settings_fields(&$form, $import) {
     if (!empty($profile_fields)) {
     
         foreach ($profile_fields as $field) {
-            $profile_string .= ', %' . check_plain($field->name);
+            $profile_string .= ', !' . check_plain($field->name);
         }
     }
     
@@ -932,14 +932,14 @@ function user_import_edit_settings_fields(&$form, $import) {
       '#type' => 'textfield',
       '#title' => t('Message'),
       '#default_value' => $import['options']['subject'],
-      '#description' => t('Customize the subject of the welcome e-mail, which is sent to imported members.') .' '. t('Available variables are:') .' %username, %site, %password, %uri, %uri_brief, %mailto, %date, %login_uri, %edit_uri, %login_url' . $profile_string . '.',
+      '#description' => t('Customize the subject of the welcome e-mail, which is sent to imported members.') .' '. t('Available variables are:') .' !username, !site, !password, !uri, !uri_brief, !mailto, !date, !login_uri, !edit_uri, !login_url' . $profile_string . '.',
     ); 
     
     $form['email_message']['message'] = array(
       '#type' => 'textarea',
       '#title' => t('Message'),
       '#default_value' => $import['options']['message'],
-      '#description' => t('Customize the body of the welcome e-mail, which is sent to imported members.') .' '. t('Available variables are:') .' %username, %site, %password, %uri, %uri_brief, %mailto, %login_uri, %edit_uri, %login_url' . $profile_string . '.',
+      '#description' => t('Customize the body of the welcome e-mail, which is sent to imported members.') .' '. t('Available variables are:') .' !username, !site, !password, !uri, !uri_brief, !mailto, !login_uri, !edit_uri, !login_url' . $profile_string . '.',
     ); 
     
     return;
@@ -1178,12 +1178,12 @@ function _user_import_send_email($account, $password, $profile, $subject, $body)
     $profile_name = _user_import_profile('fid', 'name');
     $from = variable_get('site_mail', ini_get('sendmail_from'));
     
-    $variables = array('%username' => $account->name, '%site' => variable_get('site_name', 'drupal'), '%login_url' => user_pass_reset_url($account), '%password' => $password, '%uri' => $base_url, '%uri_brief' => drupal_substr($base_url, drupal_strlen('http://')), '%mailto' => $account->mail, '%date' => format_date(time()), '%login_uri' => url('user', NULL, NULL, TRUE), '%edit_uri' => url('user/'. $account->uid .'/edit', NULL, NULL, TRUE));
+    $variables = array('!username' => $account->name, '!site' => variable_get('site_name', 'drupal'), '!login_url' => user_pass_reset_url($account), '!password' => $password, '!uri' => $base_url, '!uri_brief' => drupal_substr($base_url, drupal_strlen('http://')), '!mailto' => $account->mail, '!date' => format_date(time()), '!login_uri' => url('user', NULL, NULL, TRUE), '!edit_uri' => url('user/'. $account->uid .'/edit', NULL, NULL, TRUE));
 
     // import info to profile
     if (is_array($profile)) {
         while (list ($fid, $value) = each ($profile)) {
-            $variables[ '%' . $profile_name[$fid] ] = $value;
+            $variables[ '!' . $profile_name[$fid] ] = $value;
         }
     }   
 

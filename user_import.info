@@ -1,6 +1,12 @@
 ; $Id$
 name = User Import
 description = Import users into Drupal from a CSV file.
+version = "$Name$"
 
 
+
+
+; Information added by drupal.org packaging script on 2007-03-13
+version = "5.x-1.2-beta"
+project = "user_import"
 

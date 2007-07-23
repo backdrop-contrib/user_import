@@ -41,6 +41,7 @@ function user_import_menu($may_cache) {
             'path' => 'admin/user/user_import', 
             'title' => t('User Imports'), 
             'callback' => 'user_import_list',
+            'description' => t('Import users from a comma separated file (csv).'),
             'access' => user_access('import users'),
             );
         $items[] = array(
@@ -401,6 +402,7 @@ function user_import_edit_form($import_id, $template_id = NULL) {
     user_import_edit_remove_fields($form, $import);
     user_import_edit_settings_fields($form, $import);
     user_import_edit_match_fields($form, $import);
+    user_import_edit_subscribed_fields($form, $import);
     user_import_edit_template_fields($form, $import);
 
     // don't show test option if import has started
@@ -460,7 +462,7 @@ function user_import_edit_form_validate($form_id, $form_values) {
             // check settings template name is unique
             $unique_name = db_result(db_query("SELECT COUNT(import_id) FROM {user_import} WHERE name = '%s'", $template_name));
             
-            if (!empty($unique_name)) form_set_error('name', t("'%name' is already in use by another settings template.", array('%name' => $template_name)));
+            if (!empty($unique_name)) form_set_error('name', t("'!name' is already in use by another settings template.", array('!name' => $template_name)));
                
         case t('Test'):
         case t('Import'):
@@ -811,6 +813,7 @@ function user_import_edit_remove_fields(&$form, $import) {
 function user_import_edit_settings_fields(&$form, $import) { 
         
     $collapsed = (empty($import['name'])) ? FALSE: TRUE;
+    $profile_string = user_import_profile_string();
 
     $form['optional'] = array(
         '#type' => 'fieldset',
@@ -900,12 +903,55 @@ function user_import_edit_settings_fields(&$form, $import) {
         
         if (!empty($groups)) {
 
-			$form['group_assign']['groups'] = array(
-				'#type' => 'checkboxes',
-				'#title' => t('Groups'),
-				'#options' => $groups,
-				'#default_value' => $import['options']['groups'],
-			);
+          $form['group_assign']['groups'] = array(
+            '#type' => 'checkboxes',
+            '#title' => t('Groups'),
+            '#options' => $groups,
+            '#default_value' => $import['options']['groups'],
+          );
+          
+          $form['group_assign']['existing'] = array(
+              '#type' => 'fieldset',
+              '#title' => t('Existing Users'),
+              '#description' => t('Add to selected groups users who already have an account. Optionaly send them an email.'),
+              '#collapsible' => TRUE,
+              '#collapsed' => TRUE, 
+          );
+          
+           $form['group_assign']['existing']['existing_og_subscribe'] = array(
+                '#type' => 'radios',
+                '#title' => t('Subscribe'),
+                '#default_value' => $import['options']['existing_og_subscribe'],
+                '#options' => array(t('No'), t('Yes')),
+           ); 
+           
+          $form['group_assign']['existing']['existing_og_subject'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Message Subject'),
+            '#default_value' => $import['options']['existing_og_subject'],
+            '#description' => t('Customize the subject of the email sent to existing users being added to groups.') .' '. t('Available variables are:') .' !username, !site, !uri, !uri_brief, !mailto, !date, !login_uri, !edit_uri, !login_url' . $profile_string . '.',
+          );
+          
+          $form['group_assign']['existing']['existing_og_markup'] = array(
+            '#type' => 'radios',
+            '#title' => t('Email Format'),
+            '#default_value' => empty($import['options']['existing_og_markup']) ? 0 : $import['options']['existing_og_markup'],
+            '#options' => array(t('Plain Text'), t('HTML')),
+          );
+           
+          $form['group_assign']['existing']['existing_og_message'] = array(
+            '#type' => 'textarea',
+            '#title' => t('Email Body'),
+            '#default_value' => $import['options']['existing_og_message'],
+            '#description' => t('Message to send existing users being added to groups. Users who are already in a group will not be sent a message.') .' '. t('Available variables are:') .' !username, !site, !uri, !uri_brief, !mailto, !date, !login_uri, !edit_uri, !login_url' . $profile_string . '.',
+          );
+          
+          $form['group_assign']['existing']['existing_og_css'] = array(
+            '#type' => 'textarea',
+            '#title' => t('Email CSS'),
+            '#default_value' => $import['options']['existing_og_css'],
+            '#description' => t('Use if sending HTML formated email.'),
+          );
         
         }
     
@@ -918,19 +964,10 @@ function user_import_edit_settings_fields(&$form, $import) {
         '#collapsible' => TRUE,
         '#collapsed' => $collapsed,
     );
-    
-    $profile_fields = _user_import_profile();
-    
-    if (!empty($profile_fields)) {
-    
-        foreach ($profile_fields as $field) {
-            $profile_string .= ', !' . check_plain($field->name);
-        }
-    }
-    
+
     $form['email_message']['subject'] = array(
       '#type' => 'textfield',
-      '#title' => t('Message'),
+      '#title' => t('Message Subject'),
       '#default_value' => $import['options']['subject'],
       '#description' => t('Customize the subject of the welcome e-mail, which is sent to imported members.') .' '. t('Available variables are:') .' !username, !site, !password, !uri, !uri_brief, !mailto, !date, !login_uri, !edit_uri, !login_url' . $profile_string . '.',
     ); 
@@ -941,6 +978,20 @@ function user_import_edit_settings_fields(&$form, $import) {
       '#default_value' => $import['options']['message'],
       '#description' => t('Customize the body of the welcome e-mail, which is sent to imported members.') .' '. t('Available variables are:') .' !username, !site, !password, !uri, !uri_brief, !mailto, !login_uri, !edit_uri, !login_url' . $profile_string . '.',
     ); 
+    
+    $form['email_message']['message_format'] = array(
+      '#type' => 'radios',
+      '#title' => t('Email Format'),
+      '#default_value' => empty($import['options']['message_format']) ? 0 : $import['options']['message_format'],
+      '#options' => array(t('Plain Text'), t('HTML')),
+    );
+    
+    $form['email_message']['message_css'] = array(
+      '#type' => 'textarea',
+      '#title' => t('CSS'),
+      '#default_value' => $import['options']['message_css'],
+      '#description' => t('Use if sending HTML formated email.'),
+    );
     
     return;
 }
@@ -1120,7 +1171,7 @@ function _user_import_sanitise_username(&$username) {
     if ($sanitised == 0) {
   
         // username cannot contain an illegal character
-        $username = preg_replace('/[^a-zA-Z0-9@._\- ]/', ' ', $username);
+        $username = preg_replace('/[^a-zA-Z0-9@ ]/', ' ', $username);
         // username cannot contain multiple spaces in a row
         $username = preg_replace('/[ ]+/', ' ', $username);   
         
@@ -1172,24 +1223,101 @@ function _user_import_save_profile($field, $uid, $value) {
     return;
 }
 
-function _user_import_send_email($account, $password, $profile, $subject, $body) {
+// Send email when account is created    
+function _user_import_send_email($account, $password, $profile, $subject, $body, $format, $css, $subscribed) {
 
     global $base_url;
-    $profile_name = _user_import_profile('fid', 'name');
     $from = variable_get('site_mail', ini_get('sendmail_from'));
     
-    $variables = array('!username' => $account->name, '!site' => variable_get('site_name', 'drupal'), '!login_url' => user_pass_reset_url($account), '!password' => $password, '!uri' => $base_url, '!uri_brief' => drupal_substr($base_url, drupal_strlen('http://')), '!mailto' => $account->mail, '!date' => format_date(time()), '!login_uri' => url('user', NULL, NULL, TRUE), '!edit_uri' => url('user/'. $account->uid .'/edit', NULL, NULL, TRUE));
+    $variables = array(
+      '!username' => $account->name, 
+      '!uid' => $account->uid, 
+      '!site' => variable_get('site_name', 'drupal'), 
+      '!login_url' => user_pass_reset_url($account), 
+      '!password' => $password, 
+      '!uri' => $base_url, 
+      '!uri_brief' => drupal_substr($base_url, drupal_strlen('http://')), 
+      '!mailto' => $account->mail, 
+      '!date' => format_date(time()), 
+      '!login_uri' => url('user', NULL, NULL, TRUE), 
+      '!edit_uri' => url('user/'. $account->uid .'/edit', NULL, NULL, TRUE),
+    );
+    
+    if (module_exists('publication') && module_exists('schedule') && module_exists('identity_hash')) {
+
+      $id_hash = identity_hash_select_hash($account->uid);
+      $variables['!id_hash'] = $id_hash->hash;
+      
+      while (list($type, $subscriptions) = each($subscribed)) {
+
+        while (list($publication_id, $shedule) = each($subscriptions)) {
+
+          if (!empty($shedule[0])) {
+
+            $publication = publication_select_publications($type, $publication_id);
+            
+            $update_link = url('subscribed/preferences/' . $publication_id . '/' . $id_hash->hash, NULL, NULL, TRUE);
+            $unsubscribe_link = url('subscribed/delete/' . $publication_id . '/' . $id_hash->hash, NULL, NULL, TRUE);
+            
+            if ($format == 1) {
+             
+              $variables['!subscribed_links'] .= '<strong>' . $publication['title'] . '</strong><br />' .
+              '<a href="' . $update_link . '">' . t('Update Preferences') . '</a> | <a href="' . $unsubscribe_link . '">' . t('Unsubscribe') . '</a><br />';
+
+            }
+            else {
+            
+              $variables['!subscribed_links'] .= $publication['title'] . "\n" .
+              ' - ' . t('Update Preferences') . ' ' . $update_link . '\n' .
+              ' - ' . t('Unsubscribe') . ' ' . $unsubscribe_link . '\n';
+            
+            }
+          }
+        }
+      }
+    }
 
     // import info to profile
-    if (is_array($profile)) {
-        while (list ($fid, $value) = each ($profile)) {
-            $variables[ '!' . $profile_name[$fid] ] = $value;
-        }
-    }   
+    if (module_exists('profile') && is_array($profile)) {
+      
+      $profile_name = _user_import_profile('fid', 'name');
+      
+      while (list ($fid, $field_name) = each ($profile_name)) {
+        $variables['!' . $field_name] = $profile[$fid];
+      }
+    }
 
     $subject = (empty($subject)) ? _user_mail_text('welcome_subject', $variables) : strtr($subject, $variables);
+    $subject = mime_header_encode($subject);
     $body = (empty($body)) ? _user_mail_text('welcome_body', $variables) : strtr($body, $variables);
-    drupal_mail('user_import_send_email', $account->mail, $subject, $body, $from);
+    $body = str_replace("\r", '', $body);
+    
+    $header = "From: $from\n";
+    $header .= "Reply-to: $from\n";
+    $header .= "X-Mailer: Drupal\n";
+    $header .= "Return-path: $from\n";
+    $header .= "Errors-to: $from\n";
+    $header .= 'MIME-Version: 1.0';
+    $header .= "\n"; 
+
+    if ($format == 1) {
+      
+      $header .= 'Content-Type: text/html; charset=UTF-8; Content-transfer-encoding: 8Bit'; 
+      
+      $body_head = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+              <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+              <head>
+              <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />';
+              
+      if (!empty($css)) $body_head .= '<style type="text/css">' . check_plain($css) . '</style>';
+    
+      $body = $body_head . '</head><body>' . $body . '<body></html>';
+      
+    } else {
+      $header .= 'Content-Type: text/plain; charset=UTF-8; format=flowed Content-transfer-encoding: 8Bit';
+    }
+
+    mail($account->mail, $subject, $body, $header);
     return;
 }
 
@@ -1211,7 +1339,7 @@ function _user_import_profile($key = 'fid', $return_value = NULL) {
             }
         }
     }
-    
+
     if (empty($fields_static)) return;
    
     // return all profile fields info, or just specific type
@@ -1236,9 +1364,19 @@ function _user_import_settings_save($settings, $messages = NULL) {
      // move settings into 'options' column
      // 'options' column will be used to store new control options - instead of creating a new column for each option
     $settings['options']['groups'] = $settings['groups'];
+    $settings['options']['existing_og_subscribe'] = $settings['existing_og_subscribe'];
+    $settings['options']['existing_og_subject'] = $settings['existing_og_subject'];
+    $settings['options']['existing_og_markup'] = $settings['existing_og_markup'];
+    $settings['options']['existing_og_message'] = $settings['existing_og_message'];
+    $settings['options']['existing_og_css'] = $settings['existing_og_css'];   
+
     $settings['options']['subject'] = $settings['subject'];
     $settings['options']['message'] = $settings['message'];
+    $settings['options']['message_format'] = $settings['message_format'];
+    $settings['options']['message_css'] = $settings['message_css'];
+    
     $settings['options']['activate'] = $settings['activate'];
+    $settings['options']['subscribed'] = $settings['subscribed'];
     
     // Update settings for existing import
     if ($settings['import_id']) {
@@ -1412,6 +1550,8 @@ function _user_import_process($settings) {
                             $username_abbreviate[$column_id]= $setting['abbreviate'];
                     } 
                 }
+                
+                if ($errors == 'duplicate email' && $settings['setting'] == 'import') _user_import_group_add($settings, $email, $fields);
 
                 if (!$errors) {
                     
@@ -1449,8 +1589,9 @@ function _user_import_process($settings) {
                         }
     
                         _user_import_organic_groups($settings['options']['groups'], $account->uid);
+                        _user_import_subscribed($settings['options']['subscribed'], $account->uid);
                         
-                        if (!empty($settings['send_email'])) _user_import_send_email($account, $password, $fields, $settings['options']['subject'], $settings['options']['message']);
+                        if (!empty($settings['send_email'])) _user_import_send_email($account, $password, $fields, $settings['options']['subject'], $settings['options']['message'], $settings['options']['message_format'], $settings['options']['message_css'], $settings['options']['subscribed']);
                         $send_counter++;
     
                     }
@@ -1703,4 +1844,139 @@ function _user_import_organic_groups($groups_selected, $uid) {
     
     return;
 }
+
+
+// add user subscriptions
+function _user_import_subscribed($subscribed, $uid) {
+
+    if (!module_exists('publication') || !module_exists('schedule') || !module_exists('identity_hash')) return;
+
+    while (list($type, $subscriptions) = each($subscribed)) {
+  
+      $publications = publication_select_publications_and_terms($type);
+
+      if (!empty($publications)) {
+
+        subscribed_set_subscriptions($type, $uid, $publications, $subscriptions);
+        subscribed_set_subscriptions_terms($type, $uid, $publications, $subscriptions); 
+        identity_hash_set_hash($uid);
+      }
+    
+    }
+    
+    return;
+}
+
+// add user to groups if already a member
+function _user_import_group_add($settings, $email, $fields) {
+
+  if (!module_exists('og')) return;
+  
+  $account = user_load(array('mail' => $email));
+  if (!empty($settings['options']['existing_og_message'])) $profile = user_import_profile_load($account);
+
+  $groups_subscribed = og_get_subscriptions($account->uid);
+  
+  foreach($settings['groups'] as $group) {
+    
+    // is user member of group?
+    if (!empty($group) && empty($groups_subscribed[$group])) {
+      
+      // subscribe to group
+      og_subscribe_user($group, $account);
+
+      if (!empty($settings['options']['existing_og_message'])) _user_import_send_email($account, $password, $profile, $settings['options']['existing_og_subject'], $settings['options']['existing_og_message'], $settings['options']['existing_og_markup'], $settings['options']['existing_og_css'], $settings['options']['subscribed']);
+      
+    }
+
+  }
+
+    return;
+}
+
+
+function user_import_profile_string($prefix = ',') {
+
+    if (!module_exists('profile')) return;
+    
+    $profile_fields = _user_import_profile('fid', 'name');
+    
+    if (!empty($profile_fields)) $profile_string = ', !' . implode($prefix .' !', $profile_fields);
+
+    return $profile_string;
+}
+
+function user_import_profile_load($user) {
+
+  $result = db_query('SELECT f.name, f.type, f.fid, v.value FROM {profile_fields} f INNER JOIN {profile_values} v ON f.fid = v.fid WHERE uid = %d', $user->uid);
+
+  while ($field = db_fetch_object($result)) {
+  
+    if (empty($profile[$field->fid])) {
+      
+      $profile[$field->fid] = _profile_field_serialize($field->type) ? unserialize($field->value) : $field->value;
+    }
+    
+  }
+  
+  return $profile;
+}
+
+function user_import_edit_subscribed_fields(&$form, $import) {
+
+  if (module_exists('publication') && module_exists('schedule')) {
+
+    $publications = publication_select_publications('enewsletter');
+    if (empty($publications)) return;
+
+    $form['subscribed'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Subscriptions'),
+        '#collapsible' => TRUE,
+        '#collapsed' => $collapsed,
+        '#tree' => TRUE,
+    );
+    
+    foreach ($publications as $publication) {
+    
+      $type = $publication['type'];
+      
+      $form['subscribed'][$type] = array(
+          '#type' => 'fieldset',
+          '#title' => check_plain($type),
+      );
+      
+    }
+    
+    reset($publications);
+    $subscribed = $import['options']['subscribed'];
+ 
+    foreach ($publications as $publication) {
+      
+      $options = array();
+      $schedules = schedule_select_schedules($type, $publication['publication_id']);
+      $options[0] = t('No Subscription');
+      
+      foreach ($schedules as $schedule) {                     
+        $options[ $schedule['schedule_id'] ] = $schedule['schedule_title'];
+      }
+
+      $subscription_default = empty($subscribed[$type][$publication['publication_id']]) ? 0 : $subscribed[$type][$publication['publication_id']][0];
+
+      $form['subscribed'][$type][$publication['publication_id']][] = array(
+        '#type' => 'radios',
+        '#title' => check_plain($publication['title']),
+        '#default_value' => $subscription_default,
+        '#options' => $options,
+        '#description' => check_plain($publication['description']),
+      );
+      
+    }
+    
+  
+  }
+  
+  return;
+}
+
 

@@ -39,14 +39,43 @@ function user_import_install() {
       $query2 = db_query("CREATE TABLE IF NOT EXISTS {user_import_errors} (
                         import_id int(10) NOT NULL default '0',
                         data longtext NOT NULL,
-                        error varchar(25) NOT NULL default '',
+                        errors longtext NOT NULL,
                         KEY import_id (import_id)
                         ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
 
       if ($query1 && $query2) {
         $created = TRUE;
       }
-      break;      
+      break;
+	    case 'pgsql':
+	      $query1 = db_query("CREATE TABLE {user_import} (
+	                        import_id serial,
+	                        name varchar(25) NOT NULL default '',
+	                        filename varchar(50) NOT NULL default '',
+	                        oldfilename varchar(50) NOT NULL default '',
+	                        filepath varchar NOT NULL,
+	                        started int NOT NULL default '0',
+	                        pointer int NOT NULL default '0',
+	                        processed int NOT NULL default '0',
+	                        valid int NOT NULL default '0',
+	                        first_line_skip int NOT NULL default '0',
+	                        contact int NOT NULL default '0',
+	                        username_space int NOT NULL default '0',
+	                        send_email int NOT NULL default '0',
+	                        field_match text NOT NULL,
+	                        roles varchar(255) NOT NULL default '',
+	                        options text NOT NULL,
+	                        setting varchar(10) NOT NULL default '',
+	                        PRIMARY KEY (import_id)
+	                        );");
+
+	      $query2 = db_query("CREATE TABLE  {user_import_errors} (
+	                        import_id int NOT NULL default '0',
+	                        data text NOT NULL,
+	                        errors varchar(255) NOT NULL default '',
+	                        PRIMARY KEY (import_id)
+	                        );");   
+	      break;      
   }
   
   if ($created) {
@@ -77,6 +106,18 @@ function user_import_update_3() {
   $ret[] = update_sql("ALTER TABLE {user_import} CHANGE iid import_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT");
   $ret[] = update_sql("ALTER TABLE {user_import} CHANGE first_line first_line_skip INT(10) UNSIGNED NOT NULL default '0'");  
   $ret[] = update_sql("ALTER TABLE {user_import_errors} CHANGE iid import_id INT(10) UNSIGNED NOT NULL default '0'");
+  return $ret;
+}
+
+function user_import_update_4() {
+  $ret = array();
+  $ret[] = update_sql("ALTER TABLE {user_import_errors} CHANGE error errors longtext NOT NULL");
+  return $ret;
+}
+
+function user_import_update_5() {
+  $ret = array();
+  $ret[] = update_sql("ALTER TABLE {user_import_errors} CHANGE errors errors longtext NOT NULL");
   return $ret;
 }
 

@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 // Functionality depends on node_import and CCK.
 if (module_exists('node_import') && module_exists('content')) {

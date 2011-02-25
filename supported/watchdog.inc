@@ -1,5 +1,4 @@
 <?php
-// $Id$ 
 
 /**
  * @todo add option to not record watchdog messages for each user created

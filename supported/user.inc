@@ -1,5 +1,4 @@
 <?php
-// $Id$ 
 
 /**
  * @todo move contact options to separate contact.inc

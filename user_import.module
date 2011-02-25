@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 // Update options for existing users
 define ('UPDATE_NONE', 0);

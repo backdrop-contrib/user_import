@@ -3,7 +3,7 @@
 ********************************************************************
 Name: user import module
 Author: Robert Castelo <www.codepositive.com>
-Drupal: 5.x
+Drupal: 6.x
 ********************************************************************
 DESCRIPTION:
 
@@ -39,6 +39,20 @@ If file import fails with "File copy failed: source file does not exist." try
 setting the file extension to .txt.
 
 
+** IMPORTANT **
+
+Note that Date fields are not yet supported.
+
+Note that passwords can only be imported as plain text, and will be converted to MD5 by Drupal. 
+
+Note that if your data contains a backslash before the column separator it may not get imported as expected:
+
+  "123","abc\","def"
+  The second field will be imported as: abc","def
+
+  This has been fixed in PHP 5.3
+
+
 ********************************************************************
 PREREQUISITES:
 
@@ -65,13 +79,15 @@ check the Drupal web site if you need assistance.
 
 ADDITIONAL OPTIONS 
 
-* NodeProfile Import
+* Content Profile Import
 
-If data is to be imported into NodeProfile nodes the following module
+If data is to be imported into Content Profile nodes the following module
 needs to be installed and enabled:
  
   Node Import
-  http://drupal.org/project/node_import
+  http://drupal.org/project/content_profile
+
+Note that Date fields are not yet supported.
 
 
   
@@ -134,18 +150,13 @@ USAGE
 14. Click "Import" to complete the import.
 
 
-Note that Date fields are not yet supported.
-
-Note that passwords can only be imported as plain text, and will be converted to MD5 by Drupal. 
-
-
         ---------------------------
          OPTIONS FOR OTHER MODULES
         --------------------------- 
 
--- NODEPROFILE --
+-- CONTENT PROFILE --
 
-* NodeProfile node fields will be available when matching csv data to Drupal fields.  
+* Content Profile node fields will be available when matching csv data to Drupal fields.  
 
 * Date fields are not supported yet.
 
@@ -154,7 +165,7 @@ Note that passwords can only be imported as plain text, and will be converted to
 
 New user imported:
 
-  A NodeProfile node will be created if there is data for that node, if there is no data the node will not be created.
+  A Content Profile node will be created if there is data for that node, if there is no data the node will not be created.
 
 
 
@@ -191,7 +202,7 @@ AUTHOR CONTACT
 ********************************************************************
 ACKNOWLEDGEMENT
 
-- Initial reference point for this module was a script by David McIntosh (neofactor.com).
+- I looked at a script by David McIntosh (neofactor.com) before coding this module.
 - Documentation help Steve (spatz4000)
 - patch by mfredrickson
 - patch by idealso

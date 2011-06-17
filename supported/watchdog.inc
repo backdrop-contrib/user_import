@@ -10,6 +10,8 @@
  */
 function watchdog_user_import_after_save($settings, $account, $password, $fields, $updated) {
 
-  if (empty($updated)) watchdog('user', t('New user: %name %email.', array('%name' => $account->name, '%email' => '<'. $account->mail .'>')), WATCHDOG_NOTICE, l(t('edit'), 'user/'. $account->uid .'/edit'));
+  if (empty($updated)) {
+    watchdog('user', 'New user: %name %email.', array('%name' => $account->name, '%email' => '<'. $account->mail .'>'), WATCHDOG_NOTICE, l(t('edit'), 'user/'. $account->uid .'/edit'));
+  }
   return;
 }

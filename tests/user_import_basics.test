@@ -1,6 +1,6 @@
 <?php 
 /**
- * 	Create Invoice node test for Invoices module.
+ *  Create Invoice node test for Invoices module.
  */
 
 class UserImportBasics extends UserImportTest {
@@ -13,27 +13,27 @@ class UserImportBasics extends UserImportTest {
     );
   }
 
-	/**
-	 *  User with right permissions creates import (with new settings)
-	 *  - test core functions
-	 */
+  /**
+   *  User with right permissions creates import (with new settings)
+   *  - test core functions
+   */
   function testCreateImport() {
 
-		// Prepare a user to do testing
+    // Prepare a user to do testing
     $this->drupalLoginUser($this->user_importer);
 
     // Select CSV file (the included example file)
-		$this->settingsFileSelect();
-		
-		// import settings 
-		$this->importID($this->getUrl()); // store import ID for later
-		$setting_edit = array();
+    $this->settingsFileSelect();
+    
+    // import settings 
+    $this->importID($this->getUrl()); // store import ID for later
+    $setting_edit = array();
     $this->settingsEmailMatch($settings);
     $this->settingsIgnoreFirstLine($settings);
-		$this->drupalPostRequest($this->getUrl(), $settings, 'Import');
-		
-		// check if users have been imported
-		$this->checkAccountsExist(TRUE);
+    $this->drupalPostRequest($this->getUrl(), $settings, 'Import');
+    
+    // check if users have been imported
+    $this->checkAccountsExist(TRUE);
   }
 
 }

@@ -108,7 +108,7 @@ function user_user_import_pre_save($settings, $account, $fields, $errors, $updat
 			$account_add['contact'] = $settings['contact'];
 		} 
 		else {
-			$account_add['contact'] = $account['contact'];
+			$account_add['contact'] = isset($account['contact']) ? $account['contact'] : '';
 		}
 
   } 

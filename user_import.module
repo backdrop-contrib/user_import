@@ -260,7 +260,7 @@ function user_import_add_form($import_id = NULL) {
     $form = array();
     $ftp_files = _user_import_ftp_files();
     user_import_add_file_form($form, $ftp_files);
-        
+    user_import_delimiter_form($form);    
     $settings = _user_import_settings_select(NULL, 'get saved');
     
     if ($settings) {
@@ -291,6 +291,25 @@ function user_import_add_form($import_id = NULL) {
     return $form;    
 }
 
+function user_import_delimiter_form(&$form, $value = ',') {
+  $form['file_settings'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('File Settings'),
+      '#collapsible' => TRUE,
+			'#collapsed' => TRUE,
+      '#description' => t("File column delimiter"),
+  );
+
+  $form['file_settings']['delimiter'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Delimiter'),
+      '#size' => 4,
+      '#default_value' => $value,
+      '#required' => TRUE,
+      '#description' => t("The column delimiter for the file. Use '/t' for Tab."),
+  );
+}
+
 function user_import_add_form_validate($form, &$form_state) {
 
   $file = _user_import_file(NULL, $form_state['values']['file_ftp']);
@@ -313,6 +332,7 @@ function user_import_add_form_submit($form, &$form_state) {
   $form_state['values']['oldfilename'] = $file->filename;
   $form_state['values']['filepath'] = $file->filepath;
   $form_state['values']['setting'] = 'file set';
+  $form_state['values']['options']['delimiter'] = $form_state['values']['delimiter'];
 
   // create import setting
   $import = _user_import_settings_save($form_state['values']);
@@ -788,12 +808,12 @@ function theme_user_import_edit($form) {
 
   foreach (element_children($form['field_match']) as $key) {
 
-      $rows[] = array(
-          drupal_render($form['field_match'][$key]['csv']),
-          drupal_render($form['field_match'][$key]['field_match']),
-          drupal_render($form['field_match'][$key]['username']),
-          drupal_render($form['field_match'][$key]['abbreviate']),
-      );
+	  $rows[] = array(
+	      drupal_render($form['field_match'][$key]['csv']),
+	      drupal_render($form['field_match'][$key]['field_match']),
+	      drupal_render($form['field_match'][$key]['username']),
+	      drupal_render($form['field_match'][$key]['abbreviate']),
+	  );
   }
 
   $form['field_match']['#value'] = theme('table', $header, $rows);
@@ -944,13 +964,19 @@ function _user_import_file_open($filepath, $filename) {
 }
 
 // get first row of file
-function _user_import_file_row($filename, $handle) {
-    
-    $data_row = @fgetcsv ($handle, 1000000, ",");
-    if (!$data_row) {
-        form_set_error('file', t("Could not get data, the file '%filename' is either empty or has incompatible line endings.", array('%filename' => $filename)), 'error');
-    }
-    return $data_row;
+function _user_import_file_row($filename, $handle, $delimiter = ',') {
+
+	// Handle folks who may list 'tab' as 't' or 'tab'
+	if (strtolower($delimiter) == 't' || strtolower($delimiter) == 'tab') {
+		$delimiter = '\t';	
+	}
+	
+	$data_row = @fgetcsv ($handle, 1000000, $delimiter);
+	
+	if (!$data_row) {
+	    form_set_error('file', t("Could not get data, the file '%filename' is either empty or has incompatible line endings.", array('%filename' => $filename)), 'error');
+	}
+	return $data_row; 
 }
 
 // get info on files  uploaded via FTP
@@ -958,9 +984,12 @@ function _user_import_ftp_files() {
   
   $directory = opendir( drupal_get_path('module', 'user_import') );
   $filenames[] = t('none');
+	$ignorable_files = array('.', '..', '.DS_Store', 'CVS', '.svn', '.git', 'API.txt', 'user_import.drush.inc', 'README.txt', 'LICENSE.txt', 'UPDATES.txt', 'user_import.module', 'user_import.install', 'user_import.info', 'supported', 'tests');
   
   while ($file = readdir($directory)) {
-    if ($file != '.' && $file != '..' && $file != '.DS_Store' && $file != 'CVS' && $file != '.svn' && $file != 'README.txt' && $file != 'LICENSE.txt' && $file != 'UPDATES.txt' && $file != 'user_import.module' && $file != 'user_import.mysql' && $file != 'user_import.install' && $file != 'user_import.info' && $file != 'supported' && $file != 'tests') $filenames[] = $file;
+    if (!in_array($file, $ignorable_files)) { 
+	  	$filenames[] = $file;
+		} 
   }
   
   closedir($directory);
@@ -991,9 +1020,10 @@ function user_import_edit_file_fields(&$form, $import) {
 
 function user_import_form_field_match(&$form, $import) {
 
+	$delimiter = $import['options']['delimiter'];
   $collapsed = (empty($import['name'])) ? FALSE: TRUE;
   $handle = _user_import_file_open($form['filepath']['#value'], $form['filename']['#value']);
-  $data_row = _user_import_file_row($form['filename']['#value'], $handle);
+  $data_row = _user_import_file_row($form['filename']['#value'], $handle, $delimiter);
   
   $fieldmatch_description = t("Match columns in CSV file to profile fields, leave as '----' if there is no match.");
   $fieldmatch_description .= '<br /><strong>' . t('Username') . ': </strong>' . t("The Username will be built from CSV columns in the order selected.");
@@ -1188,12 +1218,12 @@ function _user_import_settings_save($settings) {
 
     // move settings into 'options' column
     // 'options' column will be used to store new control options - instead of creating a new column for each option
-		$options = array('groups', 'existing_og_subscribe', 'existing_og_subject', 'existing_og_markup', 'existing_og_message', 'existing_og_css', 'subject', 'message', 'message_format', 'message_css', 'activate', 'subscribed', 'update_user', 'roles_new');
+		$options = array('groups', 'existing_og_subscribe', 'existing_og_subject', 'existing_og_markup', 'existing_og_message', 'existing_og_css', 'subject', 'message', 'message_format', 'message_css', 'activate', 'subscribed', 'update_user', 'roles_new', 'delimiter');
 		
 		foreach ($options as $value) {
 			$settings['options'][$value] = isset($settings[$value]) ? $settings[$value] : '';
 		}
-		
+ 	
 		$settings['name'] = isset($settings['name']) ? $settings['name'] : '';
 		$settings['pointer'] = isset($settings['pointer']) ? $settings['pointer'] : 0;
 		$settings['processed'] = isset($settings['processed']) ? $settings['processed'] : 0;
@@ -1231,7 +1261,7 @@ function _user_import_settings_save($settings) {
             WHERE import_id = %d
             ", trim($settings['name']), $settings['filename'], $settings['oldfilename'], $settings['filepath'], $settings['pointer'], $settings['processed'], $settings['valid'], $settings['first_line_skip'], $settings['contact'], $settings['username_space'], $settings['send_email'], serialize($settings['field_match']), serialize($settings['roles']), serialize($settings['options']), $settings['setting'], $settings['import_id']);
         
-        // Save settings for new import
+    // Save settings for new import
     } 
     else {
 

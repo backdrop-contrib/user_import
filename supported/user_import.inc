@@ -141,6 +141,14 @@ function _user_import_edit_settings_fields(&$form, $import, $collapsed) {
       '#default_value' => $import['options']['activate'],
       '#description' => t("User accounts will not be visible to other users until their owner logs in. Select this option to make all imported user accounts visible. <strong>Note - one time login links in welcome emails will no longer work if this option is enabled.</strong>"),
   );
+
+	$form['optional']['delimiter'] = array(
+	    '#type' => 'textfield',
+	    '#title' => t('File Delimiter'),
+	    '#size' => 4,
+	    '#default_value' => isset($import['options']['delimiter']) ? $import['options']['delimiter'] : ',',
+	    '#description' => t('The column delimiter for the file. Use t for tab. '),
+	);
   
   return;
 }

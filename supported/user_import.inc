@@ -147,7 +147,7 @@ function _user_import_edit_settings_fields(&$form, $import, $collapsed) {
 	    '#title' => t('File Delimiter'),
 	    '#size' => 4,
 	    '#default_value' => isset($import['options']['delimiter']) ? $import['options']['delimiter'] : ',',
-	    '#description' => t('The column delimiter for the file. Use t for tab. '),
+	    '#description' => t("The column delimiter for the file. Use '/t' for Tab."),
 	);
   
   return;

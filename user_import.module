@@ -1352,7 +1352,7 @@ function _user_import_settings_deletion($import_id) {
 }
 
 function _user_import_random_username() {
-
+    $username = '';
     $vowels = 'aoueiy';
     $consonants = 'bcdfghjklmnpqrstvwxz';
     $length = 8;
@@ -1396,6 +1396,9 @@ function _user_import_process($settings) {
     $field_match = _user_import_unconcatenate_field_match($settings['field_match']);
     $update_setting = _user_import_update_user_check($settings['options']['update_user']);
     $update_setting_per_module = $settings['options']['update_user'];
+    $username_data = array();
+    $username_order = array();
+    $username_abbreviate = array();
     
     ini_set('auto_detect_line_endings', true);
     $handle = @fopen($settings['filepath'], "r");

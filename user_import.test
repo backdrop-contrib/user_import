@@ -86,6 +86,7 @@ class UserImportTestCase extends DrupalWebTestCase {
   }
   
   function checkAccountsExist($list_failures = FALSE) {
+		$failures_list = ''; 
     $users_email = $this->usersList();
     $failed = array();
     

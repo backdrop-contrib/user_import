@@ -1212,76 +1212,59 @@ function _user_import_profile($key = 'fid', $return_value = NULL) {
 }
 
 function _user_import_settings_save($settings) {
-    /**
-     * @todo refactor to put all settings into 'options' column, except settings that have their own column
-     */
 
-    // move settings into 'options' column
-    // 'options' column will be used to store new control options - instead of creating a new column for each option
-		$options = array('groups', 'existing_og_subscribe', 'existing_og_subject', 'existing_og_markup', 'existing_og_message', 'existing_og_css', 'subject', 'message', 'message_format', 'message_css', 'activate', 'subscribed', 'update_user', 'roles_new', 'delimiter');
-		
-		foreach ($options as $value) {
-			$settings['options'][$value] = isset($settings[$value]) ? $settings[$value] : '';
-		}
- 	
-		$settings['name'] = isset($settings['name']) ? $settings['name'] : '';
-		$settings['pointer'] = isset($settings['pointer']) ? $settings['pointer'] : 0;
-		$settings['processed'] = isset($settings['processed']) ? $settings['processed'] : 0;
-		$settings['valid'] = isset($settings['valid']) ? $settings['valid'] : 0;
-		$settings['first_line_skip'] = isset($settings['first_line_skip']) ? $settings['first_line_skip'] : 0;
-		$settings['contact'] = isset($settings['contact']) ? $settings['contact'] : 0;
-		$settings['username_space'] = isset($settings['username_space']) ? $settings['username_space'] : 0;
-		$settings['send_email'] = isset($settings['send_email']) ? $settings['send_email'] : 0;
-		$settings['field_match'] = isset($settings['field_match']) ? $settings['field_match'] : array();
-		$settings['roles'] = isset($settings['roles']) ? $settings['roles'] : '';
+  $database_fields = array('import_id', 'name', 'filename', 'oldfilename', 'filepath', 'started', 'pointer', 'processed', 'valid', 'first_line_skip', 'contact', 'username_space', 'send_email', 'field_match', 'roles', 'settings');
 
-		//     $settings['options']['groups'] = $settings['groups'];
-		//     $settings['options']['existing_og_subscribe'] = $settings['existing_og_subscribe'];
-		//     $settings['options']['existing_og_subject'] = $settings['existing_og_subject'];
-		//     $settings['options']['existing_og_markup'] = $settings['existing_og_markup'];
-		//     $settings['options']['existing_og_message'] = $settings['existing_og_message'];
-		//     $settings['options']['existing_og_css'] = $settings['existing_og_css'];   
-		// 
-		//     $settings['options']['subject'] = $settings['subject'];
-		//     $settings['options']['message'] = $settings['message'];
-		//     $settings['options']['message_format'] = $settings['message_format'];
-		//     $settings['options']['message_css'] = $settings['message_css'];
-		//     
-		//     $settings['options']['activate'] = $settings['activate'];
-		//     $settings['options']['subscribed'] = $settings['subscribed'];
-		//     $settings['options']['update_user'] = $settings['update_user'];
-		// 
-		// $settings['options']['roles_new'] = $settings['roles_new']; 
-    
-    // Update settings for existing import
-    if (isset($settings['import_id'])) {
-    
-        db_query("UPDATE {user_import} 
-            SET name = '%s', filename = '%s', oldfilename = '%s', filepath = '%s', pointer = %d, processed = %d, valid= %d, first_line_skip = %d, contact = %d, username_space = %d, send_email = %d, field_match = '%s', roles = '%s', options = '%s', setting = '%s' 
-            WHERE import_id = %d
-            ", trim($settings['name']), $settings['filename'], $settings['oldfilename'], $settings['filepath'], $settings['pointer'], $settings['processed'], $settings['valid'], $settings['first_line_skip'], $settings['contact'], $settings['username_space'], $settings['send_email'], serialize($settings['field_match']), serialize($settings['roles']), serialize($settings['options']), $settings['setting'], $settings['import_id']);
-        
-    // Save settings for new import
-    } 
-    else {
+	// move all other values into the options field.
 
-        db_query("INSERT INTO {user_import} 
-            (name, filename, oldfilename, filepath, started, pointer, processed, valid, first_line_skip, contact, username_space, send_email, field_match, roles, options, setting) 
-            VALUES ('%s', '%s', '%s', '%s', %d, %d, %d, %d, %d, %d, %d, %d, '%s', '%s', '%s', '%s')
-            ", trim($settings['name']), $settings['filename'], $settings['oldfilename'], $settings['filepath'], time(), $settings['pointer'], $settings['processed'], $settings['valid'], $settings['first_line_skip'], $settings['contact'], $settings['username_space'], $settings['send_email'], serialize($settings['field_match']), serialize($settings['roles']), serialize($settings['options']), $settings['setting']);
+  // move settings into 'options' column
+  // 'options' column will be used to store new control options - instead of creating a new column for each option
+	$options = array('groups', 'existing_og_subscribe', 'existing_og_subject', 'existing_og_markup', 'existing_og_message', 'existing_og_css', 'subject', 'message', 'message_format', 'message_css', 'activate', 'subscribed', 'update_user', 'roles_new', 'delimiter');
+	
+	foreach ($options as $value) {
+		$settings['options'][$value] = isset($settings[$value]) ? $settings[$value] : '';
+	}
+	
+	$settings['name'] = isset($settings['name']) ? $settings['name'] : '';
+	$settings['pointer'] = isset($settings['pointer']) ? $settings['pointer'] : 0;
+	$settings['processed'] = isset($settings['processed']) ? $settings['processed'] : 0;
+	$settings['valid'] = isset($settings['valid']) ? $settings['valid'] : 0;
+	$settings['first_line_skip'] = isset($settings['first_line_skip']) ? $settings['first_line_skip'] : 0;
+	$settings['contact'] = isset($settings['contact']) ? $settings['contact'] : 0;
+	$settings['username_space'] = isset($settings['username_space']) ? $settings['username_space'] : 0;
+	$settings['send_email'] = isset($settings['send_email']) ? $settings['send_email'] : 0;
+	$settings['field_match'] = isset($settings['field_match']) ? $settings['field_match'] : array();
+	$settings['roles'] = isset($settings['roles']) ? $settings['roles'] : '';
+   
+   // Update settings for existing import
+   if (isset($settings['import_id'])) {
+   
+       db_query("UPDATE {user_import} 
+           SET name = '%s', filename = '%s', oldfilename = '%s', filepath = '%s', pointer = %d, processed = %d, valid= %d, first_line_skip = %d, contact = %d, username_space = %d, send_email = %d, field_match = '%s', roles = '%s', options = '%s', setting = '%s' 
+           WHERE import_id = %d
+           ", trim($settings['name']), $settings['filename'], $settings['oldfilename'], $settings['filepath'], $settings['pointer'], $settings['processed'], $settings['valid'], $settings['first_line_skip'], $settings['contact'], $settings['username_space'], $settings['send_email'], serialize($settings['field_match']), serialize($settings['roles']), serialize($settings['options']), $settings['setting'], $settings['import_id']);
+       
+   // Save settings for new import
+   } 
+   else {
 
-        switch ($GLOBALS['db_type']) {
-          case 'mysql':
-          case 'mysqli':
-            $settings['import_id'] = db_result(db_query("SELECT LAST_INSERT_ID()"));
-            break;
-          case 'pgsql':
-            $settings['import_id'] = db_result(db_query("SELECT currval('{user_import_import_id_seq}')"));
-            break;
-        }
-    }
-    
-    return $settings;
+       db_query("INSERT INTO {user_import} 
+           (name, filename, oldfilename, filepath, started, pointer, processed, valid, first_line_skip, contact, username_space, send_email, field_match, roles, options, setting) 
+           VALUES ('%s', '%s', '%s', '%s', %d, %d, %d, %d, %d, %d, %d, %d, '%s', '%s', '%s', '%s')
+           ", trim($settings['name']), $settings['filename'], $settings['oldfilename'], $settings['filepath'], time(), $settings['pointer'], $settings['processed'], $settings['valid'], $settings['first_line_skip'], $settings['contact'], $settings['username_space'], $settings['send_email'], serialize($settings['field_match']), serialize($settings['roles']), serialize($settings['options']), $settings['setting']);
+
+       switch ($GLOBALS['db_type']) {
+         case 'mysql':
+         case 'mysqli':
+           $settings['import_id'] = db_result(db_query("SELECT LAST_INSERT_ID()"));
+           break;
+         case 'pgsql':
+           $settings['import_id'] = db_result(db_query("SELECT currval('{user_import_import_id_seq}')"));
+           break;
+       }
+   }
+   
+   return $settings;
 }
 
 // Update settings for existing import 

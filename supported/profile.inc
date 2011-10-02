@@ -54,6 +54,8 @@ function profile_user_import_save_profile($field, $uid, $value, $updated, $updat
   // when the profile field is displayed on the registration form an empty value is automatically saved by the Profile module
   $exists = db_result(db_query("SELECT value FROM {profile_values} WHERE fid = %d AND uid = %d LIMIT 1", $field->fid, $uid));
 
+	user_import_profile_date($value, $field->type);
+
   if ($updated) { 
  
     switch ($update_setting) {
@@ -119,4 +121,47 @@ function profile_get_fields() {
   }
 
   return $fields;
+}
+
+/**
+ * Convert date into format that Profile module expects:
+ * a:3:{s:5:"month";s:1:"1";s:3:"day";s:1:"1";s:4:"year";s:4:"1976";}
+ */
+function user_import_profile_date(&$value, $field_type) {
+	
+  if ($field_type != "date" || empty($value)) {
+	  return;
+	}
+	
+	$date = explode('/', $value);
+	
+	if (!is_array($date)) {
+		return;
+	}
+	
+	// Get seleceted format.
+	$date_format = variable_get('user_import_profile_date_format', 'MM/DD/YYYY');
+	
+	if ($date_format == 'MM/DD/YYYY') {
+	  list($month, $day, $year) = explode('/', $value);
+	}
+	else if ($date_format == 'DD/MM/YYYY') {
+	  list($day, $month, $year) = explode('/', $value);
+	}
+	else if ($date_format == 'YYYY/MM/DD') {
+	  list($year, $month, $day) = explode('/', $value);
+	}
+	else if ($date_format == 'YYYY/DD/MM') {
+	  list($year, $day, $month) = explode('/', $value);
+	}
+
+	// Leading zeros cause a problem so remove them.
+	if (substr($day, 0, 1) == '0') {
+	  $day = substr($day, 1, 1);
+	}
+	if (substr($month, 0, 1) == '0') {
+	  $month = substr($month, 1, 1);
+	}
+
+	$value = serialize(array('month' => $month, 'day' => $day, 'year' => $year));
 }

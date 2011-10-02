@@ -231,5 +231,6 @@ function user_import_uninstall() {
   variable_del('user_import_max');
   variable_del('user_import_line_max');
   variable_del('user_export_checked_usernames');
+  variable_del('user_import_profile_date_format');
 }
 

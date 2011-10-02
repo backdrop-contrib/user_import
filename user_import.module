@@ -162,8 +162,29 @@ function user_import_configure_form() {
         '#maxlength' => 10,
         '#description' => t('The default is set at 1,000 characters, if a line in your csv is longer than this you should set a higher maximum here. Setting higher maximums will slow down imports.'),
     );
-    
-    
+
+	  if (module_exists('profile')) {
+	    $date_options = array(
+	      'MM/DD/YYYY' => 'MM/DD/YYYY',
+	      'DD/MM/YYYY' => 'DD/MM/YYYY',
+	      'YYYY/MM/DD' => 'YYYY/MM/DD',
+	      'YYYY/DD/MM' => 'YYYY/DD/MM',
+	    );
+	    $form['profile'] = array(
+	      '#type' => 'fieldset',
+	      '#title' => t('Profile Settings'),
+	      '#collapsible' => TRUE,
+	      '#collapsed' => TRUE,
+	    );
+	    $form['profile']['profile_date_format'] = array(
+	      '#type' => 'select',
+	      '#title' => t('Date field format'),
+	      '#description' => t('Select a format for importing dates into user profiles (Profile module).'),
+	      '#default_value' => variable_get('user_import_profile_date_format', 'MM/DD/YYYY'),
+	      '#options' => $date_options,
+	    );
+	  }
+
     $saved_templates = _user_import_settings_select(NULL, 'GET TEMPLATES');
     
     if (!empty($saved_templates)) {
@@ -234,6 +255,7 @@ function user_import_configure_form_submit($form, &$form_state) {
   variable_set('user_import_max', $form_state['values']['user_import_max']);
   variable_set('user_import_line_max', $form_state['values']['user_import_line_max']);
   variable_set('user_import_settings', $form_state['values']['user_import_settings']);
+	variable_set('user_import_profile_date_format', $form_state['values']['profile_date_format']);
 
   if (!empty($form_state['values']['templates'])) {
 
@@ -984,7 +1006,7 @@ function _user_import_ftp_files() {
   
   $directory = opendir( drupal_get_path('module', 'user_import') );
   $filenames[] = t('none');
-	$ignorable_files = array('.', '..', '.DS_Store', 'CVS', '.svn', '.git', 'API.txt', 'user_import.drush.inc', 'README.txt', 'LICENSE.txt', 'UPDATES.txt', 'user_import.module', 'user_import.install', 'user_import.info', 'supported', 'tests');
+	$ignorable_files = array('.', '..', '.DS_Store', 'CVS', '.svn', '.git', 'user_import.test', 'API.txt', 'user_import.drush.inc', 'README.txt', 'LICENSE.txt', 'UPDATES.txt', 'user_import.module', 'user_import.install', 'user_import.info', 'supported', 'tests');
   
   while ($file = readdir($directory)) {
     if (!in_array($file, $ignorable_files)) { 

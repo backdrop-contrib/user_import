@@ -88,45 +88,6 @@ function _user_import_unique_username($username, $start = FALSE) {
   return $username;
 }
 
-function _user_import_profile($key = 'fid', $return_value = NULL) {
-    
-    if (!module_exists('profile')) return; 
-    
-    static $fields_static;
-		$fields = array();
-    
-    // avoid making more than one database call for profile info
-    if (empty($fields_static)) {
-    
-        $results = db_query("SELECT * FROM {profile_fields}");
-                
-        while ($row = db_fetch_object($results)) { 
-            // don't include private fields
-            if (user_access('administer users') || $row->visibility != PROFILE_PRIVATE) {
-                $fields_static[] = $row;
-            }
-        }
-    }
-
-    if (empty($fields_static)) return array();
-   
-    // return all profile fields info, or just specific type
-    if (empty($return_value)) {
-        
-        foreach ($fields_static as $field) {
-            $fields[$field->{$key}] = $field;
-        }
-    } 
-    else {
-        foreach ($fields_static as $field) {
-            $fields[$field->{$key}] = $field->{$return_value};
-        }
-    }
-    
-    asort($fields);    
-    return $fields;
-}
-
 // Update settings for existing import 
 function _user_import_settings_update($pointer, $processed, $valid, $setting, $import_id) {
 

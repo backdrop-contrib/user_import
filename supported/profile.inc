@@ -4,7 +4,7 @@
  * Implementation of hook_user_import_form_field_match().
  */
 function profile_user_import_form_field_match() {
-
+  module_load_include('inc', 'user_import', 'user_import.admin');
   $fields = _user_import_profile('fid', 'title');
   $options['profile'] = $fields;
   return $options;

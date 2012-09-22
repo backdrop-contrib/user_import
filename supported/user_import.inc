@@ -81,7 +81,7 @@ function user_import_mail($key, &$message, $params) {
 	switch($key) {
   	case 'welcome':
 		$message['subject'] = (empty($params['!subject'])) ? _user_mail_text('register_admin_created_subject', NULL, $params) : strtr($params['!subject'], $params);
-		$message['body'] = (empty($params['!body'])) ? _user_mail_text('register_admin_created_body', NULL, $params) : strtr($params['!body'], $params);
+		$message['body'][] = (empty($params['!body'])) ? _user_mail_text('register_admin_created_body', NULL, $params) : strtr($params['!body'], $params);
 
 		if ($params['!email_format'] == 1) {
 			$message['headers']['Content-Type'] = 'text/html; charset=UTF-8'; 

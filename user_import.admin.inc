@@ -134,7 +134,7 @@ function user_import_configure_form() {
 	    );
 	  }
 
-    $saved_templates = _user_import_settings_select(NULL, 'GET TEMPLATES');
+    $saved_templates = _user_import_settings_select(NULL, TRUE);
     
     if (!empty($saved_templates)) {
  
@@ -233,7 +233,7 @@ function user_import_add_form($import_id = NULL) {
     $ftp_files = _user_import_ftp_files();
     user_import_add_file_form($form, $ftp_files);
     user_import_delimiter_form($form);    
-    $settings = _user_import_settings_select(NULL, 'get saved');
+    $settings = _user_import_settings_select(NULL, TRUE);
     
     if ($settings) {
  

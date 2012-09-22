@@ -389,6 +389,9 @@ function _user_import_settings_save($settings) {
    return $settings;
 }
 
+/**
+ *  Return either a single import setting, or all template, or all non-template settings.
+ */
 function _user_import_settings_select($import_id = NULL, $template = FALSE) {
 
   $import = array();
@@ -398,7 +401,7 @@ function _user_import_settings_select($import_id = NULL, $template = FALSE) {
   if (!empty($import_id)) {
 	  $sql = 'SELECT * FROM {user_import} WHERE import_id = %d';
 	  if ($template) $sql .=  " AND setting = 'template'";
-	  $import = db_fetch_array(db_query($sql . ' LIMIT 1', $import_id));
+	  $import = db_fetch_array(db_query_range($sql, $import_id, 0, 1));
 
 	  if (empty($import)) return FALSE;
 

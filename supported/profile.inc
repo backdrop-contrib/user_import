@@ -42,7 +42,7 @@ function profile_user_import_after_save($settings, $account, $password, $fields,
   
   // data column in the user table needs to be updated
   if ($data != $old_data) {   
-    db_query("UPDATE {users} SET data = '%s' WHERE uid = %d LIMIT 1", serialize($data), $account->uid);
+    db_query_range("UPDATE {users} SET data = '%s' WHERE uid = %d", 0, 1, serialize($data), $account->uid);
   } 
 
   return;
@@ -52,7 +52,7 @@ function profile_user_import_after_save($settings, $account, $password, $fields,
 function profile_user_import_save_profile($field, $uid, $value, $updated, $update_setting, &$data) {   
 
   // when the profile field is displayed on the registration form an empty value is automatically saved by the Profile module
-  $exists = db_result(db_query("SELECT value FROM {profile_values} WHERE fid = %d AND uid = %d LIMIT 1", $field->fid, $uid));
+  $exists = db_result(db_query_range("SELECT value FROM {profile_values} WHERE fid = %d AND uid = %d", 0, 1, $field->fid, $uid));
 
 	user_import_profile_date($value, $field->type);
 

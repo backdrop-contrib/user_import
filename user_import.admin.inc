@@ -6,7 +6,7 @@
  */
 
 function user_import_list($action = NULL, $import_id = NULL) {
-  
+
 	// clear incomplete imports
 	_user_import_incomplete_deletion();
 
@@ -77,7 +77,7 @@ function user_import_delete($import_id = NULL, $return_path = 'admin/user/user_i
     
 	$import = _user_import_settings_select($import_id);   
 	_user_import_settings_deletion($import_id);
-	_user_import_file_deletion($import['filepath'], $import['filename'], $import['oldfilename'], $import['options']['ftp']);
+	_user_import_file_deletion($import['filepath'], $import['filename'], $import['oldfilename'], $import['ftp']);
 	drupal_goto($return_path);
 	return; 
 }
@@ -204,7 +204,8 @@ function user_import_configure_form_submit($form, &$form_state) {
   variable_set('user_import_max', $form_state['values']['user_import_max']);
   variable_set('user_import_line_max', $form_state['values']['user_import_line_max']);
   variable_set('user_import_settings', $form_state['values']['user_import_settings']);
-	variable_set('user_import_profile_date_format', $form_state['values']['profile_date_format']);
+  $profile_date_format = isset($form_state['values']['profile_date_format']) ? $form_state['values']['profile_date_format'] : 0;
+	variable_set('user_import_profile_date_format', $profile_date_format);
 
   if (!empty($form_state['values']['templates'])) {
 
@@ -279,12 +280,11 @@ function user_import_add_form_validate($form, &$form_state) {
 function user_import_add_form_submit($form, &$form_state) {
   $settings_template = '';
   $file = _user_import_file(NULL, $form_state['values']['file_ftp']);
-  $form_state['values']['options']['ftp'] = empty($form_state['values']['file_ftp']) ? FALSE : TRUE;
+  $form_state['values']['ftp'] = empty($form_state['values']['file_ftp']) ? FALSE : TRUE;
   $form_state['values']['filename'] = $file->filename;
   $form_state['values']['oldfilename'] = $file->filename;
   $form_state['values']['filepath'] = $file->filepath;
   $form_state['values']['setting'] = 'file set';
-  $form_state['values']['options']['delimiter'] = $form_state['values']['delimiter'];
 
   // create import setting
   $import = _user_import_settings_save($form_state['values']);
@@ -414,11 +414,12 @@ function user_import_edit($form_state, $import_id, $template_id = NULL) {
 }
 
 function user_import_edit_cancel_validate($form, &$form_state) { 
+	
   // if import was being added - delete file
   if ($form_state['values']['setting'] == 'file set') {
-      $settings = _user_import_settings_select($form_state['values']['import_id']);
-      _user_import_settings_deletion($form_state['values']['import_id']);
-      _user_import_file_deletion($settings['filepath'], $settings['filename'], $settings['oldfilename'], $settings['options']['ftp']);
+	  $settings = _user_import_settings_select($form_state['values']['import_id']);
+	  _user_import_settings_deletion($form_state['values']['import_id']);
+	  _user_import_file_deletion($settings['filepath'], $settings['filename'], $settings['oldfilename'], $settings['options']['ftp']); 
   }
 
   $form_state['redirect'] = 'admin/user/user_import'; 
@@ -521,7 +522,7 @@ function user_import_edit_submit($form, &$form_state) {
   module_load_include('inc', 'user_import', 'user_import.import');
 	if ($form_state['values']['setting'] == 'file set') $filepath = file_move($form_state['values']['filepath'], file_directory_path() . '/' . $form_state['values']['filename']);
 	if (!empty($form_state['values']['og_id'])) $form_state['values']['groups'][$form_state['values']['og_id']] = $form_state['values']['og_id'];
-	$form_state['values']['options']['ftp'] = $form_state['values']['ftp'];
+	$form_state['values']['ftp'] = $form_state['values']['ftp'];
   $form_state['values'] = _user_import_settings_save($form_state['values']);
   $form_state['values']['save']['update'] = NULL;
   $form_state['values']['import_template_id'] = NULL;

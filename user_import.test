@@ -334,18 +334,30 @@ class UserImportNodeprofileTestCase extends UserImportWebTestCase {
 	
         $user = user_load(array('mail' => $csv[5])); 
         // test each data cell against nodeprofile field content
-        $identity = (array) node_load(array('type' => 'identity', 'uid' => $user->uid));
-        $biography = (array) node_load(array('type' => 'biography', 'uid' => $user->uid));
-        $contact_details = (array) node_load(array('type' => 'contact_details', 'uid' => $user->uid));
-debug($identity);
-        $this->assertEqual($identity['field_first_name'][0]['value'], $csv[0], "[Compare CSV and Profile data] Row: $row Field: First Name");
-        $this->assertEqual($identity['field_last_name'][0]['value'], $csv[1], "[Compare CSV and Profile data] Row: $row Field: Last Name");
-        $this->assertEqual($biography['field_blog'][0]['url'], $csv[6], "[Compare CSV and Profile data] Row: $row Field: Blog");
-        $this->assertEqual($contact_details['field_can_be_contacted'][0]['value'], $csv[7], "[Compare CSV and Profile data] Row: $row Field: Contact Permission");
-        $this->assertEqual($contact_details['field_contact_preference'][0]['value'], $csv[8], "[Compare CSV and Profile data] Row: $row Field: Contact Preference");
-//        $this->assertEqual($user->profile_interests, $csv[9], "[Compare CSV and Profile data] Row: $row Field: Profile Interests");
-        $this->assertEqual($biography['field_cv'][0]['value'], $csv[10], "[Compare CSV and Profile data] Row: $row Field: CV");
-        $this->assertEqual($biography['field_birthday'][0]['value'], $csv[11], "[Compare CSV and Profile data] Row: $row Field: Birthday");
+        $identity = node_load(array('type' => 'identity', 'uid' => $user->uid), NULL, TRUE);
+        $this->drupalGet("node/$identity->nid");
+        $this->assertText(check_plain($csv[0]), "[Compare CSV and Profile data] Row: $row Field: First Name");
+        $this->assertText(check_plain($csv[1]), "[Compare CSV and Profile data] Row: $row Field: Last Name " . $csv[1]);
+
+        $biography = node_load(array('type' => 'biography', 'uid' => $user->uid), NULL, TRUE);
+        $this->drupalGet("node/$biography->nid");
+        $this->assertText($csv[6], "[Compare CSV and Profile data] Row: $row Field: Blog");
+        $this->assertText($csv[10], "[Compare CSV and Profile data] Row: $row Field: CV");
+        $birthday = format_date(strtotime($csv[11]), 'custom', 'D, j/m/Y');
+        $this->assertText($birthday, "[Compare CSV and Profile data] Row: $row Field: Birthday " . $birthday);
+
+
+        $contact_details = node_load(array('type' => 'contact_details', 'uid' => $user->uid), NULL, TRUE);
+        $this->drupalGet("node/$contact_details->nid");
+
+        if (isset($csv[7]) && !empty($csv[7])) {
+					$this->assertText('Can be contacted', "[Compare CSV and Profile data] Row: $row Field: Contact Permission set");
+				}
+				else {
+					$this->assertNoText('Can be contacted', "[Compare CSV and Profile data] Row: $row Field: Contact Permission not set");
+				}
+
+				$this->assertText($csv[8], "[Compare CSV and Profile data] Row: $row Field: Contact Preference");
         
         //test interests link on profile page
         if (!empty($user->profile_interests)) {
@@ -523,9 +535,7 @@ class UserImportProfileTestCase extends UserImportWebTestCase {
 			  
       if ($row > 0) {
         $user = user_load(array('mail' => $csv[5])); 
-        // test each data cell against Profile field content 
-				 // debug($csv);
-				 // debug($user->profile_birthday);  
+        // test each data cell against Profile field content   
 				$profile_first_name = isset($user->profile_first_name) ? $user->profile_first_name : '';  
         $this->assertEqual($profile_first_name, $csv[0], "[Compare CSV data to Profile data] Row: $row Field: First Name");
 

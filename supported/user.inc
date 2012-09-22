@@ -183,7 +183,7 @@ function user_user_import_edit_roles_fields(&$form, $import, $collapsed) {
   $form['role_selection']['roles_new'] = array(
       '#type' => 'checkbox',
       '#title' => t('Add New Roles'),
-      '#default_value' => $import['options']['roles_new'],
+      '#default_value' => isset($import['roles_new']) ? $import['roles_new'] : 0,
       '#description' => t('Create imported role(s) that are not found and assign it to the user, in addition to any role(s) selected above. Warning: incorrect roles will be created if the incoming data includes typos.'),
   );
   
@@ -204,28 +204,28 @@ function user_user_import_edit_email_fields(&$form, $import, $collapsed) {
     $form['email_message']['subject'] = array(
       '#type' => 'textfield',
       '#title' => t('Message Subject'),
-      '#default_value' => $import['options']['subject'],
+      '#default_value' => isset($import['subject']) ? $import['subject'] : '',
       '#description' => t('Customize the subject of the welcome e-mail, which is sent to imported members.') .' '. t('Available variables are:') .' !username, !site, !password, !uri, !uri_brief, !mailto, !date, !login_uri, !edit_uri, !login_url' . $profile_string . '.',
     ); 
     
     $form['email_message']['message'] = array(
       '#type' => 'textarea',
       '#title' => t('Message'),
-      '#default_value' => $import['options']['message'],
+      '#default_value' => isset($import['message']) ? $import['message'] : '',
       '#description' => t('Customize the body of the welcome e-mail, which is sent to imported members.') .' '. t('Available variables are:') .' !username, !site, !password, !uri, !uri_brief, !mailto, !login_uri, !edit_uri, !login_url' . $profile_string . '.',
     ); 
     
     $form['email_message']['message_format'] = array(
       '#type' => 'radios',
       '#title' => t('Email Format'),
-      '#default_value' => empty($import['options']['message_format']) ? 0 : $import['options']['message_format'],
+      '#default_value' => isset($import['message_format']) ? $import['message_format'] : 0,
       '#options' => array(t('Plain Text'), t('HTML')),
     );
     
     $form['email_message']['message_css'] = array(
       '#type' => 'textarea',
       '#title' => t('CSS'),
-      '#default_value' => $import['options']['message_css'],
+      '#default_value' => isset($import['message_css']) ? $import['message_css'] : '',
       '#description' => t('Use if sending HTML formated email.'),
     );
     

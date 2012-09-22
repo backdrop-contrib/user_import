@@ -19,14 +19,18 @@ function user_import_user_import_form_fieldset($import, $collapsed) {
  */
 function user_import_user_import_after_save($settings, $account, $password, $fields, $updated, $update_setting_per_module) {
   if (!empty($settings['send_email']) && !$updated) {
+
+		$subscribed = isset($settings['subscribed']) ? $settings['subscribed'] : NULL;
+
 		_user_import_send_email($account, 
 														$password, 
 														$fields, 
-														$settings['options']['subject'], 
-														$settings['options']['message'], 
-														$settings['options']['message_format'], 
-														$settings['options']['message_css'], 
-														$settings['options']['subscribed']);
+														$settings['subject'], 
+														$settings['message'], 
+														$settings['message_format'], 
+														$settings['message_css'], 
+														$subscribed
+														);
 	} 
 }
 
@@ -108,7 +112,7 @@ function _user_import_edit_settings_fields(&$form, $import, $collapsed) {
   $form['optional']['first_line_skip'] = array(
       '#type' => 'checkbox',
       '#title' => t('Ignore First Line'),
-      '#default_value' => $import['first_line_skip'],
+      '#default_value' => isset($import['first_line_skip']) ? $import['first_line_skip'] : 0,
       '#description' => t('If the first line is the names of the data columns, set to ignore first line.'),
   );
   /**
@@ -117,28 +121,28 @@ function _user_import_edit_settings_fields(&$form, $import, $collapsed) {
   $form['optional']['contact'] = array(
       '#type' => 'checkbox',
       '#title' => t('Contact'),
-      '#default_value' => $import['contact'],
+      '#default_value' => isset($import['contact']) ? $import['contact'] : 0,
       '#description' => t("Set each user's personal contact form to 'allowed'."),
   );
   
   $form['optional']['send_email'] = array(
       '#type' => 'checkbox',
       '#title' => t('Send Email'),
-      '#default_value' => $import['send_email'],
+      '#default_value' => isset($import['send_email']) ? $import['send_email'] : 0,
       '#description' => t('Send email to users when their account is created.'),
   );
   
   $form['optional']['username_space'] = array(
       '#type' => 'checkbox',
       '#title' => t('Username Space'),
-      '#default_value' => $import['username_space'],
+      '#default_value' => isset($import['username_space']) ? $import['username_space'] : 0,
       '#description' => t("Include spaces in usernames, e.g. 'John' + 'Smith' => 'John Smith'."),
   );
   
   $form['optional']['activate'] = array(
       '#type' => 'checkbox',
       '#title' => t('Activate Accounts'),
-      '#default_value' => $import['options']['activate'],
+      '#default_value' => isset($import['activate']) ? $import['activate'] : 0,
       '#description' => t("User accounts will not be visible to other users until their owner logs in. Select this option to make all imported user accounts visible. <strong>Note - one time login links in welcome emails will no longer work if this option is enabled.</strong>"),
   );
 
@@ -146,7 +150,7 @@ function _user_import_edit_settings_fields(&$form, $import, $collapsed) {
 	    '#type' => 'textfield',
 	    '#title' => t('File Delimiter'),
 	    '#size' => 4,
-	    '#default_value' => isset($import['options']['delimiter']) ? $import['options']['delimiter'] : ',',
+	    '#default_value' => isset($import['delimiter']) ? $import['delimiter'] : ',',
 	    '#description' => t("The column delimiter for the file. Use '/t' for Tab."),
 	);
   

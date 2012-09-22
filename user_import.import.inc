@@ -154,6 +154,7 @@ function _user_import_process($settings) {
     $username_data = array();
     $username_order = array();
     $username_abbreviate = array();
+		$first_line_skip = 0;
     
     ini_set('auto_detect_line_endings', true);
     $handle = @fopen($settings['filepath'], "r");

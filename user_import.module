@@ -324,46 +324,56 @@ function theme_user_import_username_errors($errors) {
 // - - - - - - - -  MISC - - - - - - - - 
 
 function _user_import_settings_save($settings) {
+  // Database field defaults.
+  $database_fields = array('import_id' => NULL, 
+													 'name' => '', 
+													 'filename' => '', 
+													 'oldfilename' => '', 
+													 'filepath' => '', 
+													 'started' => 0, 
+													 'pointer' => 0, 
+													 'processed' => 0, 
+													 'valid' => 0, 
+													 'field_match' => array(), 
+													 'roles' => '', 
+													 'options' => array(), 
+													 'settings' => '',
+													);												
 
-  $database_fields = array('import_id', 'name', 'filename', 'oldfilename', 'filepath', 'started', 'pointer', 'processed', 'valid', 'first_line_skip', 'contact', 'username_space', 'send_email', 'field_match', 'roles', 'settings');
+ 	// Form elements we never want to save in the options column.
+  $form_variables = array('form_id', 'form_token', 'form_build_id', 'cancel', 'import', 'submit', 'op', 0, 'return_path');
+  $form_variables = array_flip($form_variables);
 
-	// move all other values into the options field.
+  // Remove settings we don't need in the options column.
+	$options = array_diff_key($settings, $database_fields);
+  $options = array_diff_key($options, $form_variables);
 
-  // move settings into 'options' column
-  // 'options' column will be used to store new control options - instead of creating a new column for each option
-	$options = array('groups', 'existing_og_subscribe', 'existing_og_subject', 'existing_og_markup', 'existing_og_message', 'existing_og_css', 'subject', 'message', 'message_format', 'message_css', 'activate', 'subscribed', 'update_user', 'roles_new', 'delimiter');
-	
-	foreach ($options as $value) {
-		$settings['options'][$value] = isset($settings[$value]) ? $settings[$value] : '';
+  // Set defaults for options.
+	foreach ($options as $key => $value) {
+		$settings['options'][$key] = isset($settings[$key]) ? $settings[$key] : '';
 	}
-	
-	$settings['name'] = isset($settings['name']) ? $settings['name'] : '';
-	$settings['pointer'] = isset($settings['pointer']) ? $settings['pointer'] : 0;
-	$settings['processed'] = isset($settings['processed']) ? $settings['processed'] : 0;
-	$settings['valid'] = isset($settings['valid']) ? $settings['valid'] : 0;
-	$settings['first_line_skip'] = isset($settings['first_line_skip']) ? $settings['first_line_skip'] : 0;
-	$settings['contact'] = isset($settings['contact']) ? $settings['contact'] : 0;
-	$settings['username_space'] = isset($settings['username_space']) ? $settings['username_space'] : 0;
-	$settings['send_email'] = isset($settings['send_email']) ? $settings['send_email'] : 0;
-	$settings['field_match'] = isset($settings['field_match']) ? $settings['field_match'] : array();
-	$settings['roles'] = isset($settings['roles']) ? $settings['roles'] : '';
+
+  // Set defaults for fields. 
+	foreach ($database_fields as $key => $value) {
+		$settings[$key] = isset($settings[$key]) ? $settings[$key] : $value;
+	}
    
    // Update settings for existing import
    if (isset($settings['import_id'])) {
    
        db_query("UPDATE {user_import} 
-           SET name = '%s', filename = '%s', oldfilename = '%s', filepath = '%s', pointer = %d, processed = %d, valid= %d, first_line_skip = %d, contact = %d, username_space = %d, send_email = %d, field_match = '%s', roles = '%s', options = '%s', setting = '%s' 
+           SET name = '%s', filename = '%s', oldfilename = '%s', filepath = '%s', pointer = %d, processed = %d, valid= %d, field_match = '%s', roles = '%s', options = '%s', setting = '%s' 
            WHERE import_id = %d
-           ", trim($settings['name']), $settings['filename'], $settings['oldfilename'], $settings['filepath'], $settings['pointer'], $settings['processed'], $settings['valid'], $settings['first_line_skip'], $settings['contact'], $settings['username_space'], $settings['send_email'], serialize($settings['field_match']), serialize($settings['roles']), serialize($settings['options']), $settings['setting'], $settings['import_id']);
+           ", trim($settings['name']), $settings['filename'], $settings['oldfilename'], $settings['filepath'], $settings['pointer'], $settings['processed'], $settings['valid'], serialize($settings['field_match']), serialize($settings['roles']), serialize($settings['options']), $settings['setting'], $settings['import_id']);
        
    // Save settings for new import
    } 
    else {
 
        db_query("INSERT INTO {user_import} 
-           (name, filename, oldfilename, filepath, started, pointer, processed, valid, first_line_skip, contact, username_space, send_email, field_match, roles, options, setting) 
-           VALUES ('%s', '%s', '%s', '%s', %d, %d, %d, %d, %d, %d, %d, %d, '%s', '%s', '%s', '%s')
-           ", trim($settings['name']), $settings['filename'], $settings['oldfilename'], $settings['filepath'], time(), $settings['pointer'], $settings['processed'], $settings['valid'], $settings['first_line_skip'], $settings['contact'], $settings['username_space'], $settings['send_email'], serialize($settings['field_match']), serialize($settings['roles']), serialize($settings['options']), $settings['setting']);
+           (name, filename, oldfilename, filepath, started, pointer, processed, valid, field_match, roles, options, setting) 
+           VALUES ('%s', '%s', '%s', '%s', %d, %d, %d, %d, '%s', '%s', '%s', '%s')
+           ", trim($settings['name']), $settings['filename'], $settings['oldfilename'], $settings['filepath'], time(), $settings['pointer'], $settings['processed'], $settings['valid'], serialize($settings['field_match']), serialize($settings['roles']), serialize($settings['options']), $settings['setting']);
 
        switch ($GLOBALS['db_type']) {
          case 'mysql':
@@ -386,34 +396,34 @@ function _user_import_settings_select($import_id = NULL, $template = FALSE) {
   if (!empty($import_id) && !is_numeric($import_id)) return;
 
   if (!empty($import_id)) {
-      $sql = 'SELECT * FROM {user_import} WHERE import_id = %d';
-      if ($template) $sql .=  " AND setting = 'template'";
-      $import = db_fetch_array(db_query($sql . ' LIMIT 1', $import_id));
+	  $sql = 'SELECT * FROM {user_import} WHERE import_id = %d';
+	  if ($template) $sql .=  " AND setting = 'template'";
+	  $import = db_fetch_array(db_query($sql . ' LIMIT 1', $import_id));
 
-      if (empty($import)) return FALSE;
-    
-      $import['field_match'] = unserialize($import['field_match']);
-      $import['roles'] = unserialize($import['roles']);
-      $import['options'] = unserialize($import['options']);
-      /**
-       * @todo loop through options and add them to first dimension of array
-       *       i.e. $import['groups'] instead of $import['options']['groups']
-       *       all use of $import['options'][foo] will also need to be updated 
-       */
+	  if (empty($import)) return FALSE;
+
+	  $import['field_match'] = unserialize($import['field_match']);
+	  $import['roles'] = unserialize($import['roles']);
+	  $import['options'] = unserialize($import['options']);
+	
+		foreach ($import['options'] as $key => $value) {
+			$import[$key] = $value;
+		}
   } 
   else {
     
       $query = ($template) ? "SELECT * FROM {user_import} WHERE setting = 'template'" : "SELECT * FROM {user_import} WHERE setting != 'template' ORDER BY started DESC";
       $results = db_query($query);
+
       while ($row = db_fetch_array($results)) {
           $row['field_match'] = unserialize($row['field_match']);
           $row['roles'] = unserialize($row['roles']);
           $row['options'] = unserialize($row['options']);
-        /**
-         * @todo loop through options and add them to first dimension of array
-         *       i.e. $import['groups'] instead of $import['options']['groups']
-         *       all use of $import['options'][foo] will also need to be updated 
-         */
+
+					foreach ($row['options'] as $key => $value) {
+						$row[$key] = $value;
+					}
+
           $import[] = $row;
       }
   }
@@ -448,6 +458,7 @@ function user_import_profile_load($user) {
 function _user_import_unconcatenate_field_match($settings) {
 
   $settings_updated = array();
+
   foreach ($settings as $column_id => $values) {
     
     if (!empty($values['field_match']) || !empty($values['username'])) {

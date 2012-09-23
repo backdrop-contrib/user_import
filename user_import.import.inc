@@ -10,17 +10,32 @@ function user_import_errors($error = FALSE, $clear = FALSE) {
 }
 
 function _user_import_create_username($order, $data, $abbreviate, $username_space) {
-    
+
+  $username = '';
+	 
 	if (is_array($order)) {
 
 	  asort($order);
-	  reset($order);
+	  //reset($order);
 
-	  $username = '';
 
-	  while (list ($file_column, $sequence) = each ($order)) { 
-	    if (!empty($username) && !empty($username_space)) $username .= ' ';
-	    $username .= ($abbreviate[$file_column] == 1) ? trim(drupal_strtoupper(chr(ord($data[$file_column])))) : trim($data[$file_column]);
+	  //while (list ($file_column, $sequence) = each ($order)) {
+    foreach ($order as $file_column => $sequence) {
+
+	    if (!empty($username) && !empty($username_space)) {
+	      $username .= ' ';
+	    }
+	
+	    if ($abbreviate[$file_column] == 1) {
+		    //$username .= trim(drupal_strtoupper(chr(ord($data[$file_column]))));
+		    $first_character = trim($data[$file_column]);
+		    $first_character = drupal_substr($first_character, 0, 1);
+        $username .= drupal_strtoupper($first_character);	
+	    }
+	    else {
+		    $username .= trim($data[$file_column]);
+	    } 
+
 	  }
 	}
 

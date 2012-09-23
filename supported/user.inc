@@ -249,6 +249,7 @@ function _user_import_validate_email($email = NULL, $duplicates_allowed = FALSE)
 }
 
 function user_user_import_roles_data($data, $new_roles_allowed) {
+  $roles = array();
 
   if (empty($data)) return;
   $values = explode( ',', $data);

@@ -540,7 +540,9 @@ function user_import_add_file_form(&$form, $ftp_files = NULL) {
         '#description' => t("Upload a CSV file."),
     );
     
-    if (function_exists('file_upload_max_size')) $file_size = t('Maximum file size: !size MB.', array('!size' => file_upload_max_size()));
+		if (function_exists('file_upload_max_size')) {
+      $file_size = t('Maximum file size: %size.', array('%size' => format_size(file_upload_max_size())));
+    }
 
     $form['browser']['file_upload'] = array(
         '#type' => 'file',

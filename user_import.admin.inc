@@ -519,6 +519,12 @@ function user_import_import_submit($form, &$form_state) {
  * 
  */
 function user_import_edit_submit($form, &$form_state) {
+  // Deal with import being canceled.
+  if ($form_state['clicked_button']['#value'] == t('Cancel')) {
+    $form_state['redirect'] = 'admin/user/user_import';
+	  return;
+  }
+
   module_load_include('inc', 'user_import', 'user_import.import');
 	if ($form_state['values']['setting'] == 'file set') $filepath = file_move($form_state['values']['filepath'], file_directory_path() . '/' . $form_state['values']['filename']);
 	if (!empty($form_state['values']['og_id'])) $form_state['values']['groups'][$form_state['values']['og_id']] = $form_state['values']['og_id'];

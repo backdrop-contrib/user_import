@@ -92,10 +92,9 @@ function user_import_schema() {
       ),
       'roles' => array(      
         'description' => t("Roles to give imported users."), 
-        'type' => 'varchar',
-        'length' => '255',
+        'type' => 'text',
+        'size' => 'big',
         'not null' => TRUE,
-        'default' => '',
         'serialize' => TRUE
       ),
       'options' => array(   
@@ -216,6 +215,15 @@ function user_import_update_6002() {
 	$ret[] = update_sql('ALTER TABLE {user_import} DROP COLUMN username_space');
 	$ret[] = update_sql('ALTER TABLE {user_import} DROP COLUMN send_email');
 	
+  return $ret;
+}
+
+/**
+ * Change the Roles column to LOMGTEXT.
+ */
+function user_import_update_6003() {
+  $ret = array();
+  db_change_field($ret, 'user_import', 'roles', 'roles', array('type' => 'text', 'size' => 'big', 'not null' => TRUE, 'serialize' => TRUE)); 
   return $ret;
 }
 

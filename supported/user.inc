@@ -191,7 +191,6 @@ function user_user_import_edit_roles_fields(&$form, $import, $collapsed) {
 }
 
 function user_user_import_edit_email_fields(&$form, $import, $collapsed) { 
-    $profile_string = ''; // @todo missing.
 
     $form['email_message'] = array(
         '#type' => 'fieldset',
@@ -205,14 +204,14 @@ function user_user_import_edit_email_fields(&$form, $import, $collapsed) {
       '#type' => 'textfield',
       '#title' => t('Message Subject'),
       '#default_value' => isset($import['subject']) ? $import['subject'] : '',
-      '#description' => t('Customize the subject of the welcome e-mail, which is sent to imported members.') .' '. t('Available variables are:') .' !username, !site, !password, !uri, !uri_brief, !mailto, !date, !login_uri, !edit_uri, !login_url' . $profile_string . '.',
+      '#description' => t('Customize the subject of the welcome e-mail, which is sent to imported members.') .' '. t('Available variables are:') .' !username, !site, !password, !uri, !uri_brief, !mailto, !date, !login_uri, !edit_uri, !login_url.',
     ); 
     
     $form['email_message']['message'] = array(
       '#type' => 'textarea',
       '#title' => t('Message'),
       '#default_value' => isset($import['message']) ? $import['message'] : '',
-      '#description' => t('Customize the body of the welcome e-mail, which is sent to imported members.') .' '. t('Available variables are:') .' !username, !site, !password, !uri, !uri_brief, !mailto, !login_uri, !edit_uri, !login_url' . $profile_string . '.',
+      '#description' => t('Customize the body of the welcome e-mail, which is sent to imported members.') .' '. t('Available variables are:') .' !username, !site, !password, !uri, !uri_brief, !mailto, !login_uri, !edit_uri, !login_url.',
     ); 
     
     $form['email_message']['message_format'] = array(

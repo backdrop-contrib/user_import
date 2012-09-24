@@ -91,12 +91,14 @@ check the Drupal web site if you need assistance.
 ADDITIONAL OPTIONS 
 
 * Content Profile Import
+Content Profile module
+http://drupal.org/project/content_profile
 
 If data is to be imported into Content Profile nodes the following module
 needs to be installed and enabled:
  
   Node Import
-  http://drupal.org/project/content_profile
+  http://drupal.org/project/node_import
 
 Note that Date fields are not yet supported.
 

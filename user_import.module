@@ -240,7 +240,7 @@ function theme_user_import_list() {
 
 function theme_user_import_edit($form) {
  
-  $header = array(t('csv column'), t('Drupal fields'), t('username'), t('abbreviate'));
+  $header = array(t('CSV column'), t('Drupal fields'), t('Username'), t('Abbreviate'));
 
   foreach (element_children($form['field_match']) as $key) {
 

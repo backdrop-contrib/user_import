@@ -162,7 +162,7 @@ function _user_import_process($settings) {
 	$username_abbreviate = array();
 	$first_line_skip = 0;
 
-	ini_set('auto_detect_line_endings', true);
+	ini_set('auto_detect_line_endings', TRUE);
 	$handle = @fopen($settings['filepath'], "r");
 
 	// move pointer to where test/import last finished
@@ -188,8 +188,8 @@ function _user_import_process($settings) {
 
 		    // check if this is first line - if so should we skip?
 		    if (!empty($settings['first_line_skip']) && $settings['processed'] == 0) {
-		        // reset to false on second process
-		        $first_line_skip = (empty($first_line_skip)) ? TRUE : FALSE;
+	        // reset to false on second process
+	        $first_line_skip = (empty($first_line_skip)) ? TRUE : FALSE;
 		    }
 
 		    if (!$first_line_skip) {
@@ -266,8 +266,8 @@ function _user_import_process($settings) {
 		    // save lines that have fatal errors
 		    if (!empty($errors)) {
 		      $account_email = isset($account['email']) ? $account['email'] : '';
-		_user_import_errors_display_save($settings['import_id'], $fields, $account_email, $errors);
-		}
+		      _user_import_errors_display_save($settings['import_id'], $fields, $account_email, $errors);
+		    }
 		}
 
 		// Save progress.

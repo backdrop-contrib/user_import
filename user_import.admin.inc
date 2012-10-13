@@ -32,7 +32,7 @@ function user_import_list($action = NULL, $import_id = NULL) {
 
 	} else {
   
-	  $output =  theme_user_import_list();
+	  $output =  theme('user_import_list');
 	}
 
 	return $output;    

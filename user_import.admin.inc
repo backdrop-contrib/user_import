@@ -721,7 +721,7 @@ function  _user_import_incomplete_deletion() {
 
 function user_import_form_field_match(&$form, $import) {
 
-	$delimiter = $import['options']['delimiter'];
+	$delimiter = isset($import['options']['delimiter']) && !empty($import['options']['delimiter']) ? $import['options']['delimiter'] : ',';
   $collapsed = (empty($import['name'])) ? FALSE: TRUE;
   $handle = _user_import_file_open($form['filepath']['#value'], $form['filename']['#value']);
   $data_row = _user_import_file_row($form['filename']['#value'], $handle, $delimiter);

@@ -42,7 +42,7 @@ function profile_user_import_after_save($settings, $account, $password, $fields,
   
   // data column in the user table needs to be updated
   if ($data != $old_data) {   
-    db_query_range("UPDATE {users} SET data = '%s' WHERE uid = %d", serialize($data), $account->uid, 0, 1);
+    db_query("UPDATE {users} SET data = '%s' WHERE uid = %d", serialize($data), $account->uid);
   } 
 
   return;

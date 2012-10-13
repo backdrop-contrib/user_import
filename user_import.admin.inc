@@ -816,6 +816,9 @@ function _user_import_file_row($filename, $handle, $delimiter = ',') {
 // set up all necessary variables
 function _user_import_initialise_import($import) {
 
+	//_user_import_process won't work w/o this include
+	module_load_include('inc', 'user_import', 'user_import.import');
+	
 	switch ($import['setting']) {
 	  case 'imported':
 	      drupal_set_message(t('File has already been imported'), 'error');

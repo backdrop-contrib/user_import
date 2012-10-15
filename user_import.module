@@ -20,16 +20,16 @@ define ('UPDATE_ADD', 2);
 function user_import_theme() {
   return array(
     'user_import_list' => array(
-      'arguments' => array(),
+      'variables' => array(),
     ),
     'user_import_edit' => array(
-      'arguments' => array('form' => NULL),
+      'render element' => 'form',
     ),
     'user_import_errors_display' => array(
-      'arguments' => array('settings' => NULL, 'data' => NULL, 'total' => NULL),
+      'variables' => array('settings' => NULL, 'data' => NULL, 'total' => NULL),
     ),
     'user_import_username_errors' => array(
-      'arguments' => array('errors' => NULL),
+      'variables' => array('errors' => NULL),
     ), 
   );
 }
@@ -39,7 +39,8 @@ function user_import_theme() {
  */
 function user_import_help($path, $arg) {
   switch ($path) {
-    case 'admin/user/user_import':
+    case 'admin/people/user_import
+<p>':
       return t("Import or update users from a comma separated file (csv). Click 'Import' to start a new import.");
   }
 }
@@ -55,50 +56,51 @@ function user_import_perm() {
  * Implementation of hook_menu().
  */
 function user_import_menu() {
-  $items['admin/user/user_import'] = array(
-      'title' => 'User Imports',
+  $items['admin/people/user_import'] = array(
+      'title' => 'Import',
       'description' => 'Import or update users from a comma separated file (csv).',
       'page callback' => 'user_import_list',
       'access arguments' => array('import users'),
+      'type' => MENU_LOCAL_TASK, 
       'file' => 'user_import.admin.inc',
       );
-  $items['admin/user/user_import/list'] = array( 
+  $items['admin/people/user_import/list'] = array( 
       'title' => 'List Imports', 
       'access arguments' => array('import users'),
       'weight' => -10,
       'type' => MENU_DEFAULT_LOCAL_TASK,
       'file' => 'user_import.admin.inc',
       );
-  $items['admin/user/user_import/add'] = array( 
-    'title' => 'Import',
+  $items['admin/people/user_import/add'] = array( 
+    'title' => 'New Import',
     'page callback' => 'user_import_preferences',
     'access arguments' => array('import users'),
     'weight' => -5,
     'type' => MENU_LOCAL_TASK,
     'file' => 'user_import.admin.inc',
   );
-  $items['admin/user/user_import/continue'] = array( 
+  $items['admin/people/user_import/continue'] = array( 
     'title' => 'Continue',
     'page callback' => 'user_import_continue',
     'access arguments' => array('import users'),
     'type' => MENU_CALLBACK,
     'file' => 'user_import.admin.inc',
   );
-  $items['admin/user/user_import/import'] = array( 
+  $items['admin/people/user_import/import'] = array( 
     'title' => 'Import',
     'page callback' => 'user_import_import',
     'access arguments' => array('import users'),
     'type' => MENU_CALLBACK,
     'file' => 'user_import.admin.inc',
   );
-  $items['admin/user/user_import/delete'] = array(
+  $items['admin/people/user_import/delete'] = array(
     'title' => 'Delete Import',
     'page callback' => 'user_import_delete',
     'access arguments' => array('import users'),
     'type' => MENU_CALLBACK,
     'file' => 'user_import.admin.inc',
   );
-  $items['admin/user/user_import/configure'] = array(
+  $items['admin/people/user_import/configure'] = array(
     'title' => 'Configure',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('user_import_configure_form'),
@@ -121,6 +123,7 @@ function user_import_menu() {
 
   return $items;
 }
+
 
 /**
  * Implementation of hook_cron().
@@ -210,7 +213,8 @@ function theme_user_import_list() {
                   
       // info row
       $errors = db_result(db_query("SELECT COUNT(import_id) FROM {user_import_errors} WHERE import_id = %d", $import['import_id']));         
-      $errors_link = ($errors == 0) ? '0': l($errors, 'admin/user/user_import/errors/' . $import['import_id']);           
+      $errors_link = ($errors == 0) ? '0': l($errors, 'admin/people/user_import
+<p>/errors/' . $import['import_id']);           
       
       $rows[0] = array(
           check_plain($import['oldfilename']),
@@ -224,10 +228,14 @@ function theme_user_import_list() {
       $output .= theme('table', $header, $rows);
       
       // action buttons
-      $settings_link = l(t('Settings'), 'admin/user/user_import/add/' . $import['import_id']);
-      $delete_link = l(t('Delete'), 'admin/user/user_import/delete/' . $import['import_id']);
-      $continue_link = l(t('Continue Processing'), 'admin/user/user_import/continue/' . $import['import_id']);
-      $import_link = l(t('Import'), 'admin/user/user_import/import/' . $import['import_id']);
+      $settings_link = l(t('Settings'), 'admin/people/user_import
+<p>/add/' . $import['import_id']);
+      $delete_link = l(t('Delete'), 'admin/people/user_import
+<p>/delete/' . $import['import_id']);
+      $continue_link = l(t('Continue Processing'), 'admin/people/user_import
+<p>/continue/' . $import['import_id']);
+      $import_link = l(t('Import'), 'admin/people/user_import
+<p>/import/' . $import['import_id']);
       
       $output .= $settings_link  . ' | ';   
       $output .= $delete_link;   
@@ -238,8 +246,11 @@ function theme_user_import_list() {
   return $output;
 }
 
-function theme_user_import_edit($form) {
- 
+function theme_user_import_edit($variables) {
+
+  $output = '';
+  $rows = array();
+  $form = $variables['form'];
   $header = array(t('CSV column'), t('Drupal fields'), t('Username'), t('Abbreviate'));
 
   foreach (element_children($form['field_match']) as $key) {
@@ -252,12 +263,21 @@ function theme_user_import_edit($form) {
 	  );
   }
 
-  $form['field_match']['#value'] = theme('table', $header, $rows);
+  $form['field_match']['#value'] = theme('table', array('header' => $header, 'rows' => $rows));
 
-  $output = drupal_render($form['remove']);
-  $output .= drupal_render($form['options']);
-  $output .= drupal_render($form['field_match']);
-  $output .= drupal_render($form);
+  if (isset($form['remove'])){
+      $output .= drupal_render($form['remove']);
+  }
+
+  if (isset($form['options'])){
+      $output .= drupal_render($form['options']);
+  }
+
+  if (isset($form['field_match'])){
+      $output .= drupal_render($form['field_match']);
+  }
+
+  $output .= drupal_render_children($form);
   return $output;
 }
 
@@ -358,86 +378,133 @@ function _user_import_settings_save($settings) {
 		$settings[$key] = isset($settings[$key]) ? $settings[$key] : $value;
 	}
    
-   // Update settings for existing import
-   if (isset($settings['import_id'])) {
-   
-       db_query("UPDATE {user_import} 
-           SET name = '%s', filename = '%s', oldfilename = '%s', filepath = '%s', pointer = %d, processed = %d, valid= %d, field_match = '%s', roles = '%s', options = '%s', setting = '%s' 
-           WHERE import_id = %d
-           ", trim($settings['name']), $settings['filename'], $settings['oldfilename'], $settings['filepath'], $settings['pointer'], $settings['processed'], $settings['valid'], serialize($settings['field_match']), serialize($settings['roles']), serialize($settings['options']), $settings['setting'], $settings['import_id']);
-       
-   // Save settings for new import
-   } 
-   else {
+	// Update settings for existing import.
+  if (isset($settings['import_id'])) {
 
-       db_query("INSERT INTO {user_import} 
-           (name, filename, oldfilename, filepath, started, pointer, processed, valid, field_match, roles, options, setting) 
-           VALUES ('%s', '%s', '%s', '%s', %d, %d, %d, %d, '%s', '%s', '%s', '%s')
-           ", trim($settings['name']), $settings['filename'], $settings['oldfilename'], $settings['filepath'], time(), $settings['pointer'], $settings['processed'], $settings['valid'], serialize($settings['field_match']), serialize($settings['roles']), serialize($settings['options']), $settings['setting']);
+		$table = 'user_import'; 
+		$record = new stdClass();
+		$record->name = trim($settings['name']);
+		$record->filename = trim($settings['filename']);
+		$record->oldfilename = $settings['oldfilename'];
+		$record->filepath = $settings['filepath'];
+		$record->pointer = $settings['pointer'];
+		$record->processed = $settings['processed'];
+		$record->valid = $settings['valid'];
+		$record->field_match = $settings['field_match']; // S
+		$record->roles = $settings['roles']; // S
+		$record->options = $settings['options']; // S
+		$record->setting = $settings['setting'];  
 
-       switch ($GLOBALS['db_type']) {
-         case 'mysql':
-         case 'mysqli':
-           $settings['import_id'] = db_result(db_query("SELECT LAST_INSERT_ID()"));
-           break;
-         case 'pgsql':
-           $settings['import_id'] = db_result(db_query("SELECT currval('{user_import_import_id_seq}')"));
-           break;
-       }
-   }
+		drupal_write_record($table, $record, 'import_id');  
    
-   return $settings;
+       // db_query("UPDATE {user_import} 
+       //     SET name = '%s', filename = '%s', oldfilename = '%s', filepath = '%s', pointer = %d, processed = %d, valid= %d, field_match = '%s', roles = '%s', options = '%s', setting = '%s' 
+       //     WHERE import_id = %d
+       //     ", trim($settings['name']), $settings['filename'], $settings['oldfilename'], $settings['filepath'], $settings['pointer'], $settings['processed'], $settings['valid'], serialize($settings['field_match']), serialize($settings['roles']), serialize($settings['options']), $settings['setting'], $settings['import_id']);
+       //     
+
+	} 
+  else { 
+    // Save settings for new import.
+		$table = 'user_import'; 
+		$record = new stdClass();
+		$record->name = trim($settings['name']);
+		$record->filename = trim($settings['filename']);
+		$record->oldfilename = $settings['oldfilename'];
+		$record->filepath = $settings['filepath']; 
+		$record->started = time();
+		$record->pointer = $settings['pointer'];
+		$record->processed = $settings['processed'];
+		$record->valid = $settings['valid'];
+		$record->field_match = $settings['field_match']; // S
+		$record->roles = $settings['roles']; // S
+		$record->options = $settings['options']; // S
+		$record->setting = $settings['setting'];  
+
+		drupal_write_record($table, $record); 
+
+	  $settings['import_id'] = $record->import_id;
+
+       // db_query("INSERT INTO {user_import} 
+       //     (name, filename, oldfilename, filepath, started, pointer, processed, valid, field_match, roles, options, setting) 
+       //     VALUES ('%s', '%s', '%s', '%s', %d, %d, %d, %d, '%s', '%s', '%s', '%s')
+       //     ", trim($settings['name']), $settings['filename'], $settings['oldfilename'], $settings['filepath'], time(), $settings['pointer'], $settings['processed'], 
+       //      $settings['valid'], serialize($settings['field_match']), serialize($settings['roles']), serialize($settings['options']), $settings['setting']);
+       // 
+       // switch ($GLOBALS['db_type']) {
+       //   case 'mysql':
+       //   case 'mysqli':
+       //     $settings['import_id'] = db_result(db_query("SELECT LAST_INSERT_ID()"));
+       //     break;
+       //   case 'pgsql':
+       //     $settings['import_id'] = db_result(db_query("SELECT currval('{user_import_import_id_seq}')"));
+       //     break;
+       // }
+  }
+   
+  return $settings;
 }
 
 /**
  *  Return either a single import setting, or all template, or all non-template settings.
  */
 function _user_import_settings_select($import_id = NULL, $template = FALSE) {
-
   $import = array();
 
   if (!empty($import_id) && !is_numeric($import_id)) return;
 
   if (!empty($import_id)) {
-	  $sql = 'SELECT * FROM {user_import} WHERE import_id = %d';
+	  $sql = 'SELECT * FROM {user_import} WHERE import_id = :import_id';
 	  if ($template) $sql .=  " AND setting = 'template'";
-	  $import = db_fetch_array(db_query_range($sql, $import_id, 0, 1));
+	
+	
+	  $import = (array) db_query_range($sql, 0, 1, array(':import_id' => $import_id))->fetchObject();
 
 	  if (empty($import)) return FALSE;
 
 	  $import['field_match'] = unserialize($import['field_match']);
 	  $import['roles'] = unserialize($import['roles']);
 	  $import['options'] = unserialize($import['options']);
-	
-		foreach ($import['options'] as $key => $value) {
-			$import[$key] = $value;
-		}
+   
+	  if (is_array($import['options'])) {
+			foreach ($import['options'] as $key => $value) {
+				$import[$key] = $value;
+			}
+	  }
   } 
   else {
     
-      $query = ($template) ? "SELECT * FROM {user_import} WHERE setting = 'template'" : "SELECT * FROM {user_import} WHERE setting != 'template' ORDER BY started DESC";
-      $results = db_query($query);
+	  $query = ($template) ? "SELECT * FROM {user_import} WHERE setting = 'template'" : "SELECT * FROM {user_import} WHERE setting != 'template' ORDER BY started DESC";
+	  $result = db_query($query);
 
-      while ($row = db_fetch_array($results)) {
-          $row['field_match'] = unserialize($row['field_match']);
-          $row['roles'] = unserialize($row['roles']);
-          $row['options'] = unserialize($row['options']);
+	  foreach ($result as $row_data) {
+	      $row = (array) $row_data;
+	      $row['field_match'] = unserialize($row['field_match']);
+	      $row['roles'] = unserialize($row['roles']);
+	      $row['options'] = unserialize($row['options']);
 
-					foreach ($row['options'] as $key => $value) {
-						$row[$key] = $value;
-					}
+		foreach ($row['options'] as $key => $value) {
+			$row[$key] = $value;
+		}
 
-          $import[] = $row;
-      }
+	      $import[] = $row;
+	  }
   }
 
   return $import;      
 }
 
 function _user_import_settings_deletion($import_id) {
-
-    db_query("DELETE FROM {user_import} WHERE import_id = %d", $import_id);
-    db_query("DELETE FROM {user_import_errors} WHERE import_id = %d", $import_id);
+    db_delete('user_import')
+			->condition('import_id', $import_id)
+			->execute();
+			
+    db_delete('user_import_errors')
+			->condition('import_id', $import_id)
+			->execute();
+			
+    //db_query("DELETE FROM {user_import} WHERE import_id = %d", $import_id);
+    //db_query("DELETE FROM {user_import_errors} WHERE import_id = %d", $import_id);
     return;
 }
 
@@ -493,12 +560,11 @@ function user_import_load_supported() {
 
   if (!$loaded) {
     $path = drupal_get_path('module', 'user_import') . '/supported';
-    $files = drupal_system_listing('.*\.inc$', $path, 'name', 0);
+    $files = drupal_system_listing("/\.inc$/", $path, 'name', 0);
 
     foreach ($files as $module_name => $file) {
-
-      if (module_exists($module_name)) {
-        include_once($file->filename);
+      if (module_exists($module_name)) { 
+        include_once($file->uri);
       }
     }
 

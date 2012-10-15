@@ -310,7 +310,8 @@ function user_import_edit_remove_file_validate($form, &$form_state) {
   $settings = _user_import_settings_select($form_state['values']['import_id']);
   _user_import_settings_deletion($form_state['values']['import_id']);
   _user_import_file_deletion($settings['filepath'], $settings['filename'], $settings['oldfilename'], $settings['options']['ftp']);
-  drupal_goto('admin/user/user_import/add');  
+  drupal_goto('admin/people/user_import
+<p>/add');  
 }
 
 function _user_import_publication_email(&$variables, $account, $subscribed, $format) {

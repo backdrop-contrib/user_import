@@ -6,15 +6,6 @@
  */
 
 /**
- * Implementation of hook_install()
- */
-function user_import_install() {
-  // Create tables.
-  drupal_install_schema('user_import');
-  return;
-}
-
-/**
 * Implementation of hook_schema(). 
 */
 function user_import_schema() {
@@ -231,7 +222,6 @@ function user_import_update_6003() {
 * Implementation of hook_uninstall().
 */
 function user_import_uninstall() {
-  drupal_uninstall_schema('user_import');
   variable_del('user_import_settings');
   variable_del('user_import_max');
   variable_del('user_import_line_max');

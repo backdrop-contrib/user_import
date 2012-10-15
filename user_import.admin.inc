@@ -57,7 +57,8 @@ function user_import_continue($import_id = NULL) {
 		_user_import_process($import);
 	}
 
-	drupal_goto('admin/user/user_import');
+	drupal_goto('admin/people/user_import
+<p>');
 }
 
 function user_import_import($import_id = NULL) {
@@ -68,10 +69,11 @@ function user_import_import($import_id = NULL) {
 		_user_import_initialise_import($import); 
 	}
 
-	drupal_goto('admin/user/user_import');
+	drupal_goto('admin/people/user_import
+<p>');
 }
 
-function user_import_delete($import_id = NULL, $return_path = 'admin/user/user_import') {
+function user_import_delete($import_id = NULL, $return_path = 'admin/people/user_import') {
 
 	if (empty($import_id) || !is_numeric($import_id)) drupal_goto($return_path);
     
@@ -224,7 +226,8 @@ function user_import_configure_form_submit($form, &$form_state) {
   if (!empty($deleted)) drupal_set_message(t('Settings templates deleted: @deleted', array('@deleted' => $deleted)));
 
   drupal_set_message(t('Configuration settings have been saved.'));
-  $form_state['redirect'] = 'admin/user/user_import';
+  $form_state['redirect'] = 'admin/people/user_import
+<p>';
 }
 
 function user_import_add_form($import_id = NULL) {
@@ -278,7 +281,7 @@ function user_import_add_form_validate($form, &$form_state) {
 }
 
 function user_import_add_form_submit($form, &$form_state) {
-  $settings_template = '';
+  $redirect = 'admin/people/user_import/add/';
   $file = _user_import_file(NULL, $form_state['values']['file_ftp']);
   $form_state['values']['ftp'] = empty($form_state['values']['file_ftp']) ? FALSE : TRUE;
   $form_state['values']['filename'] = $file->filename;
@@ -288,9 +291,13 @@ function user_import_add_form_submit($form, &$form_state) {
 
   // create import setting
   $import = _user_import_settings_save($form_state['values']);
-  if (!empty($form_state['values']['import_template_select'])) $settings_template = check_plain($form_state['values']['import_template_select']);
+  $redirect .= $import['import_id'];
 
-  $form_state['redirect'] = 'admin/user/user_import/add/'. $import['import_id'] .'/'. $settings_template; 
+  if (!empty($form_state['values']['import_template_select'])) {
+	  $redirect .= '/'. check_plain($form_state['values']['import_template_select']);
+	}
+
+  $form_state['redirect'] = $redirect; 
 }
 
 function user_import_delimiter_form(&$form, $value = ',') {
@@ -312,12 +319,13 @@ function user_import_delimiter_form(&$form, $value = ',') {
   );
 }
 
-function user_import_edit($form_state, $import_id, $template_id = NULL) {
+function user_import_edit($form, $form_state, $import_id, $template_id = NULL) {
 
   // load code for supported modules  
   user_import_load_supported();
 
   $form = array();
+
   $import = _user_import_settings_select($import_id);
   $import['template_id'] = $template_id;
 
@@ -327,8 +335,10 @@ function user_import_edit($form_state, $import_id, $template_id = NULL) {
   );
   
   // add setting template values
-  if ($import['setting'] == 'file set') $import = _user_import_initialise_import($import);
-  
+  if ($import['setting'] == 'file set') {
+    $import = _user_import_initialise_import($import);
+  } 
+
   $form['import_id'] = array(
       '#type' => 'value', 
       '#value' => $import_id,
@@ -341,7 +351,7 @@ function user_import_edit($form_state, $import_id, $template_id = NULL) {
   
   $form['return_path'] = array(
       '#type' => 'value', 
-      '#default_value' => 'admin/user/user_import',
+      '#default_value' => 'admin/people/user_import',
   );
   
   $form['og_id'] = array(
@@ -422,7 +432,8 @@ function user_import_edit_cancel_validate($form, &$form_state) {
 	  _user_import_file_deletion($settings['filepath'], $settings['filename'], $settings['oldfilename'], $settings['options']['ftp']); 
   }
 
-  $form_state['redirect'] = 'admin/user/user_import'; 
+  $form_state['redirect'] = 'admin/people/user_import
+<p>'; 
 }
 
 function user_import_edit_validate($form, &$form_state) {
@@ -471,7 +482,8 @@ function user_import_template_new_submit($form, &$form_state) {
   drupal_set_message(t("'%name' was saved as a settings template.", array('%name' => $form_state['values']['name'])));
 
   // reload settings page
-  $form_state['redirect'] = 'admin/user/user_import/add/' . $import_id;
+  $form_state['redirect'] = 'admin/people/user_import
+<p>/add/' . $import_id;
   return; 
 }
 
@@ -495,7 +507,8 @@ function user_import_template_update_submit($form, &$form_state) {
   drupal_set_message (t("'%name' settings template was updated.", array('%name' => $form['#current_template'])));
 
   // reload settings page
-  $form_state['redirect'] = 'admin/user/user_import/add/' . $import_id;
+  $form_state['redirect'] = 'admin/people/user_import
+<p>/add/' . $import_id;
   return; 
 }
 
@@ -521,7 +534,8 @@ function user_import_import_submit($form, &$form_state) {
 function user_import_edit_submit($form, &$form_state) {
   // Deal with import being canceled.
   if ($form_state['clicked_button']['#value'] == t('Cancel')) {
-    $form_state['redirect'] = 'admin/user/user_import';
+    $form_state['redirect'] = 'admin/people/user_import
+<p>';
 	  return;
   }
 
@@ -706,9 +720,9 @@ function _user_import_ftp_files() {
 // delete incomplete import settings, where only the file has been uploaded
 function  _user_import_incomplete_deletion() {
 
-  $results = db_query("SELECT * FROM {user_import} WHERE setting = 'file set'");
+  $result = db_query("SELECT * FROM {user_import} WHERE setting = 'file set'");
 
-  while ($import = db_fetch_object($results)) {
+	foreach ($result as $import) {
     $options = unserialize($import->options);
     _user_import_file_deletion($import->filepath, $import->filename, $import->oldfilename, $options['ftp'], FALSE);
     _user_import_settings_deletion($import->import_id); 
@@ -720,7 +734,7 @@ function  _user_import_incomplete_deletion() {
 // - - - - - - - -  MISC - - - - - - - - 
 
 function user_import_form_field_match(&$form, $import) {
-
+	
 	$delimiter = isset($import['options']['delimiter']) && !empty($import['options']['delimiter']) ? $import['options']['delimiter'] : ',';
   $collapsed = (empty($import['name'])) ? FALSE: TRUE;
   $handle = _user_import_file_open($form['filepath']['#value'], $form['filename']['#value']);
@@ -732,7 +746,7 @@ function user_import_form_field_match(&$form, $import) {
 		'<strong>'. t('Abbreviate') .':</strong> '. t("Use the first letter of a field in uppercase for the Username, e.g. 'john' -> 'J'."), 
   );
 
-  $fieldmatch_description = theme('item_list', $fieldmatch_description_parts);
+  $fieldmatch_description = theme('item_list', array('items' => $fieldmatch_description_parts));
   
   $form['field_match'] = array(
       '#type' => 'fieldset',
@@ -770,7 +784,7 @@ function user_import_form_field_match(&$form, $import) {
       );
  
       $form['field_match'][$row]['csv'] = array( 
-          '#value' => check_plain(drupal_substr($data_cell, 0, 40)),
+          '#markup' => check_plain(drupal_substr($data_cell, 0, 40)),
       );
   
       $form['field_match'][$row]['field_match'] = array( 

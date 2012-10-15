@@ -3,7 +3,7 @@
 ********************************************************************
 Name: user import module
 Author: Robert Castelo <www.codepositive.com>
-Drupal: 6.x
+Drupal: 7.x
 ********************************************************************
 DESCRIPTION:
 

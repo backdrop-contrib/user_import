@@ -16,7 +16,8 @@ class UserImportWebTestCase extends DrupalWebTestCase {
   */ 
   function settingsFileSelect() {
     $edit = array('file_ftp' => 1);
-    $this->drupalPost('admin/user/user_import/add', $edit, 'Next');
+    $this->drupalPost('admin/people/user_import
+<p>/add', $edit, 'Next');
 
     /* Check file was selected */
     $this->assertText(t('Use Different CSV File'), '[assert] File was selected');
@@ -302,7 +303,8 @@ class UserImportNodeprofileTestCase extends UserImportWebTestCase {
 
     // set access perm for authenticated users to creade profile nodes
     $edit = array('2[create identity content]' => 'create identity content', '2[create biography content]' => 'create biography content', '2[create contact_details content]' => 'create contact_details content');
-    $this->drupalPost('admin/user/permissions', $edit, t('Save permissions')); 
+    $this->drupalPost('admin/people/
+<p>permissions', $edit, t('Save permissions')); 
   }
 
 
@@ -477,35 +479,43 @@ class UserImportProfileTestCase extends UserImportWebTestCase {
     
     // Textfield
     $edit = array('category' => 'Name', 'title' => 'First Name', 'name' => 'profile_first_name'); 
-    $this->drupalPost('admin/user/profile/add/textfield', $edit, t('Save field'));
+    $this->drupalPost('admin/people/
+<p>profile/add/textfield', $edit, t('Save field'));
   
     // Textfield 
     $edit = array('category' => 'Name', 'title' => 'Last Name', 'name' => 'profile_last_name'); 
-    $this->drupalPost('admin/user/profile/add/textfield', $edit, t('Save field'));
+    $this->drupalPost('admin/people/
+<p>profile/add/textfield', $edit, t('Save field'));
   
     // Textarea
     $edit = array('category' => 'Biography', 'title' => 'CV', 'name' => 'profile_cv'); 
-    $this->drupalPost('admin/user/profile/add/textarea', $edit, t('Save field'));
+    $this->drupalPost('admin/people/
+<p>profile/add/textarea', $edit, t('Save field'));
   
     // Checkbox
     $edit = array('category' => 'Contact Details', 'title' => 'Can Be Contacted', 'name' => 'profile_contact_permission'); 
-    $this->drupalPost('admin/user/profile/add/checkbox', $edit, t('Save field'));
+    $this->drupalPost('admin/people/
+<p>profile/add/checkbox', $edit, t('Save field'));
   
     // List
     $edit = array('category' => 'Contact Details', 'title' => 'Contact Preference', 'name' => 'profile_contact_preference', 'options' => 'email,telephone,post'); 
-    $this->drupalPost('admin/user/profile/add/selection', $edit, t('Save field'));
+    $this->drupalPost('admin/people/
+<p>profile/add/selection', $edit, t('Save field'));
   
     // Freeform List
     $edit = array('category' => 'Biography', 'title' => 'Interests', 'name' => 'profile_interests'); 
-    $this->drupalPost('admin/user/profile/add/list', $edit, t('Save field'));  
+    $this->drupalPost('admin/people/
+<p>profile/add/list', $edit, t('Save field'));  
   
     // URL
     $edit = array('category' => 'Biography', 'title' => 'Blog', 'name' => 'profile_blog'); 
-    $this->drupalPost('admin/user/profile/add/url', $edit, t('Save field')); 
+    $this->drupalPost('admin/people/
+<p>profile/add/url', $edit, t('Save field')); 
   
     // Date
     $edit = array('category' => 'Biography', 'title' => 'Birthday', 'name' => 'profile_birthday'); 
-    $this->drupalPost('admin/user/profile/add/date', $edit, t('Save field'));
+    $this->drupalPost('admin/people/
+<p>profile/add/date', $edit, t('Save field'));
   } 
   
   /**

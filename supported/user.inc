@@ -8,7 +8,6 @@
  * Implementation of hook_user_import_form_field_match().
  */
 function user_user_import_form_field_match() {
-
   $options = array();
   $options['user']['email'] = t('Email Address*');
   $options['user']['password'] = t('Password'); 
@@ -16,6 +15,9 @@ function user_user_import_form_field_match() {
 	// $options['user']['username'] = t('Username');
 	// $options['user']['uid'] = t('UID');
 	// $options['user']['modified'] = t('Modified');
+	// $options['user']['picture_uri'] = t('Picture');
+	// $options['user']['timezone'] = t('Timezone');
+  // $options['user']['md5_password'] = t('Password MD5'); 	
   return $options;
 }
 
@@ -198,7 +200,8 @@ function user_user_import_edit_email_fields(&$form, $import, $collapsed) {
     $form['email_message'] = array(
         '#type' => 'fieldset',
         '#title' => t('Email Message'),
-        '#description' => t('Welcome message to be sent to imported users. Leave blank to use the default !message. If an existing user account is updated no welcome email will be sent to that user. <strong>Note - if "Activate Accounts" option is enabled !login_url (one time login) will not work.</strong>', array('!message' => l('message', 'admin/user/settings'))),
+        '#description' => t('Welcome message to be sent to imported users. Leave blank to use the default !message. If an existing user account is updated no welcome email will be sent to that user. <strong>Note - if "Activate Accounts" option is enabled !login_url (one time login) will not work.</strong>', array('!message' => l('message', 'admin/people/
+<p>settings'))),
         '#collapsible' => TRUE,
         '#collapsed' => $collapsed,
     );

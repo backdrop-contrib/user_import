@@ -16,8 +16,7 @@ class UserImportWebTestCase extends DrupalWebTestCase {
   */ 
   function settingsFileSelect() {
     $edit = array('file_ftp' => 1);
-    $this->drupalPost('admin/people/user_import
-<p>/add', $edit, 'Next');
+    $this->drupalPost('admin/people/user_import/add', $edit, 'Next');
 
     /* Check file was selected */
     $this->assertText(t('Use Different CSV File'), '[assert] File was selected');

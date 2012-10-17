@@ -27,8 +27,8 @@ function user_import_list($action = NULL, $import_id = NULL) {
 	      $file_lines[] = $line;
 	  }
   
-	  $output = theme('user_import_errors_display', $import, $file_lines, $total);
-	  $output .= theme('pager', NULL, $max, $pager_id);
+    $output = theme('user_import_errors_display', array('import' => $import, 'file_lines' => $file_lines, 'total' => $total));
+    $output .= theme('pager', array('max' => $max, 'page_id' => $pager_id));
 
 	} else {
   
@@ -57,8 +57,7 @@ function user_import_continue($import_id = NULL) {
 		_user_import_process($import);
 	}
 
-	drupal_goto('admin/people/user_import
-<p>');
+	drupal_goto('admin/people/user_import');
 }
 
 function user_import_import($import_id = NULL) {
@@ -69,8 +68,7 @@ function user_import_import($import_id = NULL) {
 		_user_import_initialise_import($import); 
 	}
 
-	drupal_goto('admin/people/user_import
-<p>');
+	drupal_goto('admin/people/user_import');
 }
 
 function user_import_delete($import_id = NULL, $return_path = 'admin/people/user_import') {
@@ -226,8 +224,7 @@ function user_import_configure_form_submit($form, &$form_state) {
   if (!empty($deleted)) drupal_set_message(t('Settings templates deleted: @deleted', array('@deleted' => $deleted)));
 
   drupal_set_message(t('Configuration settings have been saved.'));
-  $form_state['redirect'] = 'admin/people/user_import
-<p>';
+  $form_state['redirect'] = 'admin/people/user_import';
 }
 
 function user_import_add_form($import_id = NULL) {
@@ -283,10 +280,11 @@ function user_import_add_form_validate($form, &$form_state) {
 function user_import_add_form_submit($form, &$form_state) {
   $redirect = 'admin/people/user_import/add/';
   $file = _user_import_file(NULL, $form_state['values']['file_ftp']);
+
   $form_state['values']['ftp'] = empty($form_state['values']['file_ftp']) ? FALSE : TRUE;
   $form_state['values']['filename'] = $file->filename;
   $form_state['values']['oldfilename'] = $file->filename;
-  $form_state['values']['filepath'] = $file->filepath;
+  $form_state['values']['filepath'] = $file->uri;
   $form_state['values']['setting'] = 'file set';
 
   // create import setting
@@ -432,8 +430,7 @@ function user_import_edit_cancel_validate($form, &$form_state) {
 	  _user_import_file_deletion($settings['filepath'], $settings['filename'], $settings['oldfilename'], $settings['options']['ftp']); 
   }
 
-  $form_state['redirect'] = 'admin/people/user_import
-<p>'; 
+  $form_state['redirect'] = 'admin/people/user_import'; 
 }
 
 function user_import_edit_validate($form, &$form_state) {
@@ -482,8 +479,7 @@ function user_import_template_new_submit($form, &$form_state) {
   drupal_set_message(t("'%name' was saved as a settings template.", array('%name' => $form_state['values']['name'])));
 
   // reload settings page
-  $form_state['redirect'] = 'admin/people/user_import
-<p>/add/' . $import_id;
+  $form_state['redirect'] = 'admin/people/user_import/add/' . $import_id;
   return; 
 }
 
@@ -507,8 +503,7 @@ function user_import_template_update_submit($form, &$form_state) {
   drupal_set_message (t("'%name' settings template was updated.", array('%name' => $form['#current_template'])));
 
   // reload settings page
-  $form_state['redirect'] = 'admin/people/user_import
-<p>/add/' . $import_id;
+  $form_state['redirect'] = 'admin/people/user_import/add/' . $import_id;
   return; 
 }
 
@@ -534,13 +529,20 @@ function user_import_import_submit($form, &$form_state) {
 function user_import_edit_submit($form, &$form_state) {
   // Deal with import being canceled.
   if ($form_state['clicked_button']['#value'] == t('Cancel')) {
-    $form_state['redirect'] = 'admin/people/user_import
-<p>';
+    $form_state['redirect'] = 'admin/people/user_import';
 	  return;
   }
 
+  // Load import functions.
   module_load_include('inc', 'user_import', 'user_import.import');
-	if ($form_state['values']['setting'] == 'file set') $filepath = file_move($form_state['values']['filepath'], file_directory_path() . '/' . $form_state['values']['filename']);
+
+	if ($form_state['values']['setting'] == 'file set') {
+    $file = new stdClass();
+    $file->uri = $form_state['values']['filepath'];
+    $file->filename = $form_state['values']['filename'];
+		$filepath = file_move($file, file_directory_path() .'/'. $form_state['values']['filename']);
+	}
+	
 	if (!empty($form_state['values']['og_id'])) $form_state['values']['groups'][$form_state['values']['og_id']] = $form_state['values']['og_id'];
 	$form_state['values']['ftp'] = $form_state['values']['ftp'];
   $form_state['values'] = _user_import_settings_save($form_state['values']);
@@ -646,7 +648,12 @@ function _user_import_file_deletion($filepath, $filename, $old_filename, $ftp, $
     return; 
   } 
   
-  $removed = file_delete($filepath);
+  $file = new stdClass();
+  $file->uri = $filepath;
+  $file->filename = $filename;
+  $file->fid = db_query("SELECT fid FROM {file_managed} WHERE uri = :filepath", array(':filepath' => $filepath))->fetchField();;
+
+  $removed = file_delete($file);
 
   if (!$message) return;
 
@@ -672,7 +679,7 @@ function _user_import_file($import_id = NULL, $ftp_file_selected = NULL) {
     if (!empty($file)) return $file;
     
     // file was uploaded through browser
-    $file = file_save_upload('file_upload');
+    $file = file_save_upload('file_upload', array('file_validate_extensions' => array('csv txt')));
     if (!empty($file) ) return $file;
     
     // file was uploaded by FTP
@@ -681,6 +688,7 @@ function _user_import_file($import_id = NULL, $ftp_file_selected = NULL) {
         $filepath = drupal_get_path('module', 'user_import');
         $filename = $ftp_files[$ftp_file_selected];
         $file = new stdClass();
+        $file->uri = "$filepath/$filename";
         $file->filepath = "$filepath/$filename";
         $file->filename = $filename;
         return $file;
@@ -689,6 +697,7 @@ function _user_import_file($import_id = NULL, $ftp_file_selected = NULL) {
    // use file info stored in database
    if (!empty($import_id)) {
         $import = _user_import_settings_select($import_id);
+        $file->uri = $import['filepath'];
         $file->filepath = $import['filepath'];
         $file->oldfilename = $import['oldfilename'];
         $file->filename = $import['filename'];

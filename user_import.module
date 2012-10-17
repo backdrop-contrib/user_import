@@ -184,8 +184,8 @@ function user_import_limited_errors($import_id = NULL, $template_id = NULL) {
       $file_lines[] = $line;
     }
  
-    $output .= theme('user_import_errors_display', $import, $file_lines, $total);
-    $output .= theme('pager', NULL, $max, $pager_id); 
+    $output .= theme('user_import_errors_display', array('import' => $import, 'file_lines' => $file_lines, 'total' => $total));
+    $output .= theme('pager', array('max' => $max, 'pager_id' => $pager_id)); 
   }
   
   $output .= l(t('Return'), "user_import/$template_id/$import_id");
@@ -212,9 +212,8 @@ function theme_user_import_list() {
       $header = array(t('file'), t('started'), t('processed'), $import_label, t('errors'), t('status'));
                   
       // info row
-      $errors = db_result(db_query("SELECT COUNT(import_id) FROM {user_import_errors} WHERE import_id = %d", $import['import_id']));         
-      $errors_link = ($errors == 0) ? '0': l($errors, 'admin/people/user_import
-<p>/errors/' . $import['import_id']);           
+      $errors = db_query('SELECT COUNT(import_id) FROM {user_import_errors} WHERE import_id = :import_id', array(':import_id' => $import['import_id']))->fetchField();         
+      $errors_link = ($errors == 0) ? '0': l($errors, 'admin/people/user_import/errors/' . $import['import_id']);           
       
       $rows[0] = array(
           check_plain($import['oldfilename']),
@@ -225,17 +224,13 @@ function theme_user_import_list() {
           $import['setting'],
       );
       
-      $output .= theme('table', $header, $rows);
+      $output .= theme('table', array('header' => $header, 'rows' => $rows));
       
       // action buttons
-      $settings_link = l(t('Settings'), 'admin/people/user_import
-<p>/add/' . $import['import_id']);
-      $delete_link = l(t('Delete'), 'admin/people/user_import
-<p>/delete/' . $import['import_id']);
-      $continue_link = l(t('Continue Processing'), 'admin/people/user_import
-<p>/continue/' . $import['import_id']);
-      $import_link = l(t('Import'), 'admin/people/user_import
-<p>/import/' . $import['import_id']);
+      $settings_link = l(t('Settings'), 'admin/people/user_import/add/' . $import['import_id']);
+      $delete_link = l(t('Delete'), 'admin/people/user_import/delete/' . $import['import_id']);
+      $continue_link = l(t('Continue Processing'), 'admin/people/user_import/continue/' . $import['import_id']);
+      $import_link = l(t('Import'), 'admin/people/user_import/import/' . $import['import_id']);
       
       $output .= $settings_link  . ' | ';   
       $output .= $delete_link;   
@@ -325,7 +320,7 @@ function theme_user_import_errors_display($settings, $data, $total) {
     $output .= t('<strong>Errors:</strong> !total', array('!total' => $total)) . '</p>';
 
     $header['errors'] = t('Errors');
-    $output .= theme('table', $header, $rows);    
+    $output .= theme('table', array('header' => $header, 'rows' => $rows));    
     return $output;
 }
 
@@ -335,7 +330,7 @@ function theme_user_import_username_errors($errors) {
         $output = '<p><strong>' . t('All usernames are OK.') . '</strong></p>';
     } else {
         $header = array(t('User ID'), t('Email'), t('Username'), t('Error'));
-        $output = theme('table', $header, $errors);
+        $output = theme('table', array('header' => $header, 'errors' => $errors));
     }
     
     return $output;
@@ -380,66 +375,44 @@ function _user_import_settings_save($settings) {
    
 	// Update settings for existing import.
   if (isset($settings['import_id'])) {
-
-		$table = 'user_import'; 
-		$record = new stdClass();
-		$record->name = trim($settings['name']);
-		$record->filename = trim($settings['filename']);
-		$record->oldfilename = $settings['oldfilename'];
-		$record->filepath = $settings['filepath'];
-		$record->pointer = $settings['pointer'];
-		$record->processed = $settings['processed'];
-		$record->valid = $settings['valid'];
-		$record->field_match = $settings['field_match']; // S
-		$record->roles = $settings['roles']; // S
-		$record->options = $settings['options']; // S
-		$record->setting = $settings['setting'];  
-
-		drupal_write_record($table, $record, 'import_id');  
-   
-       // db_query("UPDATE {user_import} 
-       //     SET name = '%s', filename = '%s', oldfilename = '%s', filepath = '%s', pointer = %d, processed = %d, valid= %d, field_match = '%s', roles = '%s', options = '%s', setting = '%s' 
-       //     WHERE import_id = %d
-       //     ", trim($settings['name']), $settings['filename'], $settings['oldfilename'], $settings['filepath'], $settings['pointer'], $settings['processed'], $settings['valid'], serialize($settings['field_match']), serialize($settings['roles']), serialize($settings['options']), $settings['setting'], $settings['import_id']);
-       //     
+		
+    db_update('user_import')
+      ->fields(array(
+          'name' => (isset($settings['name'])) ? trim($settings['name']) : '',
+          'filename' => $settings['filename'],
+          'oldfilename' => $settings['oldfilename'],
+          'filepath' => $settings['filepath'],
+          'pointer' => (isset($settings['pointer'])) ? $settings['pointer'] : 0,
+          'processed' => (isset($settings['processed'])) ? $settings['processed'] : 0,
+          'valid' => (isset($settings['valid'])) ? $settings['valid'] : 0,
+          'field_match' => (isset($settings['field_match'])) ? serialize($settings['field_match']) : '',
+          'roles' => (isset($settings['roles'])) ? serialize($settings['roles']) : '',
+          'options' => (isset($settings['options'])) ? serialize($settings['options']) : '',
+          'setting' =>  (isset($settings['setting'])) ? $settings['setting'] : ''
+          ))
+      ->condition('import_id', $settings['import_id'])
+      ->execute();     
 
 	} 
   else { 
-    // Save settings for new import.
-		$table = 'user_import'; 
-		$record = new stdClass();
-		$record->name = trim($settings['name']);
-		$record->filename = trim($settings['filename']);
-		$record->oldfilename = $settings['oldfilename'];
-		$record->filepath = $settings['filepath']; 
-		$record->started = time();
-		$record->pointer = $settings['pointer'];
-		$record->processed = $settings['processed'];
-		$record->valid = $settings['valid'];
-		$record->field_match = $settings['field_match']; // S
-		$record->roles = $settings['roles']; // S
-		$record->options = $settings['options']; // S
-		$record->setting = $settings['setting'];  
 
-		drupal_write_record($table, $record); 
+    $settings['import_id'] = db_insert('user_import')
+      ->fields(array(
+          'name' => (isset($settings['name'])) ? trim($settings['name']) : '',
+          'filename' => $settings['filename'],
+          'oldfilename' => $settings['oldfilename'],
+          'filepath' => $settings['filepath'],
+          'started' => time(),
+          'pointer' => (isset($settings['pointer'])) ? $settings['pointer'] : 0,
+          'processed' => (isset($settings['processed'])) ? $settings['processed'] : 0,
+          'valid' => (isset($settings['valid'])) ? $settings['valid'] : 0,
+          'field_match' => (isset($settings['field_match'])) ? serialize($settings['field_match']) : '',
+          'roles' => (isset($settings['roles'])) ? serialize($settings['roles']) : '',
+          'options' => (isset($settings['options'])) ? serialize($settings['options']) : '',
+          'setting' =>  (isset($settings['setting'])) ? $settings['setting'] : '',
 
-	  $settings['import_id'] = $record->import_id;
-
-       // db_query("INSERT INTO {user_import} 
-       //     (name, filename, oldfilename, filepath, started, pointer, processed, valid, field_match, roles, options, setting) 
-       //     VALUES ('%s', '%s', '%s', '%s', %d, %d, %d, %d, '%s', '%s', '%s', '%s')
-       //     ", trim($settings['name']), $settings['filename'], $settings['oldfilename'], $settings['filepath'], time(), $settings['pointer'], $settings['processed'], 
-       //      $settings['valid'], serialize($settings['field_match']), serialize($settings['roles']), serialize($settings['options']), $settings['setting']);
-       // 
-       // switch ($GLOBALS['db_type']) {
-       //   case 'mysql':
-       //   case 'mysqli':
-       //     $settings['import_id'] = db_result(db_query("SELECT LAST_INSERT_ID()"));
-       //     break;
-       //   case 'pgsql':
-       //     $settings['import_id'] = db_result(db_query("SELECT currval('{user_import_import_id_seq}')"));
-       //     break;
-       // }
+      ))
+      ->execute(); 
   }
    
   return $settings;

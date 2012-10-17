@@ -220,10 +220,10 @@ function _user_import_unique_username($username, $start = FALSE) {
   if ($start) $suffix = 1;
   
   if ($suffix < 2) {
-    $duplicate = db_result(db_query("SELECT uid from {users} where name = '%s' LIMIT 1", $username));
+    $duplicate = db_query_range('SELECT uid from {users} where name = :name', 0, 1, array(':name' => $username))->fetchField();
   }
   else {
-    $duplicate = db_result(db_query("SELECT uid from {users} where name = '%s' LIMIT 1", "$username $suffix"));
+    $duplicate = db_query_range('SELECT uid from {users} where name = :name', 0, 1, array(':name' => "$username $suffix"))->fetchField();
   }
 
   // loop until name is valid 
@@ -242,7 +242,16 @@ function _user_import_unique_username($username, $start = FALSE) {
 function _user_import_settings_update($pointer, $processed, $valid, $setting, $import_id) {
 
   if (empty($import_id)) return;
-  db_query("UPDATE {user_import} SET pointer = %d, processed = %d, valid= %d, setting = '%s' WHERE import_id = %d", $pointer, $processed, $valid, $setting, $import_id);
+
+  db_update('user_import')
+    ->fields(array(
+        'pointer' => $pointer,
+        'processed' => $processed,
+        'valid' => $valid,
+        'setting' => $setting
+        ))
+    ->condition('import_id', $import_id)
+    ->execute();
 }
 
 function _user_import_random_username() {
@@ -285,11 +294,15 @@ function _user_import_update_user_check($settings) {
 function _user_import_errors_display_save($import_id, $data, $email, $errors) {
 
 	$data['email'] = $email;
+				
+	$id = db_insert('user_import_errors')
+	  ->fields(array(
+	      'import_id' => $import_id,
+	      'data' => serialize($data),
+	      'errors' => serialize($errors),
+	  ))
+	  ->execute();
 
-	db_query("INSERT INTO {user_import_errors} 
-				   (import_id, data, errors) 
-				   VALUES (%d, '%s', '%s')
-				   ", $import_id, serialize($data), serialize($errors));
 	return;
 }
 

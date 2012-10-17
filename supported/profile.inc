@@ -75,11 +75,24 @@ function profile_user_import_save_profile($field, $uid, $value, $updated, $updat
         }
 
         if ((empty($exists) && $exists != '') || $exists === FALSE) { 
- 	
-          db_query("INSERT INTO {profile_values} (fid,uid,value) VALUES(%d,%d,'%s')", $field->fid, $uid, $value);
+
+					$id = db_insert('profile_values')
+						->fields(array(
+	              'fid' => $field->fid,
+	              'uid' => $uid,
+	              'value' => $value,
+	          ))
+	          ->execute();
         }
         else {
-          db_query("UPDATE {profile_values} SET value = '%s' WHERE fid = %d AND uid = %d", $value, $field->fid, $uid);  
+	
+					$id = db_update('profile_values')
+					  ->fields(array(
+					    'value' => $value,
+					  ))
+					  ->condition('fid', $field->fid)
+					  ->condition('uid', $uid) 
+					  ->execute(); 
         }
         
         $data[$field->name] = $value; 

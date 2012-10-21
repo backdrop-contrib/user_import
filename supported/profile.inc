@@ -52,7 +52,7 @@ function profile_user_import_after_save($settings, $account, $password, $fields,
 function profile_user_import_save_profile($field, $uid, $value, $updated, $update_setting, &$data) {   
 
   // when the profile field is displayed on the registration form an empty value is automatically saved by the Profile module
-  $exists = db_result(db_query_range("SELECT value FROM {profile_values} WHERE fid = %d AND uid = %d", $field->fid, $uid, 0, 1));
+  $exists = db_query_range('SELECT value FROM {profile_values} WHERE fid = :fid AND uid = :uid', 0, 1, array(':fid' => $field->fid, ':uid' => $uid))->fetchField(); 
 
 	user_import_profile_date($value, $field->type);
 
@@ -126,9 +126,9 @@ function profile_get_fields() {
 
   // Avoid making more than one database call for profile info.
   if (empty($fields)) {
-    $results = db_query("SELECT * FROM {profile_fields}");
+    $results = db_query('SELECT * FROM {profile_fields}');
 
-    while ($row = db_fetch_object($results)) {
+    foreach ($results as $row) {
       $fields[] = $row;
     }
   }

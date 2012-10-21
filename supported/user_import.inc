@@ -272,7 +272,7 @@ function user_import_template_has_name_validate($form, &$form_state) {
  */
 function user_import_template_unique_name_validate($form, &$form_state) {
   $template_name = trim($form_state['values']['name']);
-  $unique_name = db_result(db_query("SELECT COUNT(import_id) FROM {user_import} WHERE name = '%s'", $template_name));
+  $unique_name = db_query('SELECT COUNT(import_id) FROM {user_import} WHERE name = :name', array(':name' => $template_name))->fetchField();
   if (!empty($unique_name)) form_set_error('name', t("'!name' is already in use by another settings template.", array('!name' => $template_name))); 
 }
 

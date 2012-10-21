@@ -1,8 +1,4 @@
-<?php
-// $Id$
-//$this->pass(var_export($modules, TRUE));
-// debug($this->admin_user);
-//file_put_contents('output.html', $this->drupalGetContent());  
+<?php 
 
 /**
  * User Import module base test class.
@@ -16,7 +12,7 @@ class UserImportWebTestCase extends DrupalWebTestCase {
   */ 
   function settingsFileSelect() {
     $edit = array('file_ftp' => 1);
-    $this->drupalPost('admin/people/user_import/add', $edit, 'Next');
+    $this->drupalPost('admin/people/user_import/add', $edit, t('Next'));
 
     /* Check file was selected */
     $this->assertText(t('Use Different CSV File'), '[assert] File was selected');
@@ -36,7 +32,7 @@ class UserImportWebTestCase extends DrupalWebTestCase {
     $failed = array();
     
     foreach ($users_email as $mail) {
-      $user = user_load(array('mail' => $mail));
+      $user = user_load_by_mail($mail);
       if (empty($user)) $failed[] = $mail; 
     }
     
@@ -45,7 +41,6 @@ class UserImportWebTestCase extends DrupalWebTestCase {
     }
     
     $this->assertTrue(empty($failed), t('Accounts created for users imported') . $failures_list);
-    
   }
   
   /**
@@ -112,12 +107,13 @@ class UserImportWebTestCase extends DrupalWebTestCase {
    * SimpleTest core method: code run after each and every test method.
   */
   function tearDown() {
+
     // delete accounts of users imported
     $users_email = $this->usersList();
 
     foreach ($users_email as $mail) {
-      $account = user_load(array('mail' => $mail));
-      if (!empty($account)) user_delete(array(), $account->uid); 
+      $account = user_load_by_mail($mail);
+      if (!empty($account)) user_delete($account->uid); 
     }
     
     // delete the import
@@ -146,9 +142,9 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
   }
 
   function setUp() {
-  			parent::setUp('user_import');
-  	    $this->admin_user = $this->drupalCreateUser(array('administer users', 'access administration pages', 'administer site configuration'));
-  	    $this->user_importer = $this->drupalCreateUser(array('import users'));
+		parent::setUp(array('user_import'));
+		$this->admin_user = $this->drupalCreateUser(array('administer users', 'access administration pages', 'access overlay'));
+		$this->user_importer = $this->drupalCreateUser(array('import users'));
   } 
 	
   /**
@@ -159,7 +155,7 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
 
     // Prepare a user to do testing
     $this->drupalLogin($this->user_importer);
-
+    
     // Select CSV file (the included example file)
     $this->settingsFileSelect();
     
@@ -333,7 +329,7 @@ class UserImportNodeprofileTestCase extends UserImportWebTestCase {
      
       if ($row > 0) {
 	
-        $user = user_load(array('mail' => $csv[5])); 
+        $user = user_load_by_mail($csv[5]); 
         // test each data cell against nodeprofile field content
         $identity = node_load(array('type' => 'identity', 'uid' => $user->uid), NULL, TRUE);
         $this->drupalGet("node/$identity->nid");
@@ -383,7 +379,7 @@ class UserImportNodeprofileTestCase extends UserImportWebTestCase {
     $users_email = $this->usersList();
 
     foreach ($users_email as $mail) {
-      $account = user_load(array('mail' => $mail));
+      $account = user_load_by_mail($mail);
       // delete node profile nodes
       if (!empty($account)) {
         $identity = node_load(array('type' => 'identity', 'uid' => $account->uid));
@@ -543,7 +539,7 @@ class UserImportProfileTestCase extends UserImportWebTestCase {
     while ($csv = fgetcsv($handle, 1000, ',')) { 
 			  
       if ($row > 0) {
-        $user = user_load(array('mail' => $csv[5])); 
+        $user = user_load_by_mail($csv[5]); 
         // test each data cell against Profile field content   
 				$profile_first_name = isset($user->profile_first_name) ? $user->profile_first_name : '';  
         $this->assertEqual($profile_first_name, $csv[0], "[Compare CSV data to Profile data] Row: $row Field: First Name");

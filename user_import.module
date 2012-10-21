@@ -48,8 +48,14 @@ function user_import_help($path, $arg) {
 /**
  * Implementation of hook_perm().
  */
-function user_import_perm() {
-  return array('import users');
+function user_import_permission() {
+
+  return array(
+    'import users' => array(
+      'title' => t('Import users'),
+      'description' => t('Import users.'),
+    ),
+  );
 }
 
 /**
@@ -167,7 +173,7 @@ function user_import_limited_errors($import_id = NULL, $template_id = NULL) {
   $max = 25;
   $import = _user_import_settings_select($import_id);
   
-  $total = db_result(db_query("SELECT count(data) FROM {user_import_errors} WHERE import_id = %d", $import['import_id']));
+  $total = db_query("SELECT count(data) FROM {user_import_errors} WHERE :import_id = %d", array(':import_id' => $import['import_id']))->fetchField();
   
   if (empty($total))  {
   
@@ -175,13 +181,25 @@ function user_import_limited_errors($import_id = NULL, $template_id = NULL) {
   
   } else {
   
-    $results = pager_query("SELECT * FROM {user_import_errors} WHERE import_id = %d", $max, $pager_id, NULL, array($import['import_id']));
-    
-    while ($line = db_fetch_array($results)) {
+    $header = array(
+      array('data' => t('ID'), 'field' => 'import_id', 'sort' => 'desc'),
+      array('data' => t('Data'), 'field' => 'data'),
+      array('data' => t('Errors'), 'field' => 'errors')
+    );
 
-      $line['data'] = unserialize($line['data']);
-      $line['errors'] = unserialize($line['errors']);
-      $file_lines[] = $line;
+    $query = db_select('user_import_errors')
+              ->extend('PagerDefault')
+              ->extend('TableSort');
+
+    $query
+      ->condition('import_id', $import['import_id'])
+      ->limit($max)
+      ->orderByHeader($header);
+
+    $result = $query->execute();
+
+    foreach ($result as $line) {
+      $file_lines[] = array('data' => unserialize($line->data), 'errors' => unserialize($line->errors));
     }
  
     $output .= theme('user_import_errors_display', array('import' => $import, 'file_lines' => $file_lines, 'total' => $total));
@@ -476,8 +494,6 @@ function _user_import_settings_deletion($import_id) {
 			->condition('import_id', $import_id)
 			->execute();
 			
-    //db_query("DELETE FROM {user_import} WHERE import_id = %d", $import_id);
-    //db_query("DELETE FROM {user_import_errors} WHERE import_id = %d", $import_id);
     return;
 }
 

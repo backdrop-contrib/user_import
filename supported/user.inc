@@ -289,12 +289,10 @@ function user_user_import_roles_data($data, $new_roles_allowed) {
  * Return an existing user ID, if present, for a given email.
  */
 function _user_import_existing_uid($email) {
-  //$uid = db_result(db_query("SELECT uid FROM {users} WHERE mail= '%s' LIMIT 1", $email));
 
   $sql = 'SELECT uid FROM {users} WHERE mail = :mail';
   $args = array(':mail' => $email);
   $uid = db_query_range($sql, 0, 1, $args)->fetchField();
-krumo($uid);
   return $uid;
 }
 
@@ -319,7 +317,6 @@ function user_user_import_after_save_role($account, $new_roles_allowed, $account
             ))
             ->execute();
 				
-		      //$key = db_result(db_query("SELECT rid FROM {role} WHERE name = '%s' LIMIT 1", $role));
 					$existing_roles[$key] = $role;
 			  }
 

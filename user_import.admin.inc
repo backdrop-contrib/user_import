@@ -16,15 +16,32 @@ function user_import_list($action = NULL, $import_id = NULL) {
 	  $max = 25;
 	  $import = _user_import_settings_select($import_id);
   
-	  $total = db_result(db_query("SELECT count(data) FROM {user_import_errors} WHERE import_id = %d", $import['import_id']));
-	  $results = pager_query("SELECT * FROM {user_import_errors} WHERE import_id = %d", $max, $pager_id, NULL, array($import['import_id']));
-  
-	  while ($line = db_fetch_array($results)) {
+	  $total = db_query('SELECT count(data) FROM {user_import_errors} WHERE import_id = :import_id', array(':import_id' => $import['import_id']))->fetchField();
+	
+	
+	  //$results = pager_query("SELECT * FROM {user_import_errors} WHERE import_id = %d", $max, $pager_id, NULL, array($import['import_id']));
+	
+    $header = array(
+      array('data' => t('ID'), 'field' => 'import_id', 'sort' => 'desc'),
+      array('data' => t('Data'), 'field' => 'data'),
+      array('data' => t('Errors'), 'field' => 'errors')
+    );
+	
+    $query = db_select('user_import_errors', 'imp_usr_errors')
+              ->extend('PagerDefault')
+              ->extend('TableSort');
 
-	   $line['data'] = unserialize($line['data']);
-	      $line['errors'] = unserialize($line['errors']); 
-      
-	      $file_lines[] = $line;
+		$query->fields('imp_usr_errors', array('import_id', 'data', 'errors' ));
+		$query->condition('import_id', $import['import_id']);
+
+		$result = $query
+		 ->range(0, 1)
+		 ->orderByHeader($header)
+		 ->execute(); 
+
+  
+    foreach ($result as $line) {
+	    $file_lines[] = array('import_id' => $line->import_id, 'data' => unserialize($line->data), 'errors' => unserialize($line->errors));
 	  }
   
     $output = theme('user_import_errors_display', array('import' => $import, 'file_lines' => $file_lines, 'total' => $total));
@@ -493,7 +510,7 @@ function user_import_template_update_submit($form, &$form_state) {
   _user_import_settings_save($form_state['values']);
 
   // get template details
-  $template_id = db_result(db_query("SELECT import_id from {user_import} where setting = 'template' AND name= '%s' LIMIT 1", $form['#current_template']));
+  $template_id = db_query_range("SELECT import_id from {user_import} where setting = 'template' AND name = :name", 0, 1, array(':name' => $form['#current_template']))->fetchField();
 
   // save settings for template 
   $form_state['values']['setting'] = 'template';
@@ -652,7 +669,6 @@ function _user_import_file_deletion($filepath, $filename, $old_filename, $ftp, $
   $file->uri = $filepath;
   $file->filename = $filename;
   $file->fid = db_query("SELECT fid FROM {file_managed} WHERE uri = :filepath", array(':filepath' => $filepath))->fetchField();;
-
   $removed = file_delete($file);
 
   if (!$message) return;

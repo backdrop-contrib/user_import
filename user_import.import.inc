@@ -79,7 +79,7 @@ function _user_import_process($settings) {
 		        // if we update existing users matched by email (and therefore passed validation even if this email already exists)
 		        // look for and use an existing account.
 		        if ($update_setting && !empty($fields['user']['email'][0])) {
-		          $existing_account = user_load(array('mail' => $fields['user']['email'][0]));
+		          $existing_account = user_load_by_mail($fields['user']['email'][0]);
 		          if ($existing_account) $account = (array) $existing_account; 
 		        }
        

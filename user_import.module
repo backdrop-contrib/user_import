@@ -39,8 +39,7 @@ function user_import_theme() {
  */
 function user_import_help($path, $arg) {
   switch ($path) {
-    case 'admin/people/user_import
-<p>':
+    case 'admin/people/user_import':
       return t("Import or update users from a comma separated file (csv). Click 'Import' to start a new import.");
   }
 }

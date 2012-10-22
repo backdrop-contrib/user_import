@@ -42,7 +42,11 @@ function profile_user_import_after_save($settings, $account, $password, $fields,
   
   // data column in the user table needs to be updated
   if ($data != $old_data) {   
-    db_query("UPDATE {users} SET data = '%s' WHERE uid = %d", serialize($data), $account->uid);
+
+    db_update('users')
+			->fields(array('data' => serialize($data)))
+			->condition('uid', $account->uid)
+			->execute();
   } 
 
   return;
@@ -105,10 +109,21 @@ function profile_user_import_save_profile($field, $uid, $value, $updated, $updat
     if (empty($value)) return;
  
     if ((empty($exists) && $exists != '') || $exists === FALSE) {  
-      db_query("INSERT INTO {profile_values} (fid,uid,value) VALUES(%d,%d,'%s')", $field->fid, $uid, $value);
+      
+			$id = db_insert('profile_values')
+				->fields(array('fid' => $field->fid, 'uid' => $uid, 'value' => $value))
+				->execute();
+
     }
     else {  
-     db_query("UPDATE {profile_values} SET value = '%s' WHERE fid = %d AND uid = %d", $value, $field->fid, $uid);
+
+			db_update('profile_values')
+			  ->fields(array('value' => $value))
+			  ->condition('fid', $field->fid)
+			  ->condition('uid', $uid)
+			  ->limit(1)
+			  ->execute();
+
       $data[$field->name] = $value;
     }
   }

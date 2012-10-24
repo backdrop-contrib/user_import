@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implementation of hook_user_import_form_fieldsets().
+ * Implementation of hook_user_import_form_fieldset().
  * Add fieldsets to an import settings form. 
  */
 function user_import_user_import_form_fieldset($import, $collapsed) {
@@ -203,7 +203,7 @@ function _user_import_edit_template_fields(&$form, $import) {
       $form['save'][] = array(
           '#type' => 'submit', 
           '#value' => t('Save'),
-          '#validate' => array('user_import_template_has_name_validate', 'user_import_template_unique_name_validate', 'user_import_edit_form_validate'),
+          '#validate' => array('user_import_template_has_name_validate', 'user_import_template_unique_name_validate', 'user_import_edit_validate'),
           '#submit' => array('user_import_template_new_submit'),
       );
 
@@ -230,7 +230,7 @@ function _user_import_edit_template_fields(&$form, $import) {
       $form['save']['update']['submit'] = array(
           '#type' => 'submit', 
           '#value' => t('Update'),
-          '#validate' => array('user_import_edit_form_validate'),
+          '#validate' => array('user_import_edit_validate'),
           '#submit' => array('user_import_template_update_submit'),
       );
           
@@ -251,7 +251,7 @@ function _user_import_edit_template_fields(&$form, $import) {
       $form['save']['new'][] = array(
           '#type' => 'submit', 
           '#value' => t('Save As New'),
-          '#validate' => array('user_import_template_has_name_validate', 'user_import_template_unique_name_validate', 'user_import_edit_form_validate'),
+          '#validate' => array('user_import_template_has_name_validate', 'user_import_template_unique_name_validate', 'user_import_edit_validate'),
           '#submit' => array('user_import_template_new_submit'),
       );
   }

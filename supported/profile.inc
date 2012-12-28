@@ -141,7 +141,7 @@ function profile_get_fields() {
 
   // Avoid making more than one database call for profile info.
   if (empty($fields)) {
-    $results = db_query('SELECT * FROM {profile_fields}');
+    $results = db_query('SELECT * FROM {profile_field}');
 
     foreach ($results as $row) {
       $fields[] = $row;

@@ -510,7 +510,7 @@ function _user_import_settings_deletion($import_id) {
 // Used by user_import_og.module
 function user_import_profile_load($user) {
 
-  $result = db_query('SELECT f.name, f.type, f.fid, v.value FROM {profile_fields} f INNER JOIN {profile_values} v ON f.fid = v.fid WHERE uid = %d', $user->uid);
+  $result = db_query('SELECT f.name, f.type, f.fid, v.value FROM {profile_field} f INNER JOIN {profile_values} v ON f.fid = v.fid WHERE uid = %d', $user->uid);
 
   while ($field = db_fetch_object($result)) {
 

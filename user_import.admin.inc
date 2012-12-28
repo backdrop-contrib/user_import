@@ -927,7 +927,7 @@ function _user_import_profile($key = 'fid', $return_value = NULL) {
     // avoid making more than one database call for profile info
     if (empty($fields_static)) {
 
-        $results = db_query("SELECT * FROM {profile_fields}");
+        $results = db_query("SELECT * FROM {profile_field}");
 
         while ($row = db_fetch_object($results)) {
             // don't include private fields

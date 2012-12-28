@@ -22,19 +22,19 @@ function user_import_user_import_after_save($settings, $account, $password, $fie
 
 		$subscribed = isset($settings['subscribed']) ? $settings['subscribed'] : NULL;
 
-		_user_import_send_email($account, 
-														$password, 
-														$fields, 
-														$settings['subject'], 
-														$settings['message'], 
-														$settings['message_format'], 
-														$settings['message_css'], 
+		_user_import_send_email($account,
+														$password,
+														$fields,
+														$settings['subject'],
+														$settings['message'],
+														$settings['message_format'],
+														$settings['message_css'],
 														$subscribed
 														);
-	} 
+	}
 }
 
-// Send email when account is created    
+// Send email when account is created
 function _user_import_send_email($account, $password, $profile, $subject, $body, $format, $css, $subscribed) {
 
     global $base_url;

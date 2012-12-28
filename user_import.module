@@ -135,17 +135,17 @@ function user_import_menu() {
  */
 function user_import_cron() {
   module_load_include('inc', 'user_import', 'user_import.import');
-	$imports = _user_import_settings_select();
+  $imports = _user_import_settings_select();
 
-	if (!$imports) return;
+  if (!$imports) return;
 
-	foreach ($imports as $import) {
-		if ($import['setting'] == 'test' || $import['setting'] == 'import') {
-			_user_import_process($import);
-		}
-	}
+  foreach ($imports as $import) {
+    if ($import['setting'] == 'test' || $import['setting'] == 'import') {
+      _user_import_process($import);
+    }
+  }
 
-	return;
+  return;
 }
 
 
@@ -278,12 +278,12 @@ function theme_user_import_edit($variables) {
 
   foreach (element_children($form['field_match']) as $key) {
 
-	  $rows[] = array(
-	      drupal_render($form['field_match'][$key]['csv']),
-	      drupal_render($form['field_match'][$key]['field_match']),
-	      drupal_render($form['field_match'][$key]['username']),
-	      drupal_render($form['field_match'][$key]['abbreviate']),
-	  );
+    $rows[] = array(
+        drupal_render($form['field_match'][$key]['csv']),
+        drupal_render($form['field_match'][$key]['field_match']),
+        drupal_render($form['field_match'][$key]['username']),
+        drupal_render($form['field_match'][$key]['abbreviate']),
+    );
   }
 
   $form['field_match']['#value'] = theme('table', array('header' => $header, 'rows' => $rows));
@@ -312,7 +312,7 @@ function theme_user_import_errors_display($settings, $data, $total) {
 
     foreach ($data as $data_row) {
 
-        $row = NULL;
+        $row = array();
 
         foreach ($data_row['data'] as $type => $fields) {
 
@@ -369,39 +369,39 @@ function theme_user_import_username_errors($errors) {
 function _user_import_settings_save($settings) {
   // Database field defaults.
   $database_fields = array('import_id' => NULL,
-													 'name' => '',
-													 'filename' => '',
-													 'oldfilename' => '',
-													 'filepath' => '',
-													 'started' => 0,
-													 'pointer' => 0,
-													 'processed' => 0,
-													 'valid' => 0,
-													 'field_match' => array(),
-													 'roles' => '',
-													 'options' => array(),
-													 'setting' => '',
-													);
+                           'name' => '',
+                           'filename' => '',
+                           'oldfilename' => '',
+                           'filepath' => '',
+                           'started' => 0,
+                           'pointer' => 0,
+                           'processed' => 0,
+                           'valid' => 0,
+                           'field_match' => array(),
+                           'roles' => '',
+                           'options' => array(),
+                           'setting' => '',
+                          );
 
- 	// Form elements we never want to save in the options column.
+  // Form elements we never want to save in the options column.
   $form_variables = array('form_id', 'form_token', 'form_build_id', 'cancel', 'import', 'submit', 'op', 0, 'return_path');
   $form_variables = array_flip($form_variables);
 
   // Remove settings we don't need in the options column.
-	$options = array_diff_key($settings, $database_fields);
+  $options = array_diff_key($settings, $database_fields);
   $options = array_diff_key($options, $form_variables);
 
   // Set defaults for options.
-	foreach ($options as $key => $value) {
-		$settings['options'][$key] = isset($settings[$key]) ? $settings[$key] : '';
-	}
+  foreach ($options as $key => $value) {
+    $settings['options'][$key] = isset($settings[$key]) ? $settings[$key] : '';
+  }
 
   // Set defaults for fields.
-	foreach ($database_fields as $key => $value) {
-		$settings[$key] = isset($settings[$key]) ? $settings[$key] : $value;
-	}
+  foreach ($database_fields as $key => $value) {
+    $settings[$key] = isset($settings[$key]) ? $settings[$key] : $value;
+  }
 
-	// Update settings for existing import.
+  // Update settings for existing import.
   if (isset($settings['import_id'])) {
 
     db_update('user_import')
@@ -421,7 +421,7 @@ function _user_import_settings_save($settings) {
       ->condition('import_id', $settings['import_id'])
       ->execute();
 
-	}
+  }
   else {
 
     $settings['import_id'] = db_insert('user_import')
@@ -455,41 +455,41 @@ function _user_import_settings_select($import_id = NULL, $template = FALSE) {
   if (!empty($import_id) && !is_numeric($import_id)) return;
 
   if (!empty($import_id)) {
-	  $sql = 'SELECT * FROM {user_import} WHERE import_id = :import_id';
-	  if ($template) $sql .=  " AND setting = 'template'";
+    $sql = 'SELECT * FROM {user_import} WHERE import_id = :import_id';
+    if ($template) $sql .=  " AND setting = 'template'";
 
 
-	  $import = (array) db_query_range($sql, 0, 1, array(':import_id' => $import_id))->fetchObject();
+    $import = (array) db_query_range($sql, 0, 1, array(':import_id' => $import_id))->fetchObject();
 
-	  if (empty($import)) return FALSE;
+    if (empty($import)) return FALSE;
 
-	  $import['field_match'] = unserialize($import['field_match']);
-	  $import['roles'] = unserialize($import['roles']);
-	  $import['options'] = unserialize($import['options']);
+    $import['field_match'] = unserialize($import['field_match']);
+    $import['roles'] = unserialize($import['roles']);
+    $import['options'] = unserialize($import['options']);
 
-	  if (is_array($import['options'])) {
-			foreach ($import['options'] as $key => $value) {
-				$import[$key] = $value;
-			}
-	  }
+    if (is_array($import['options'])) {
+      foreach ($import['options'] as $key => $value) {
+        $import[$key] = $value;
+      }
+    }
   }
   else {
 
-	  $query = ($template) ? "SELECT * FROM {user_import} WHERE setting = 'template'" : "SELECT * FROM {user_import} WHERE setting != 'template' ORDER BY started DESC";
-	  $result = db_query($query);
+    $query = ($template) ? "SELECT * FROM {user_import} WHERE setting = 'template'" : "SELECT * FROM {user_import} WHERE setting != 'template' ORDER BY started DESC";
+    $result = db_query($query);
 
-	  foreach ($result as $row_data) {
-	      $row = (array) $row_data;
-	      $row['field_match'] = unserialize($row['field_match']);
-	      $row['roles'] = unserialize($row['roles']);
-	      $row['options'] = unserialize($row['options']);
+    foreach ($result as $row_data) {
+        $row = (array) $row_data;
+        $row['field_match'] = unserialize($row['field_match']);
+        $row['roles'] = unserialize($row['roles']);
+        $row['options'] = unserialize($row['options']);
 
-		foreach ($row['options'] as $key => $value) {
-			$row[$key] = $value;
-		}
+    foreach ($row['options'] as $key => $value) {
+      $row[$key] = $value;
+    }
 
-	      $import[] = $row;
-	  }
+        $import[] = $row;
+    }
   }
 
   return $import;
@@ -497,12 +497,12 @@ function _user_import_settings_select($import_id = NULL, $template = FALSE) {
 
 function _user_import_settings_deletion($import_id) {
     db_delete('user_import')
-			->condition('import_id', $import_id)
-			->execute();
+      ->condition('import_id', $import_id)
+      ->execute();
 
     db_delete('user_import_errors')
-			->condition('import_id', $import_id)
-			->execute();
+      ->condition('import_id', $import_id)
+      ->execute();
 
     return;
 }

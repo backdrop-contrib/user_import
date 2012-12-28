@@ -907,25 +907,29 @@ function _user_import_initialise_import($import) {
 	return;
 }
 
-function _user_import_errors_display_delete($import_id) {
 
-	db_query("DELETE FROM {user_import_errors} WHERE import_id = %d", $import_id);
-	return; 
+/**
+ * Delete errors from database for a specified import.
+ * @param $import_id
+ */
+function _user_import_errors_display_delete($import_id) {
+  db_query('DELETE FROM {user_import_errors} WHERE import_id = :import_id', array(':import_id' => $import_id));
+	return;
 }
 
 function _user_import_profile($key = 'fid', $return_value = NULL) {
-    
-    if (!module_exists('profile')) return; 
-    
+
+    if (!module_exists('profile')) return;
+
     static $fields_static;
 		$fields = array();
-    
+
     // avoid making more than one database call for profile info
     if (empty($fields_static)) {
-    
+
         $results = db_query("SELECT * FROM {profile_fields}");
-                
-        while ($row = db_fetch_object($results)) { 
+
+        while ($row = db_fetch_object($results)) {
             // don't include private fields
             if (user_access('administer users') || $row->visibility != PROFILE_PRIVATE) {
                 $fields_static[] = $row;

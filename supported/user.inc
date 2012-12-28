@@ -210,29 +210,31 @@ function user_user_import_edit_email_fields(&$form, $import, $collapsed) {
       '#title' => t('Message Subject'),
       '#default_value' => isset($import['subject']) ? $import['subject'] : '',
       '#description' => t('Customize the subject of the welcome e-mail, which is sent to imported members.') .' '. t('Available variables are:') .' !username, !site, !password, !uri, !uri_brief, !mailto, !date, !login_uri, !edit_uri, !login_url.',
-    ); 
-    
+      '#element_validate' => array('user_import_send_email_subject_validate'),
+    );
+
     $form['email_message']['message'] = array(
       '#type' => 'textarea',
       '#title' => t('Message'),
       '#default_value' => isset($import['message']) ? $import['message'] : '',
       '#description' => t('Customize the body of the welcome e-mail, which is sent to imported members.') .' '. t('Available variables are:') .' !username, !site, !password, !uri, !uri_brief, !mailto, !login_uri, !edit_uri, !login_url.',
-    ); 
-    
+      '#element_validate' => array('user_import_send_email_message_validate'),
+    );
+
     $form['email_message']['message_format'] = array(
       '#type' => 'radios',
       '#title' => t('Email Format'),
       '#default_value' => isset($import['message_format']) ? $import['message_format'] : 0,
       '#options' => array(t('Plain Text'), t('HTML')),
     );
-    
+
     $form['email_message']['message_css'] = array(
       '#type' => 'textarea',
       '#title' => t('CSS'),
       '#default_value' => isset($import['message_css']) ? $import['message_css'] : '',
       '#description' => t('Use if sending HTML formated email.'),
     );
-    
+
     return;
 }
 

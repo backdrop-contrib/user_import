@@ -273,28 +273,46 @@ function user_import_template_has_name_validate($form, &$form_state) {
 function user_import_template_unique_name_validate($form, &$form_state) {
   $template_name = trim($form_state['values']['name']);
   $unique_name = db_query('SELECT COUNT(import_id) FROM {user_import} WHERE name = :name', array(':name' => $template_name))->fetchField();
-  if (!empty($unique_name)) form_set_error('name', t("'!name' is already in use by another settings template.", array('!name' => $template_name))); 
+  if (!empty($unique_name)) form_set_error('name', t("'!name' is already in use by another settings template.", array('!name' => $template_name)));
+}
+
+/**
+ * Validate that a email subject line has been set if Send Email is enabled.
+ */
+function user_import_send_email_subject_validate($element, &$form_state) {
+  if (!empty($form_state['values']['send_email']) && empty($form_state['values']['subject'])) {
+    form_error($element, t('If Send Email has been enabled then an <strong>email subject</strong> line must set.'));
+  }
+}
+
+/**
+ * Validate that a email message has been set if Send Email is enabled.
+ */
+function user_import_send_email_message_validate($element, &$form_state) {
+  if (!empty($form_state['values']['send_email']) && empty($form_state['values']['message'])) {
+    form_error($element, t('If Send Email has been enabled then an <strong>email message</strong> must set.'));
+  }
 }
 
 function _user_import_edit_remove_fields(&$form, $import) {
-        
+
   $form['remove'] = array(
       '#type' => 'fieldset',
       '#title' => t('Use Different CSV File'),
       '#description' => t('Remove file to use a different file. All settings on this page will be deleted.'),
       '#weight' => -100,
       '#collapsible' => TRUE,
-      '#collapsed' => TRUE, 
+      '#collapsed' => TRUE,
   );
-  
+
   $form['remove']['file'] = array(
-      '#type' => 'item', 
+      '#type' => 'item',
       '#title' => t('Uploaded file: @filename', array('@filename' => $import['filename'])),
       '#value' => $import['filename'],
   );
 
   $form['remove']['submit'] = array(
-      '#type' => 'submit', 
+      '#type' => 'submit',
       '#value' => t('Remove file'),
       '#validate' => array('user_import_edit_remove_file_validate'),
   );

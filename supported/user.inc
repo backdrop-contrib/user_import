@@ -19,12 +19,6 @@ function user_user_import_form_field_match() {
 	// $options['user']['timezone'] = t('Timezone');
   // $options['user']['md5_password'] = t('Password MD5');
 
-	//   $fields_info = field_info_instances('user', 'user');
-	//
-	//   foreach ($fields_info as $field_name => $value) {
-	//     $options['user'][$field_name] = $value['label'];
-	// }
-
   return $options;
 }
 
@@ -60,7 +54,6 @@ function user_user_import_data($settings, $update_setting, $column_settings, $mo
 
   if ($field_id == 'email') {
     $value = trim($data[$column_id]);
-
     _user_import_validate_email($value, $update_setting);
   }
 
@@ -152,9 +145,10 @@ function user_user_import_after_save($settings, $account, $password, $fields, $u
   /**
    * @todo change hook_user_import_after_save() so that all changes to data are returned and saved in one hit
    */
-  $roles = isset($fields['user']['roles']) ? $fields['user']['roles'] : array();
 
+  $roles = isset($fields['user']['roles']) ? $fields['user']['roles'] : array();
 	user_user_import_after_save_role($account, $settings['roles_new'], $account->roles, $roles);
+
   return;
 }
 

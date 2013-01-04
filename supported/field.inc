@@ -24,6 +24,17 @@ function field_user_import_form_field_match() {
 }
 
 /**
+ * Implementation of hook_user_import_data().
+ */
+function field_user_import_data($settings, $update_setting, $column_settings, $module, $field_id, $data, $column_id) {
+
+  if ($module != 'field') return;
+
+  $value = $data[$column_id];
+  return $value;
+}
+
+/**
  * Implementation of hook_user_import_after_save().
  */
 function field_user_import_after_save($settings, $account, $password, $fields, $updated, $update_setting_per_module) {

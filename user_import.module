@@ -26,7 +26,7 @@ function user_import_theme() {
       'render element' => 'form',
     ),
     'user_import_errors_display' => array(
-      'variables' => array('settings' => NULL, 'data' => NULL, 'total' => NULL),
+      'variables' => array('settings' => NULL),
     ),
     'user_import_username_errors' => array(
       'variables' => array('errors' => NULL),
@@ -37,12 +37,12 @@ function user_import_theme() {
 /**
  * Implementation of hook_help().
  */
-function user_import_help($path, $arg) {
-  switch ($path) {
-    case 'admin/people/user_import':
-      return t("Import or update users from a comma separated file (csv). Click 'Import' to start a new import.");
-  }
-}
+// function user_import_help($path, $arg) {
+//   switch ($path) {
+//     case 'admin/people/user_import':
+//       return t("Import or update users from a comma separated file (csv). Click 'Import' to start a new import.");
+//   }
+// }
 
 /**
  * Implementation of hook_perm().
@@ -167,7 +167,9 @@ function user_import_content_type_submit($form, &$form_state) {
 
 function user_import_limited_errors($import_id = NULL, $template_id = NULL) {
 
-  if (empty($import_id) || !is_numeric($import_id)) drupal_goto('user_import/' . $template_id);
+  if (empty($import_id) || !is_numeric($import_id)) {
+    drupal_goto('user_import/' . $template_id);
+  } 
 
   $pager_id = 1;
   $max = 25;
@@ -179,7 +181,6 @@ function user_import_limited_errors($import_id = NULL, $template_id = NULL) {
   if (empty($total))  {
 
     $output .= theme('There were no import errors');
-
   } else {
 
     $header = array(
@@ -198,7 +199,7 @@ function user_import_limited_errors($import_id = NULL, $template_id = NULL) {
       ->orderByHeader($header);
 
     $result = $query->execute();
-
+ 
     foreach ($result as $line) {
       $file_lines[] = array('data' => unserialize($line->data), 'errors' => unserialize($line->errors));
     }
@@ -304,52 +305,71 @@ function theme_user_import_edit($variables) {
   return $output;
 }
 
-function theme_user_import_errors_display($settings, $data, $total) {
-    $output = '';
-    $error_count = 0;
-    $field_match = _user_import_unconcatenate_field_match($settings['field_match']);
-    $header[0] = t('Email Address');
+function theme_user_import_errors_display($settings) {
 
-    foreach ($data as $data_row) {
+	$output = '';
+	$header[0] = t('Email Address');
+	$data = $settings['file_lines'];
+	$total = $settings['total'];
+	$oldfilename = $settings['import']['oldfilename'];
+	$field_match = $settings['import']['field_match'];
+	$error_count = 0;
+	$field_match = _user_import_unconcatenate_field_match($field_match);
 
-        $row = array();
+	foreach ($data as $data_row) {
 
-        foreach ($data_row['data'] as $type => $fields) {
+	    $row = array();
 
-          if (!empty($fields)) {
+	    foreach ($data_row['data'] as $type => $fields) {
 
-            foreach ($fields as $field_id => $field_data) {
+	      if (!empty($fields)) {
 
-              foreach ($field_match as $column_info) {
+	        foreach ($fields as $field_id => $field_data) {
 
-                if ($column_info['type'] ==  $type && $column_info['field_id'] == $field_id) {
+	          foreach ($field_match as $column_info) {
 
-                  if (!empty($column_info['username'])) {
-                    $header[$column_info['username']] = t('Name %sort', array('%sort' => $column_info['username']));
-                    $row[$column_info['username']] = array("data" => $field_data[0], "align" => "left");
-                  }
+	            if ($column_info['type'] ==  $type && $column_info['field_id'] == $field_id) {
 
-                  if ($column_info['field_id'] == 'email') {
-                    $row[0] = array("data" => $field_data[0], "align" => "left");
-                  }
-                }
-              }
+	              if (!empty($column_info['username'])) {
+	                $header[$column_info['username']] = t('Name %sort', array('%sort' => $column_info['username']));
+	                $row[$column_info['username']] = array("data" => $field_data[0], "align" => "left");
+	              }
 
-            }
-          }
-        }
+	              if ($column_info['field_id'] == 'email') {
+	                $row[0] = array("data" => $field_data[0], "align" => "left");
+	              }
+	            }
+	          }
 
-        ksort($row);
-        $row[] = implode('<br />', $data_row['errors']);
-        $rows[] = $row;
-    }
+	        }
+	      }
+	    }
 
-    $output .= '<p>' . t('<strong>CSV File:</strong> %file', array('%file' => $settings['oldfilename'])) . '<br />';
-    $output .= t('<strong>Errors:</strong> !total', array('!total' => $total)) . '</p>';
+	    ksort($row);
+	    $row[] = implode('<br />', $data_row['errors']);
+	    $rows[] = $row;
+	}
 
-    $header['errors'] = t('Errors');
-    $output .= theme('table', array('header' => $header, 'rows' => $rows));
-    return $output;
+	$output .= '<p>' . t('<strong>CSV File:</strong> %file', array('%file' => $oldfilename)) . '<br />';
+	$output .= t('<strong>Errors:</strong> !total', array('!total' => $total)) . '</p>';
+
+	$header['errors'] = t('Errors');
+	
+  // Output of table with the paging
+  $output .= theme('table',
+    array(
+      "header" => $header,
+      "rows" => $rows,
+      "attributes" => array(),
+      "sticky" => FALSE, // Table header will be sticky
+      "caption" => '',
+      "colgroups" => array(),
+      "empty" => t("There are no errors.") // The message to be displayed if table is empty
+    )
+  ).theme("pager");
+	
+	//$output .= theme('table', array('header' => $header, 'rows' => $rows));
+	return $output;
 }
 
 function theme_user_import_username_errors($errors) {

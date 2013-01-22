@@ -13,39 +13,39 @@ function user_import_list($action = NULL, $import_id = NULL) {
 	if (!empty($import_id) && is_numeric($import_id)) {
 
 	  $pager_id = 1;
-	  $max = 25;
+	  $limit = 10;
+	  $rows = array();
 	  $import = _user_import_settings_select($import_id);
-
-	  $total = db_query('SELECT count(data) FROM {user_import_errors} WHERE import_id = :import_id', array(':import_id' => $import['import_id']))->fetchField();
-
-
+	
+	  $total = db_query('SELECT count(data) FROM {user_import_errors} WHERE import_id = :import_id', array(':import_id' => $import_id))->fetchField();
 	  //$results = pager_query("SELECT * FROM {user_import_errors} WHERE import_id = %d", $max, $pager_id, NULL, array($import['import_id']));
 
-    $header = array(
-      array('data' => t('ID'), 'field' => 'import_id', 'sort' => 'desc'),
-      array('data' => t('Data'), 'field' => 'data'),
-      array('data' => t('Errors'), 'field' => 'errors')
-    );
+    // Select table
+    $query = db_select('user_import_errors', 'imp_usr_errors');
 
-    $query = db_select('user_import_errors', 'imp_usr_errors')
-              ->extend('PagerDefault')
-              ->extend('TableSort');
-
+    // Select fields
 		$query->fields('imp_usr_errors', array('import_id', 'data', 'errors' ));
+		
+		// Set conditions.
 		$query->condition('import_id', $import['import_id']);
+		
+		// For pagination
+		$query = $query->extend('TableSort')->extend('PagerDefault')->limit($limit);
 
-		$result = $query
-		 ->range(0, 1)
-		 ->orderByHeader($header)
-		 ->execute();
+		// $result = $query
+		//  ->range(0, 1)
+		//  ->orderByHeader($header)
+		//  ->execute();
+		
+		// Execute query
+		$result = $query->execute();
 
 
     foreach ($result as $line) {
-	    $file_lines[] = array('import_id' => $line->import_id, 'data' => unserialize($line->data), 'errors' => unserialize($line->errors));
+	    $rows[] = array('import_id' => $line->import_id, 'data' => unserialize($line->data), 'errors' => unserialize($line->errors));
 	  }
 
-    $output = theme('user_import_errors_display', array('import' => $import, 'file_lines' => $file_lines, 'total' => $total));
-    $output .= theme('pager', array('max' => $max, 'page_id' => $pager_id));
+    $output = theme('user_import_errors_display', array('import' => $import, 'file_lines' => $rows, 'total' => $total));  
 
 	} else {
 

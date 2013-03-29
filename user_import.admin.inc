@@ -839,7 +839,7 @@ function user_import_form_field_match(&$form, $import) {
 function _user_import_file_row($filename, $handle, $delimiter = ',') {
 
 	// Handle folks who may list 'tab' as 't' or 'tab'
-	if (strtolower($delimiter) == 't' || strtolower($delimiter) == 'tab') {
+	if (strtolower($delimiter) == 't' || strtolower($delimiter) == 'tab' || $delimiter == '\t' || $delimiter == '/t') {
 		$delimiter = '\t';
 	}
 

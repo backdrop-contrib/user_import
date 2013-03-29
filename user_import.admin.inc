@@ -929,7 +929,7 @@ function _user_import_profile($key = 'fid', $return_value = NULL) {
 
         $results = db_query("SELECT * FROM {profile_field}");
 
-        while ($row = db_fetch_object($results)) {
+        foreach($results as $row) {
             // don't include private fields
             if (user_access('administer users') || $row->visibility != PROFILE_PRIVATE) {
                 $fields_static[] = $row;

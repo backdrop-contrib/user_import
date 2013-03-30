@@ -73,7 +73,7 @@ function profile_user_import_save_profile($field, $uid, $value, $updated, $updat
 
         if (empty($value) && $update_setting == UPDATE_REPLACE) {
           
-          db_query("DELETE FROM {profile_values} WHERE fid = %d AND uid = %d", $field->fid, $uid);
+          db_query("DELETE FROM {profile_values} WHERE fid = :fid AND uid = :uid", array(':fid' => $field->fid, ':uid' => $uid));
           unset($data[$field->name]);
           return;
         }

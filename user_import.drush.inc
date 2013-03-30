@@ -14,17 +14,18 @@ function user_import_drush_help($command) {
 }
 
 function user_import_drush_command() {
-  $commands = array();
+  $commands                = array();
   $commands['user-import'] = array(
     'description' => dt('Queue an import of users'),
-    'arguments' => array(
-      'file' => dt('The CSV file with user data'),
+    'arguments'   => array(
+      'file'     => dt('The CSV file with user data'),
       'template' => dt('Name of the template to use (optional, if not provided the default template is used)'),
     ),
-    'examples' => array(
+    'examples'    => array(
       dt('standard example') => 'drush user-import users.csv',
     ),
   );
+
   return $commands;
 }
 
@@ -57,31 +58,31 @@ function drush_user_import_user_import($original_file = NULL, $template_name = N
     drush_print(dt('Using default settings template "!template"', array('!template' => $template->name)));
   }
 
-  $template->options = unserialize($template->options);
+  $template->options     = unserialize($template->options);
   $template->field_match = unserialize($template->field_match);
-  $template->roles = unserialize($template->roles);
+  $template->roles       = unserialize($template->roles);
 
-  $file = new stdClass();
+  $file           = new stdClass();
   $file->filepath = $original_file;
   $file->filename = basename($original_file);
   file_copy($file, file_directory_temp(), FILE_EXISTS_RENAME);
 
-  // initialize import from template 
-  $import = new stdClass();
+  // initialize import from template
+  $import                  = new stdClass();
   $import->first_line_skip = $template->first_line_skip;
-  $import->contact = $template->contact;
-  $import->username_space = $template->username_space;
-  $import->send_email = $template->send_email;
-  $import->field_match = $template->field_match;
-  $import->roles = $template->roles;
-  $import->options = $template->options;
-  $import->options['ftp'] = 0;
-  $import->oldfilename = basename($original_file);
-  $import->filename = $file->filename;
-  $import->filepath = $file->filepath;
-  $import->setting = 'tested';
-  $import->started = time();
-  $result = drupal_write_record('user_import', $import);
+  $import->contact         = $template->contact;
+  $import->username_space  = $template->username_space;
+  $import->send_email      = $template->send_email;
+  $import->field_match     = $template->field_match;
+  $import->roles           = $template->roles;
+  $import->options         = $template->options;
+  $import->options['ftp']  = 0;
+  $import->oldfilename     = basename($original_file);
+  $import->filename        = $file->filename;
+  $import->filepath        = $file->filepath;
+  $import->setting         = 'tested';
+  $import->started         = time();
+  $result                  = drupal_write_record('user_import', $import);
 
   if ($result == SAVED_NEW) {
     drush_print(dt('Successfully queued user import. The original CSV file !file has been copied to the Drupal installation and can be removed.', array('!file' => $original_file)));

@@ -4,20 +4,20 @@
  * Implementation of hook_user_import_form_field_match().
  */
 function field_user_import_form_field_match() {
-  $options = array();
+  $options               = array();
   $supported_field_types = field_user_import_supported_fields();
-  $fields_info = field_info_instances('user', 'user');
+  $fields_info           = field_info_instances('user', 'user');
 
   foreach ($fields_info as $field_name => $value) {
     $field_info = field_info_field($field_name);
-    $type = $field_info['type'];
+    $type       = $field_info['type'];
 
-	  if (isset($supported_field_types[$type])) {
+    if (isset($supported_field_types[$type])) {
       $options['field'][$field_name] = $value['label'];
-	  }
-	  else {
-		  drupal_set_message(t('Field %field is not supported', array('%field' => $value['label'])), 'warning');
-	  }
+    }
+    else {
+      drupal_set_message(t('Field %field is not supported', array('%field' => $value['label'])), 'warning');
+    }
   }
 
   return $options;
@@ -31,6 +31,7 @@ function field_user_import_data($settings, $update_setting, $column_settings, $m
   if ($module != 'field') return;
 
   $value = $data[$column_id];
+
   return $value;
 }
 
@@ -43,14 +44,14 @@ function field_user_import_after_save($settings, $account, $password, $fields, $
 
   if (empty($fields_data)) return;
 
-  $processors = field_user_import_supported_fields();
-  $fields_info = field_info_instances('user', 'user');
-  $user_fields = user_load($account->uid);
+  $processors       = field_user_import_supported_fields();
+  $fields_info      = field_info_instances('user', 'user');
+  $user_fields      = user_load($account->uid);
   $processed_fields = array();
 
   foreach ($fields_data as $field_name => $values) {
-    $field_info = field_info_field($field_name);
-    $field_type = $field_info['type'];
+    $field_info         = field_info_field($field_name);
+    $field_type         = $field_info['type'];
     $processor_function = $processors[$field_type]['save'];
 
     // Use callback function to process info for field before saving.
@@ -84,59 +85,59 @@ function field_user_import_supported_fields($output = 'all') {
   if (empty($supported)) {
     $supported['text'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save' => 'field_user_import_default_field_processor',
+      'save'     => 'field_user_import_default_field_processor',
     );
 
     $supported['list_boolean'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save' => 'field_user_import_default_field_processor',
+      'save'     => 'field_user_import_default_field_processor',
     );
 
     $supported['number_decimal'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save' => 'field_user_import_default_field_processor',
+      'save'     => 'field_user_import_default_field_processor',
     );
 
     $supported['number_float'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save' => 'field_user_import_default_field_processor',
+      'save'     => 'field_user_import_default_field_processor',
     );
 
     $supported['number_integer'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save' => 'field_user_import_default_field_processor',
+      'save'     => 'field_user_import_default_field_processor',
     );
 
     $supported['list_float'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save' => 'field_user_import_default_field_processor',
+      'save'     => 'field_user_import_default_field_processor',
     );
 
     $supported['list_integer'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save' => 'field_user_import_default_field_processor',
+      'save'     => 'field_user_import_default_field_processor',
     );
 
     $supported['list_text'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save' => 'field_user_import_default_field_processor',
+      'save'     => 'field_user_import_default_field_processor',
     );
 
     // 'format'? 'safe_value'? - DONE
     $supported['text_long'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save' => 'field_user_import_default_field_processor',
+      'save'     => 'field_user_import_default_field_processor',
     );
 
     // 'format'? 'safe_value'? 'summary'? 'safe_summary'?
     $supported['text_with_summary'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save' => 'field_user_import_default_field_processor',
+      'save'     => 'field_user_import_default_field_processor',
     );
 
     $supported['taxonomy_term_reference'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save' => 'field_user_import_default_field_processor',
+      'save'     => 'field_user_import_default_field_processor',
     );
 
     /** Unsupported for the moment **/

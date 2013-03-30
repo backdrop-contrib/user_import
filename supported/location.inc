@@ -8,8 +8,9 @@ if (module_exists('location_user')) {
    * Implementation of hook_user_import_form_field_match(). Add supported Location fields into our dropdown list.
    */
   function location_user_import_form_field_match() {
-    $options = array();
+    $options             = array();
     $options['location'] = location_field_names();
+
     return $options;
   }
 
@@ -18,9 +19,10 @@ if (module_exists('location_user')) {
    */
   function location_user_import_form_update_user() {
     $form['location'] = array(
-      'title' => t('Location'),
+      'title'       => t('Location'),
       'description' => t('Affected: fields in user Location.'),
     );
+
     return $form;
   }
 
@@ -32,7 +34,7 @@ if (module_exists('location_user')) {
       return;
     }
     if (empty($data[$column_id])) {
-      $defaults = location_locationapi($data, 'defaults');
+      $defaults         = location_locationapi($data, 'defaults');
       $data[$column_id] = $defaults[$field_id]['default'];
     }
     switch ($field_id) {
@@ -51,14 +53,15 @@ if (module_exists('location_user')) {
         }
 
         user_import_errors(t('Invalid country'));
+
         return trim($data[$column_id]);
 
       case 'province':
         if (!empty($data['country'])) {
           if (!empty($data[$column_id])) {
             $provinces = location_get_provinces($data['country']);
-            $found = FALSE;
-            $province = strtoupper($data['province']);
+            $found     = FALSE;
+            $province  = strtoupper($data['province']);
             foreach ($provinces as $key => $value) {
               if ($province == strtoupper($key) || $province == strtoupper($value)) {
                 $found = TRUE;
@@ -68,9 +71,11 @@ if (module_exists('location_user')) {
             if (!$found) {
               user_import_errors(t('Province not found'));
             }
+
             return trim($data[$column_id]);
           }
         }
+
         return trim($data[$column_id]);
 
       default:
@@ -94,9 +99,9 @@ if (module_exists('location_user')) {
 
     foreach ($fields['location'] as $column_id => $column_data) {
       $location[0][$column_id] = $column_data[0];
-    } 
+    }
     // Merge defaults in
-    $dummy = array();
+    $dummy    = array();
     $defaults = location_invoke_locationapi($dummy, 'defaults');
 
     foreach ($defaults as $key => $value) {
@@ -106,6 +111,7 @@ if (module_exists('location_user')) {
     }
 
     location_save_locations($location, array('uid' => $account->uid));
+
     return;
   }
 

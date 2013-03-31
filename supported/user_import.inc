@@ -174,6 +174,14 @@ function _user_import_edit_settings_fields(&$form, $import, $collapsed) {
     '#description'   => t("The column delimiter for the file. Use '/t' for Tab."),
   );
 
+  $form['optional']['multi_value_delimiter'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Multi Value Delimiter'),
+    '#size'          => 4,
+    '#default_value' => isset($import['multi_value_delimiter']) ? $import['multi_value_delimiter'] : '*||*',
+    '#description'   => t("Character(s) to use to split data so that it can be added to a field set to multiple values, e.g. '||', '*||*'"),
+  );
+
   return;
 }
 

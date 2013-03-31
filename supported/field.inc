@@ -45,14 +45,17 @@ function field_user_import_after_save($settings, $account, $password, $fields, $
   if (empty($fields_data)) return;
 
   $processors       = field_user_import_supported_fields();
-  $fields_info      = field_info_instances('user', 'user');
+  $delimiter        =  $settings['multi_value_delimiter'];
   $user_fields      = user_load($account->uid);
   $processed_fields = array();
 
-  foreach ($fields_data as $field_name => $values) {
+  foreach ($fields_data as $field_name => $data) {
     $field_info         = field_info_field($field_name);
     $field_type         = $field_info['type'];
     $processor_function = $processors[$field_type]['save'];
+
+    // Deal with multiple values.
+    $values = explode($delimiter, $data[0]);
 
     // Use callback function to process info for field before saving.
     $processed_fields[$field_name] = $processor_function($user_fields, $field_name, $values);
@@ -73,7 +76,9 @@ function field_user_import_default_field_processor($user_fields, $field_name, $v
   $field = $user_fields->$field_name;
 
   for ($i = 0; $i < count($values); $i++) {
-    $field[LANGUAGE_NONE][$i]['value'] = $values[$i];
+    if (!empty($values[$i])) {
+      $field[LANGUAGE_NONE][$i]['value'] = $values[$i];
+    }
   }
 
   return $field;

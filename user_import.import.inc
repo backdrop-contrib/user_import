@@ -234,6 +234,13 @@ function _user_import_unique_username($username, $start = FALSE) {
   // loop until name is valid
   if (!empty($duplicate)) {
     $suffix++;
+
+    // If we loop to many times PHP will kill the script,
+    // for large user bases that might be a problem with popular names.
+    if ($suffix > 10) {
+      $suffix = $suffix * mt_rand(10, 99);
+    }
+
     _user_import_unique_username($username);
   }
 

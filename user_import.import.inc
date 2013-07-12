@@ -132,6 +132,10 @@ function _user_import_process($settings) {
   // Save progress.
   $settings['setting'] = _user_import_save_progress($settings['setting'], $remaining_data, $settings['pointer'], $settings['processed'], $settings['valid'], $settings['import_id'], TRUE);
 
+  if ($settings['setting'] == 'imported') {
+    module_invoke_all('user_import_imported', $settings['import_id'], $settings);
+  }
+
   fclose($handle);
 
   return $settings;

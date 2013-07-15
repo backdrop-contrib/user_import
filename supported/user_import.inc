@@ -182,6 +182,13 @@ function _user_import_edit_settings_fields(&$form, $import, $collapsed) {
     '#description'   => t("Character(s) to use to split data so that it can be added to a field set to multiple values, e.g. '||', '*||*'"),
   );
 
+  $form['optional']['email_domain'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Email Domain'),
+    '#description'   => t("Create an email address with the combined contents of Email Address (in Field Match above) and this field. <em><br />For example if Email Address is 'Luthor' and Email Domain is '@lexcorp.com', the account address woud be 'luthor@lexcorp.com'. <br />Note that '@example.com' is recommended for dummy addresses.</em>"),
+    '#default_value' => isset($import['email_domain']) ? $import['email_domain'] : '',
+  );
+
   return;
 }
 

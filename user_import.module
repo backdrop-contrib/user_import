@@ -414,9 +414,27 @@ function _user_import_settings_save($settings) {
   $options = array_diff_key($settings, $database_fields);
   $options = array_diff_key($options, $form_variables);
 
+  // Optimise Email Domain option if it's set.
+  if (!empty($options['email_domain'])) {
+    $options['email_domain'] = trim($options['email_domain']);
+
+    if (substr($options['email_domain'], 0, 1) != '@') {
+      $options['email_domain'] = '@'. $options['email_domain'];
+    }
+  }
+
   // Set defaults for options.
   foreach ($options as $key => $value) {
     $settings['options'][$key] = isset($settings[$key]) ? $settings[$key] : '';
+  }
+
+  // Optimise Email Domain option if it's set.
+  if (!empty($settings['options']['email_domain'])) {
+    $settings['options']['email_domain'] = trim($settings['options']['email_domain']);
+
+    if (substr($settings['options']['email_domain'], 0, 1) != '@') {
+      $settings['options']['email_domain'] = '@'. $settings['options']['email_domain'];
+    }
   }
 
   // Set defaults for fields.

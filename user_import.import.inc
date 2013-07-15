@@ -43,7 +43,7 @@ function _user_import_process($settings) {
       // check if this is first line - if so should we skip?
       if (!empty($settings['first_line_skip']) && $settings['processed'] == 0) {
         // reset to false on second process
-        $first_line_skip = (empty($first_line_skip)) ? TRUE : FALSE;
+        $first_line_skip = ($first_line_skip === 0) ? TRUE : FALSE;
       }
 
       if (!$first_line_skip) {

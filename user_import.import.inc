@@ -109,11 +109,12 @@ function _user_import_process($settings) {
             module_invoke_all('user_import_after_save', $settings, $account, $password, $fields, $updated, $update_setting_per_module);
             $processed_counter++;
           }
-          $settings['processed']++;
+
           $settings['valid']++;
         }
 
-
+        // If first line is skipped it doesn't count as processed.
+        $settings['processed']++;
       }
 
       $settings['pointer'] = ftell($handle);
@@ -126,7 +127,6 @@ function _user_import_process($settings) {
     }
 
     $settings['setting'] = _user_import_save_progress($settings['setting'], $remaining_data, $settings['pointer'], $settings['processed'], $settings['valid'], $settings['import_id']);
-
   }
 
   // Save progress.

@@ -743,7 +743,7 @@ function _user_import_ftp_files() {
     'README.txt', 'LICENSE.txt', 'UPDATES.txt', 'user_import.module', 'user_import.install', 'user_import.info',
     'user_import.admin.inc', 'user_import.import.inc', 'supported', 'tests');
 
-  while ($file = readdir($directory)) {
+  while (FALSE !== ($file = readdir($directory))) {
     if (!in_array($file, $ignorable_files)) {
       $filenames[] = $file;
     }

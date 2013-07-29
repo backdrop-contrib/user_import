@@ -34,6 +34,15 @@ function user_import_user_import_after_save($settings, $account, $password, $fie
   }
 }
 
+/**
+ * Implementation of hook_user_import_imported().
+ */
+function user_import_user_import_imported($import_id, $settings) {
+  // Delete file after it's been processed,
+  _user_import_file_deletion($settings['filepath'], $settings['filename'], $settings['oldfilename'], FALSE, FALSE);
+
+}
+
 // Send email when account is created
 function _user_import_send_email($account, $password, $profile, $subject, $body, $format, $css, $subscribed) {
 
@@ -216,6 +225,17 @@ function _user_import_edit_template_fields(&$form, $import) {
       '#description' => t('Name to identify these settings by.'),
     );
 
+    $auto_imports_enabled = variable_get('user_import_auto_imports_enabled', FALSE);
+
+    if (!empty($auto_imports_enabled)) {
+      $form['save']['auto_import_directory'] = array(
+        '#type'          => 'textfield',
+        '#title'         => t('Auto Import Directory Name'),
+        '#description'   => t('If this is set a directory with this name will be created, into which files can be uploaded and automatically processed, using the settings on this page to create new user accounts.'),
+        '#default_value' => isset($import['auto_import_directory']) ? $import['auto_import_directory'] : '',
+      );
+    }
+
     $form['save'][] = array(
       '#type'     => 'submit',
       '#value'    => t('Save'),
@@ -246,6 +266,17 @@ function _user_import_edit_template_fields(&$form, $import) {
       '#description' => t("Update '%name' settings template", array('%name' => $import['name'])),
     );
 
+    $auto_imports_enabled = variable_get('user_import_auto_imports_enabled', FALSE);
+
+    if (!empty($auto_imports_enabled)) {
+      $form['save']['auto_import_directory'] = array(
+        '#type'          => 'textfield',
+        '#title'         => t('Auto Import Directory Name'),
+        '#description'   => t('If this is set a directory with this name will be created, into which files can be uploaded and automatically processed, using the settings on this page to create new user accounts.'),
+        '#default_value' => isset($import['auto_import_directory']) ? $import['auto_import_directory'] : '',
+      );
+    }
+
     $form['save']['update']['submit'] = array(
       '#type'     => 'submit',
       '#value'    => t('Update'),
@@ -266,6 +297,17 @@ function _user_import_edit_template_fields(&$form, $import) {
       '#maxlength'   => 25,
       '#description' => t('Name to identify these settings by.'),
     );
+
+    $auto_imports_enabled = variable_get('user_import_auto_imports_enabled', FALSE);
+
+    if (!empty($auto_imports_enabled)) {
+      $form['save']['auto_import_directory'] = array(
+        '#type'          => 'textfield',
+        '#title'         => t('Auto Import Directory Name'),
+        '#description'   => t('If this is set a directory with this name will be created, into which files can be uploaded and automatically processed, using the settings on this page to create new user accounts.'),
+        '#default_value' => isset($import['auto_import_directory']) ? $import['auto_import_directory'] : '',
+      );
+    }
 
     $form['save']['new'][] = array(
       '#type'     => 'submit',

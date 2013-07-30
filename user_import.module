@@ -368,12 +368,10 @@ function theme_user_import_list() {
     $output .= theme('table', array('header' => $header, 'rows' => $rows));
 
     // action buttons
-    $settings_link = l(t('Settings'), 'admin/people/user_import/add/' . $import['import_id']);
     $delete_link   = l(t('Delete'), 'admin/people/user_import/delete/' . $import['import_id']);
     $continue_link = l(t('Continue Processing'), 'admin/people/user_import/continue/' . $import['import_id']);
     $import_link   = l(t('Import'), 'admin/people/user_import/import/' . $import['import_id']);
 
-    $output .= $settings_link . ' | ';
     $output .= $delete_link;
     if ($import['setting'] == 'tested' || $import['setting'] == 'test') $output .= ' | ' . $import_link;
     if ($import['setting'] == 'test' || $import['setting'] == 'import') $output .= ' | ' . $continue_link;
@@ -784,11 +782,6 @@ function user_import_simpletest() {
  * @param bool $message
  */
 function _user_import_file_deletion($filepath, $filename, $old_filename, $ftp, $message = TRUE) {
-
-  if ($ftp) {
-    drupal_set_message(t("File '%filename' was uploaded using FTP and should be deleted manually once the import has been completed.", array('%filename' => $filename)));
-    return;
-  }
 
   $path_parts = explode(':', $filepath);
 

@@ -39,8 +39,8 @@ function user_import_user_import_after_save($settings, $account, $password, $fie
  */
 function user_import_user_import_imported($import_id, $settings) {
   // Delete file after it's been processed,
-  _user_import_file_deletion($settings['filepath'], $settings['filename'], $settings['oldfilename'], FALSE, FALSE);
-
+  //_user_import_file_deletion($settings['filepath'], $settings['filename'], $settings['oldfilename'], FALSE, FALSE);
+  file_unmanaged_delete($settings['filepath']);
 }
 
 // Send email when account is created
@@ -388,7 +388,8 @@ function user_import_edit_remove_file_validate($form, &$form_state) {
 
   $settings = _user_import_settings_select($form_state['values']['import_id']);
   _user_import_settings_deletion($form_state['values']['import_id']);
-  _user_import_file_deletion($settings['filepath'], $settings['filename'], $settings['oldfilename'], $settings['options']['ftp']);
+  //_user_import_file_deletion($settings['filepath'], $settings['filename'], $settings['oldfilename'], $settings['options']['ftp']);
+  file_unmanaged_delete($settings['filepath']);
   drupal_goto('admin/people/user_import/add');
 }
 

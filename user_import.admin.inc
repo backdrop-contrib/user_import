@@ -89,7 +89,8 @@ function user_import_delete($import_id = NULL, $return_path = 'admin/people/user
 
   $import = _user_import_settings_select($import_id);
   _user_import_settings_deletion($import_id);
-  _user_import_file_deletion($import['filepath'], $import['filename'], $import['oldfilename'], $import['ftp']);
+  //_user_import_file_deletion($import['filepath'], $import['filename'], $import['oldfilename'], $import['ftp']);
+  file_unmanaged_delete($import['filepath']);
   drupal_goto($return_path);
 
   return;
@@ -307,6 +308,11 @@ function user_import_configure_form_submit($form, &$form_state) {
   $form_state['redirect'] = 'admin/people/user_import';
 }
 
+/**
+ *  Start new import.
+ *  Form to select file.
+ *
+ **/
 function user_import_add_form($import_id = NULL) {
 
   $form = array();
@@ -361,11 +367,12 @@ function user_import_add_form_validate($form, &$form_state) {
   $file = _user_import_file(NULL, $file_ftp);
 
   // check file uploaded OK
-  if (empty($file->filename)) form_set_error('file_upload', t('A file must be uploaded or selected from FTP updates.'));
-
-  /**
-   * @todo check file matches saved settings selected
-   */
+  if (empty($file->filename)) {
+    form_set_error('file_upload', t('A file must be uploaded or selected from FTP updates.'));
+  }
+  else {
+    $form_state['values']['file_info'] = $file;
+  }
 
   return;
 }
@@ -381,11 +388,12 @@ function user_import_add_form_submit($form, &$form_state) {
   }
 
   $file = _user_import_file(NULL, $file_ftp);
+  $file_name = user_import_move_file_for_processing($file->uri, $file->filename);
 
   $form_state['values']['ftp']         = $file_ftp;
-  $form_state['values']['filename']    = $file->filename;
+  $form_state['values']['filename']    = $file_name;
   $form_state['values']['oldfilename'] = $file->filename;
-  $form_state['values']['filepath']    = $file->uri;
+  $form_state['values']['filepath']    = 'private://user_import/processing/' . $file_name;
   $form_state['values']['setting']     = 'file set';
 
   // create import setting
@@ -528,7 +536,8 @@ function user_import_edit_cancel_validate($form, &$form_state) {
   if ($form_state['values']['setting'] == 'file set') {
     $settings = _user_import_settings_select($form_state['values']['import_id']);
     _user_import_settings_deletion($form_state['values']['import_id']);
-    _user_import_file_deletion($settings['filepath'], $settings['filename'], $settings['oldfilename'], $settings['options']['ftp']);
+    // _user_import_file_deletion($settings['filepath'], $settings['filename'], $settings['oldfilename'], $settings['options']['ftp']);
+    file_unmanaged_delete($settings['filepath']);
   }
 
   $form_state['redirect'] = 'admin/people/user_import';
@@ -641,6 +650,16 @@ function user_import_import_submit($form, &$form_state) {
   drupal_set_message(t('Imported'));
 }
 
+function user_import_move_file_for_processing($source, $file_name) {
+  // Make sure processing directory exists.
+  user_import_create_directory(NULL, 'processing');
+
+  $destination = 'private://user_import/processing/' . $file_name;
+  $uri = file_unmanaged_move($source, $destination, FILE_EXISTS_RENAME);
+  $file_name = substr($uri, 33);
+  return $file_name;
+}
+
 /**
  *
  */
@@ -656,10 +675,11 @@ function user_import_edit_submit($form, &$form_state) {
   module_load_include('inc', 'user_import', 'user_import.import');
 
   if ($form_state['values']['setting'] == 'file set') {
-    $file           = new stdClass();
-    $file->uri      = $form_state['values']['filepath'];
-    $file->filename = $form_state['values']['filename'];
-    $filepath       = file_move($file, file_directory_path() . '/' . $form_state['values']['filename']);
+//    $file           = new stdClass();
+//    $file->uri      = $form_state['values']['filepath'];
+//    $file->filename = $form_state['values']['filename'];
+    //$filepath       = file_move($file, file_directory_path() . '/' . $form_state['values']['filename']);
+    $filepath       = user_import_move_file_for_processing($form_state['values']['filepath']);
   }
 
   if (!empty($form_state['values']['og_id'])) $form_state['values']['groups'][$form_state['values']['og_id']] = $form_state['values']['og_id'];
@@ -772,11 +792,16 @@ function _user_import_file($import_id = NULL, $ftp_file_selected = NULL) {
   static $file;
   if (!empty($file)) return $file;
 
-  // file was uploaded through browser
-  $file = file_save_upload('file_upload', array('file_validate_extensions' => array('csv txt'))); // ?????
-  if (!empty($file)) return $file;
+  // File was uploaded through browser.
+  if (empty($ftp_file_selected) && empty($import_id)) {
+    // Delete record from database management so we don't have duplicates problems.
+    db_delete('file_managed')->condition('uri', 'temporary://' . $_FILES['files']['name']['file_upload'])->execute();
 
-  // file was uploaded by FTP
+    $file = file_save_upload('file_upload', array('file_validate_extensions' => array('csv txt')), FALSE, FILE_EXISTS_RENAME);
+    if (!empty($file)) return $file;
+  }
+
+  // File was uploaded by FTP
   if (!empty($ftp_file_selected)) {
     $ftp_files      = file_scan_directory('private://user_import/uploads/selectable', '/.*$/', array('key' => 'filename'));
     $file           = $ftp_files[$ftp_file_selected];
@@ -785,7 +810,7 @@ function _user_import_file($import_id = NULL, $ftp_file_selected = NULL) {
     return $file;
   }
 
-  // use file info stored in database
+  // Use file info stored in database
   if (!empty($import_id)) {
     $import            = _user_import_settings_select($import_id);
     $file->uri         = $import['filepath'];
@@ -821,7 +846,8 @@ function  _user_import_incomplete_deletion() {
 
   foreach ($result as $import) {
     $options = unserialize($import->options);
-    _user_import_file_deletion($import->filepath, $import->filename, $import->oldfilename, $options['ftp'], FALSE);
+    //_user_import_file_deletion($import->filepath, $import->filename, $import->oldfilename, $options['ftp'], FALSE);
+    file_unmanaged_delete($import->filepath);
     _user_import_settings_deletion($import->import_id);
   }
 

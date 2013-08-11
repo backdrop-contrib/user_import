@@ -7,12 +7,12 @@ Drupal: 7.x
 ********************************************************************
 DESCRIPTION:
 
-Import users into Drupal from a csv file (comma separated file).
+Import users into Drupal from a CSV file (Comma Separated File).
 
 Features include:
 
 * Creates an account for each user
-* Match csv columns to profile fields.
+* Match CSV columns to profile fields.
 * Can optionally use the file's first row to map csv data to user profile fields
 * Option to create Usernames based on data from file, e.g. "John" + "Smith" => "JohnSmith"
 * Usernames can be made of abbreviated data from file, e.g. "Jane" + "Doe" => "JDoe"
@@ -67,7 +67,7 @@ setting the file extension to .txt.
 ********************************************************************
 PREREQUISITES:
 
-  Must have customized Profile fields already entered
+  Must have customised Profile fields already entered
   if data is to be imported into user profiles.
 
 
@@ -88,7 +88,38 @@ check the Drupal web site if you need assistance.
   Click the 'Save configuration' button at the bottom to commit your
   changes.
 
+3. IMPORTANT - Navigate to:
+    admin/config/media/file-system 
 
+    Set the 'Private file system path' field.
+
+
+
+********************************************************************
+CONFIGURATION:
+
+Configuration for User Import:
+
+'People'
+-- 'Import'
+-- 'Configure' (admin/people/user_import/configure)
+
+* Uploads Directory
+
+   This option provides a directory where files can be uploaded, and then selected when setting up 
+   an import. The uploads directory will be in your Private files directory:
+
+   [path to private files]/user_import/uploads/selectable
+
+* Automated Imports
+
+   If this is set then each import template will have the option to create a matching directory which 
+   will be scanned for any files that have been uploaded to it, and when a file is found it will 
+   automatically be used to create new user accounts. Directories are scanned during cron runs.
+
+   Scanned directories will be in:
+
+   [path to private files]/user_import/uploads/[name of directory]
 
 
 
@@ -176,3 +207,8 @@ ACKNOWLEDGEMENT
 - patch by mfredrickson
 - patch by idealso
 - code from Nedjo Rogers
+
+
+********************************************************************
+SPONSORS
+

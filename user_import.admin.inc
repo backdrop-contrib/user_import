@@ -52,6 +52,15 @@ function user_import_list($action = NULL, $import_id = NULL) {
 function user_import_preferences($import_id = NULL, $template_id = NULL) {
 
   if (empty($import_id)) {
+    $private_path = variable_get('file_private_path', FALSE);
+
+    // Private path hasn't been set, show a message instead of the form.
+    if (!$private_path) {
+      drupal_set_message(t('!path needs to be set before users can be imported.', array('!path' => l('Private file system path', 'admin/config/media/file-system', array('query' => array('destination' => 'admin/people/user_import/add'))))), 'warning');
+      return ' ';
+    }
+
+
     $output = drupal_get_form('user_import_add_form');
   }
   else {
@@ -272,9 +281,13 @@ function user_import_configure_form_submit($form, &$form_state) {
   settype($form_state['values']['user_import_line_max'], 'integer');
   variable_set('user_import_max', $form_state['values']['user_import_max']);
   variable_set('user_import_line_max', $form_state['values']['user_import_line_max']);
-  variable_set('user_import_settings', $form_state['values']['user_import_settings']);
+
+  $user_import_settings = isset($form_state['values']['user_import_settings']) ? $form_state['values']['user_import_settings'] : 0;
+  variable_set('user_import_settings', $user_import_settings);
+
   $profile_date_format = isset($form_state['values']['profile_date_format']) ? $form_state['values']['profile_date_format'] : 0;
   variable_set('user_import_profile_date_format', $profile_date_format);
+
   variable_set('user_import_selectable_files', $form_state['values']['selectable_files']);
   variable_set('user_import_auto_imports_enabled', $form_state['values']['auto_imports_enabled']);
 
@@ -311,7 +324,6 @@ function user_import_configure_form_submit($form, &$form_state) {
 /**
  *  Start new import.
  *  Form to select file.
- *
  **/
 function user_import_add_form($import_id = NULL) {
 
@@ -702,7 +714,7 @@ function user_import_add_file_form(&$form, $ftp_files = NULL) {
   );
 
   if (function_exists('file_upload_max_size')) {
-    $file_size = t('Maximum file size: %size.', array('%size' => format_size(file_upload_max_size())));
+    $file_size = t('Maximum file size: @size.', array('@size' => format_size(file_upload_max_size())));
   }
 
   $form['browser']['file_upload'] = array(

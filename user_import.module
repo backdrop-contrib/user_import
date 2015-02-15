@@ -88,23 +88,26 @@ function user_import_menu() {
     'type'             => MENU_LOCAL_TASK,
     'file'             => 'user_import.admin.inc',
   );
-  $items['admin/people/user_import/continue']  = array(
+  $items['admin/people/user_import/continue/%']  = array(
     'title'            => 'Continue',
-    'page callback'    => 'user_import_continue',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'    => array('user_import_confirm_continue', 4),
     'access arguments' => array('import users'),
     'type'             => MENU_CALLBACK,
     'file'             => 'user_import.admin.inc',
   );
-  $items['admin/people/user_import/import']    = array(
+  $items['admin/people/user_import/import/%']    = array(
     'title'            => 'Import',
-    'page callback'    => 'user_import_import',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'    => array('user_import_confirm_import', 4),
     'access arguments' => array('import users'),
     'type'             => MENU_CALLBACK,
     'file'             => 'user_import.admin.inc',
   );
-  $items['admin/people/user_import/delete']    = array(
+  $items['admin/people/user_import/delete/%']    = array(
     'title'            => 'Delete Import',
-    'page callback'    => 'user_import_delete',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'    => array('user_import_confirm_delete', 4),
     'access arguments' => array('import users'),
     'type'             => MENU_CALLBACK,
     'file'             => 'user_import.admin.inc',
@@ -116,12 +119,6 @@ function user_import_menu() {
     'access arguments' => array('import users'),
     'type'             => MENU_LOCAL_TASK,
     'file'             => 'user_import.admin.inc',
-  );
-  $items['admin/people/user_import/delete']                 = array(
-    'title'            => 'Remove Info',
-    'page callback'    => 'user_import_limited_delete',
-    'type'             => MENU_CALLBACK,
-    'access arguments' => array('limited user import'),
   );
   $items['admin/people/user_import/errors/%']                 = array(
     'title'            => 'Import Errors',
@@ -333,7 +330,8 @@ function user_import_limited_errors($import_id = NULL, $template_id = NULL) {
  * @param null $template_id
  */
 function user_import_limited_delete($import_id = NULL, $template_id = NULL) {
-  user_import_delete($import_id, "user_import/$template_id");
+  module_load_include('inc', 'user_import', 'user_import.admin');
+  user_import_delete($import_id, "admin/people/user_import");
 }
 
 // - - - - - - - -  THEMES - - - - - - - -

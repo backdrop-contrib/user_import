@@ -1,12 +1,13 @@
 <?php
 
 function _user_import_process($settings) {
+  $config = config('user_import.settings');
   // Load supported modules
   user_import_load_supported();
 
   $remaining_data            = FALSE;
-  $line_max                  = variable_get('user_import_line_max', 1000);
-  $import_max                = variable_get('user_import_max', 250);
+  $line_max                  = $config->get('user_import_line_max');
+  $import_max                = $config->get('user_import_max');
   $field_match               = _user_import_unconcatenate_field_match($settings['field_match']);
   $update_setting            = _user_import_update_user_check($settings['options']['update_user']);
   $update_setting_per_module = $settings['options']['update_user'];
@@ -20,7 +21,9 @@ function _user_import_process($settings) {
   $handle = @fopen($settings['filepath'], "r");
 
   // move pointer to where test/import last finished
-  if ($settings['pointer'] != 0) fseek($handle, $settings['pointer']);
+  if ($settings['pointer'] != 0) {
+    fseek($handle, $settings['pointer']);
+  }
 
   // start count of imports on this cron run
   $processed_counter = 0;
@@ -36,7 +39,7 @@ function _user_import_process($settings) {
     }
 
     // don't process empty lines
-    $line_filled = (count($data) == 1 && drupal_strlen($data[0]) == 0) ? FALSE : TRUE;
+    $line_filled = (count($data) == 1 && backdrop_strlen($data[0]) == 0) ? FALSE : TRUE;
 
     if ($line_filled) {
 
@@ -81,7 +84,9 @@ function _user_import_process($settings) {
         // look for and use an existing account.
         if ($update_setting && !empty($fields['user']['email'][0])) {
           $existing_account = user_load_by_mail($fields['user']['email'][0]);
-          if ($existing_account) $account = (array)$existing_account;
+          if ($existing_account) {
+            $account = (array) $existing_account;
+          }
         }
 
         // if $account['uid'] is not empty then we can assume the account is being updated
@@ -142,11 +147,19 @@ function _user_import_process($settings) {
 }
 
 // errors for user being imported
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_errors($error = FALSE, $clear = FALSE) {
 
   static $errors = array();
-  if ($clear) $errors = array();
-  if ($error) $errors[] = $error;
+  if ($clear) {
+    $errors = array();
+  }
+  if ($error) {
+    $errors[] = $error;
+  }
 
   return $errors;
 }
@@ -169,10 +182,10 @@ function _user_import_create_username($order, $data, $abbreviate, $username_spac
       }
 
       if ($abbreviate[$file_column] == 1) {
-        //$username .= trim(drupal_strtoupper(chr(ord($data[$file_column]))));
+        //$username .= trim(backdrop_strtoupper(chr(ord($data[$file_column]))));
         $first_character = trim($data[$file_column]);
-        $first_character = drupal_substr($first_character, 0, 1);
-        $username .= drupal_strtoupper($first_character);
+        $first_character = backdrop_substr($first_character, 0, 1);
+        $username .= backdrop_strtoupper($first_character);
       }
       else {
         $username .= trim($data[$file_column]);
@@ -181,7 +194,9 @@ function _user_import_create_username($order, $data, $abbreviate, $username_spac
     }
   }
 
-  if (empty($username)) $username = _user_import_random_username();
+  if (empty($username)) {
+    $username = _user_import_random_username();
+  }
 
   $username = _user_import_sanitise_username($username);
   $username = _user_import_unique_username($username, TRUE);
@@ -190,7 +205,7 @@ function _user_import_create_username($order, $data, $abbreviate, $username_spac
 }
 
 /**
- *  conform to Drupal username rules
+ *  conform to Backdrop username rules
  */
 function _user_import_sanitise_username($username) {
 
@@ -226,7 +241,9 @@ function _user_import_sanitise_username($username) {
 function _user_import_unique_username($username, $start = FALSE) {
 
   static $suffix = 1;
-  if ($start) $suffix = 1;
+  if ($start) {
+    $suffix = 1;
+  }
 
   if ($suffix < 2) {
     $duplicate = db_query_range('SELECT uid from {users} where name = :name', 0, 1, array(':name' => $username))->fetchField();
@@ -257,14 +274,16 @@ function _user_import_unique_username($username, $start = FALSE) {
 // Update settings for existing import
 function _user_import_settings_update($pointer, $processed, $valid, $setting, $import_id) {
 
-  if (empty($import_id)) return;
+  if (empty($import_id)) {
+    return;
+  }
 
   db_update('user_import')
     ->fields(array(
-    'pointer'   => $pointer,
+    'pointer' => $pointer,
     'processed' => $processed,
-    'valid'     => $valid,
-    'setting'   => $setting
+    'valid' => $valid,
+    'setting' => $setting,
   ))
     ->condition('import_id', $import_id)
     ->execute();
@@ -276,7 +295,7 @@ function _user_import_random_username() {
   $consonants = 'bcdfghjklmnpqrstvwxz';
   $length     = 8;
 
-  mt_srand((double)microtime() * 10000000);
+  mt_srand((double) microtime() * 10000000);
   $next_vowel = 0;
 
   for ($count = 0; $count <= $length; $count++) {
@@ -301,7 +320,9 @@ function _user_import_random_username() {
 function _user_import_update_user_check($settings) {
 
   foreach ($settings as $setting) {
-    if ($setting != UPDATE_NONE) return TRUE;
+    if ($setting != UPDATE_NONE) {
+      return TRUE;
+    }
   }
 
   return FALSE;
@@ -314,8 +335,8 @@ function _user_import_errors_display_save($import_id, $data, $email, $errors) {
   $id = db_insert('user_import_errors')
     ->fields(array(
     'import_id' => $import_id,
-    'data'      => serialize($data),
-    'errors'    => serialize($errors),
+    'data' => serialize($data),
+    'errors' => serialize($errors),
   ))
     ->execute();
 
@@ -328,8 +349,12 @@ function _user_import_errors_display_save($import_id, $data, $email, $errors) {
 function _user_import_save_progress($status, $remaining_data, $pointer, $processed, $valid, $import_id, $status_check = FALSE) {
 
   if ($status_check) {
-    if ($status == 'import' && !$remaining_data) $status = 'imported';
-    if ($status == 'test') $status = 'tested';
+    if ($status == 'import' && !$remaining_data) {
+      $status = 'imported';
+    }
+    if ($status == 'test') {
+      $status = 'tested';
+    }
   }
 
   _user_import_settings_update($pointer, $processed, $valid, $status, $import_id);

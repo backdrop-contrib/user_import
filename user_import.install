@@ -6,140 +6,140 @@
  */
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function user_import_schema() {
   $schema['user_import'] = array(
     'description' => t("Settings for each import, and import setting templates."),
-    'fields'      => array(
-      'import_id'   => array(
+    'fields' => array(
+      'import_id' => array(
         'description' => t("ID key of import or template."),
-        'type'        => 'serial',
-        'unsigned'    => TRUE,
-        'not null'    => TRUE,
-        'disp-width'  => '10'
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'disp-width' => '10',
       ),
-      'name'        => array(
+      'name' => array(
         'description' => t("Label of import template, only used if this is an import template."),
-        'type'        => 'varchar',
-        'length'      => '25',
-        'not null'    => TRUE,
-        'default'     => ''
+        'type' => 'varchar',
+        'length' => '25',
+        'not null' => TRUE,
+        'default' => '',
       ),
-      'auto_import_directory'    => array(
+      'auto_import_directory' => array(
         'description' => t("Name of directory associated with an import template."),
-        'type'        => 'varchar',
-        'length'      => '255',
-        'not null'    => TRUE,
-        'default'     => ''
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'default' => '',
       ),
-      'filename'    => array(
+      'filename' => array(
         'description' => t("Name of file being used as source of data for import."),
-        'type'        => 'varchar',
-        'length'      => '50',
-        'not null'    => TRUE,
-        'default'     => ''
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+        'default' => '',
       ),
       'oldfilename' => array(
         'description' => t("Original name of file being used as source of data for import."),
-        'type'        => 'varchar',
-        'length'      => '50',
-        'not null'    => TRUE,
-        'default'     => ''
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+        'default' => '',
       ),
-      'filepath'    => array(
+      'filepath' => array(
         'description' => t("Path to file being used as source of data for import."),
-        'type'        => 'text',
-        'size'        => 'small',
-        'not null'    => TRUE
+        'type' => 'text',
+        'size' => 'small',
+        'not null' => TRUE,
       ),
-      'started'     => array(
+      'started' => array(
         'description' => t("Datestamp of when import was started."),
-        'type'        => 'int',
-        'not null'    => TRUE,
-        'default'     => 0,
-        'disp-width'  => '11'
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'disp-width' => '11',
       ),
-      'pointer'     => array(
+      'pointer' => array(
         'description' => t("Pointer to where test/import last finished."),
-        'type'        => 'int',
-        'not null'    => TRUE,
-        'default'     => 0,
-        'disp-width'  => '10'
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'disp-width' => '10',
       ),
-      'processed'   => array(
+      'processed' => array(
         'description' => t("Number of users processed by import."),
-        'type'        => 'int',
-        'not null'    => TRUE,
-        'default'     => 0,
-        'disp-width'  => '10'
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'disp-width' => '10',
       ),
-      'valid'       => array(
+      'valid' => array(
         'description' => t("Number of users processed without errors."),
-        'type'        => 'int',
-        'not null'    => TRUE,
-        'default'     => 0,
-        'disp-width'  => '10'
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'disp-width' => '10',
       ),
       'field_match' => array(
-        'description' => t("Settings for how data matches to Drupal fields."),
-        'type'        => 'text',
-        'size'        => 'big',
-        'not null'    => TRUE,
-        'serialize'   => TRUE
+        'description' => t("Settings for how data matches to Backdrop fields."),
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+        'serialize' => TRUE,
       ),
-      'roles'       => array(
+      'roles' => array(
         'description' => t("Roles to give imported users."),
-        'type'        => 'text',
-        'size'        => 'big',
-        'not null'    => TRUE,
-        'serialize'   => TRUE
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+        'serialize' => TRUE,
       ),
-      'options'     => array(
+      'options' => array(
         'description' => t("Store of all other options for import. Most of the other settings in this table will be moved into here in future."),
-        'type'        => 'text',
-        'size'        => 'big',
-        'not null'    => TRUE,
-        'serialize'   => TRUE
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+        'serialize' => TRUE,
       ),
-      'setting'     => array(
+      'setting' => array(
         'description' => t("Status of import, or whether it is an import template."),
-        'type'        => 'varchar',
-        'length'      => '10',
-        'not null'    => TRUE,
-        'default'     => ''
-      )
+        'type' => 'varchar',
+        'length' => '10',
+        'not null' => TRUE,
+        'default' => '',
+      ),
     ),
     'primary key' => array('import_id'),
   );
 
   $schema['user_import_errors'] = array(
     'description' => t("Record of errors encountered during an import."),
-    'fields'      => array(
+    'fields' => array(
       'import_id' => array(
         'description' => t("ID key of import or template."),
-        'type'        => 'int',
-        'not null'    => TRUE,
-        'default'     => 0,
-        'disp-width'  => '10'
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'disp-width' => '10',
       ),
-      'data'      => array(
+      'data' => array(
         'description' => t("Data (matched to fields) for user that failed to import due to error."),
-        'type'        => 'text',
-        'size'        => 'big',
-        'not null'    => TRUE,
-        'serialize'   => TRUE
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+        'serialize' => TRUE,
       ),
-      'errors'    => array(
+      'errors' => array(
         'description' => t("Error(s) encountered for user that failed to import."),
-        'type'        => 'text',
-        'size'        => 'big',
-        'not null'    => TRUE,
-        'serialize'   => TRUE
-      )
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+        'serialize' => TRUE,
+      ),
     ),
-    'indexes'     => array(
-      'import_id' => array('import_id')
+    'indexes' => array(
+      'import_id' => array('import_id'),
     ),
   );
 
@@ -147,143 +147,94 @@ function user_import_schema() {
 }
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  */
 function user_import_install() {
 
   // Add a new mail system for HTML emails.
+  // TODO This variable was probably removed in Backdrop without replacement.
   $mail_system = variable_get('mail_system', array('default-system' => 'DefaultMailSystem'));
   $mail_system['user_import'] = 'UserImportMailSystem';
+  // TODO This variable was probably removed in Backdrop without replacement.
   variable_set('mail_system', $mail_system);
+  // Dynamically generated variable data was detected on the following lines.
+  // /user_import/user_import.module line 271
 }
 
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function user_import_uninstall() {
-  variable_del('user_import_settings');
-  variable_del('user_import_max');
-  variable_del('user_import_line_max');
+  config_clear('user_import.settings', 'user_import_settings');
+  config_clear('user_import.settings', 'user_import_max');
+  config_clear('user_import.settings', 'user_import_line_max');
+  // TODO This variable was probably removed in Backdrop without replacement.
   variable_del('user_export_checked_usernames');
-  variable_del('user_import_profile_date_format');
+  config_clear('user_import.settings', 'user_import_profile_date_format');
 
   //
+  // TODO This variable was probably removed in Backdrop without replacement.
   $mail_system = variable_get('mail_system', array('default-system' => 'DefaultMailSystem'));
   unset($mail_system['user_import']);
+  // TODO This variable was probably removed in Backdrop without replacement.
   variable_set('mail_system', $mail_system);
 }
 
-function user_import_update_1() {
-  $ret = array();
-  _system_update_utf8(array('user_import', 'user_import_errors'));
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function user_import_update_1() { }
 
-  return $ret;
-}
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function user_import_update_2() { }
 
-function user_import_update_2() {
-  $ret = array();
-  db_add_column($ret, 'user_import', 'options', 'longtext');
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function user_import_update_3() { }
 
-  return $ret;
-}
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function user_import_update_4() { }
 
-function user_import_update_3() {
-  $ret = array();
-  db_drop_primary_key($ret, 'user_import');
-  db_change_field($ret, 'user_import', 'iid', 'import_id', array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE, 'disp-width' => '10'), array('primary key' => array('import_id')));
-  db_change_field($ret, 'user_import', 'first_line', 'first_line_skip', array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0, 'disp-width' => '10'), array('primary key' => array('import_id')));
-  db_drop_index($ret, 'user_import_errors', 'import_id');
-  db_change_field($ret, 'user_import_errors', 'iid', 'import_id', array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0, 'disp-width' => '10'));
-  db_add_index($ret, 'user_import_errors', 'import_id', array('import_id'));
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function user_import_update_5() { }
 
-  return $ret;
-}
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function user_import_update_6001() { }
 
-function user_import_update_4() {
-  $ret = array();
-  db_drop_index($ret, 'user_import_errors', 'import_id');
-  db_change_field($ret, 'user_import_errors', 'error', 'errors', array('type' => 'text', 'size' => 'big', 'not null' => TRUE, 'serialize' => TRUE));
-  db_add_index($ret, 'user_import_errors', 'import_id', array('import_id'));
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function user_import_update_6002() { }
 
-  return $ret;
-}
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function user_import_update_6003() { }
 
-function user_import_update_5() {
-  $ret = array();
-  db_drop_index($ret, 'user_import_errors', 'import_id');
-  db_change_field($ret, 'user_import_errors', 'errors', 'errors', array('type' => 'text', 'size' => 'big', 'not null' => TRUE, 'serialize' => TRUE));
-  db_add_index($ret, 'user_import_errors', 'import_id', array('import_id'));
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function user_import_update_7200(&$sandbox) { }
 
-  return $ret;
-}
-
-function user_import_update_6001() {
-  // Rebuild schema cache
-  drupal_get_schema('user_import', TRUE);
-
-  return array();
-}
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function user_import_update_7201() { }
 
 /**
- * Move settings into the 'options' column.
+ * Implements hook_update_last_removed().
  */
-function user_import_update_6002() {
-  $ret    = array();
-  $result = db_query("SELECT * FROM {user_import}");
-
-  // Update each import.
-  while ($import = db_fetch_array($result)) {
-    $options                    = unserialize($import['options']);
-    $options['first_line_skip'] = $import['first_line_skip'];
-    $options['contact']         = $import['contact'];
-    $options['username_space']  = $import['username_space'];
-    $options['send_email']      = $import['send_email'];
-    //Avoid using update_sql() as it has issues with serialized data.
-    db_query("UPDATE {user_import} SET options = '%s' WHERE import_id = %d", serialize($options), $import['import_id']);
-  }
-
-  $ret[] = update_sql('ALTER TABLE {user_import} DROP COLUMN first_line_skip');
-  $ret[] = update_sql('ALTER TABLE {user_import} DROP COLUMN contact');
-  $ret[] = update_sql('ALTER TABLE {user_import} DROP COLUMN username_space');
-  $ret[] = update_sql('ALTER TABLE {user_import} DROP COLUMN send_email');
-
-  return $ret;
+function user_import_update_last_removed() {
+  return 7201;
 }
 
 /**
- * Change the Roles column to LOMGTEXT.
+ * Implements hook_update_N().
  */
-function user_import_update_6003() {
-  $ret = array();
-  db_change_field($ret, 'user_import', 'roles', 'roles', array('type' => 'text', 'size' => 'big', 'not null' => TRUE, 'serialize' => TRUE));
-
-  return $ret;
-}
-
-/**
- *  Add database field to store the name of a directory associated with an import template.
- *
- **/
-function user_import_update_7200(&$sandbox) {
-  $field = array(
-    'description' => t("Name of directory associated with an import template."),
-    'type'        => 'varchar',
-    'length'      => '255',
-    'not null'    => TRUE,
-    'default'     => '',
-  );
-
-  db_add_field('user_import', 'auto_import_directory', $field);
-}
-
-/**
- * Add a new mail system for HTML emails.
- */
-function user_import_update_7201() {
-  $ret = array();
-  $mail_system = variable_get('mail_system', array('default-system' => 'DefaultMailSystem'));
-  $mail_system['user_import'] = 'UserImportMailSystem';
-  variable_set('mail_system', $mail_system);
-  return $ret;
+function user_import_update_1000() {
+  $config = config('user_import.settings');
+  $config->set('user_import_profile_date_format', update_variable_get('user_import_profile_date_format', 'MM/DD/YYYY'));
+  $config->set('user_import_auto_imports_enabled', update_variable_get('user_import_auto_imports_enabled', 'FALSE'));
+  $config->set('user_import_selectable_files', update_variable_get('user_import_selectable_files', 'novalue'));
+  $config->set('user_import_max', update_variable_get('user_import_max', '250'));
+  $config->set('user_import_line_max', update_variable_get('user_import_line_max', '1000'));
+  $config->set('user_import_settings', update_variable_get('user_import_settings', '0'));
+  $config->set('user_import_og_template', update_variable_get('user_import_og_template', 'dynamic value in file /user_import/user_import.module line 271'));
+  update_variable_del('user_import_profile_date_format');
+  update_variable_del('user_import_auto_imports_enabled');
+  update_variable_del('user_import_selectable_files');
+  update_variable_del('user_import_max');
+  update_variable_del('user_import_line_max');
+  update_variable_del('user_import_settings');
+  update_variable_del('user_import_og_template');
 }

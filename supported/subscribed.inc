@@ -8,14 +8,16 @@ function subscribed_user_import_form_fieldset($import, $collapsed) {
   if (module_exists('publication') && module_exists('schedule')) {
 
     $publications = publication_select_publications('enewsletter');
-    if (empty($publications)) return;
+    if (empty($publications)) {
+      return;
+    }
 
     $form['subscribed'] = array(
-      '#type'        => 'fieldset',
-      '#title'       => t('Subscriptions'),
+      '#type' => 'fieldset',
+      '#title' => t('Subscriptions'),
       '#collapsible' => TRUE,
-      '#collapsed'   => $collapsed,
-      '#tree'        => TRUE,
+      '#collapsed' => $collapsed,
+      '#tree' => TRUE,
     );
 
     foreach ($publications as $publication) {
@@ -23,7 +25,7 @@ function subscribed_user_import_form_fieldset($import, $collapsed) {
       $type = $publication->type;
 
       $form['subscribed'][$type] = array(
-        '#type'  => 'fieldset',
+        '#type' => 'fieldset',
         '#title' => check_plain($type),
       );
 
@@ -45,11 +47,11 @@ function subscribed_user_import_form_fieldset($import, $collapsed) {
       $subscription_default = empty($subscribed[$type][$publication->publication_id]) ? 0 : $subscribed[$type][$publication->publication_id][0];
 
       $form['subscribed'][$type][$publication->publication_id][] = array(
-        '#type'          => 'radios',
-        '#title'         => check_plain($publication->title),
+        '#type' => 'radios',
+        '#title' => check_plain($publication->title),
         '#default_value' => $subscription_default,
-        '#options'       => $options,
-        '#description'   => check_plain($publication->description),
+        '#options' => $options,
+        '#description' => check_plain($publication->description),
       );
 
     }
@@ -62,7 +64,10 @@ function subscribed_user_import_form_fieldset($import, $collapsed) {
  * Implementation of hook_user_import_form_update_user().
  */
 function subscribed_user_import_form_update_user() {
-  $form['subscribed'] = array('title' => t('Subscribed'), 'description' => t('Affected: subscriptions.'));
+  $form['subscribed'] = array(
+    'title' => t('Subscribed'),
+    'description' => t('Affected: subscriptions.'),
+  );
 
   return $form;
 }
@@ -74,7 +79,9 @@ function subscribed_user_import_after_save($settings, $account, $password, $fiel
   /**
    * @todo change to new update architecture
    */
-  if (!module_exists('publication') || !module_exists('schedule') || !module_exists('identity_hash') || empty($settings['options']['subscribed'])) return;
+  if (!module_exists('publication') || !module_exists('schedule') || !module_exists('identity_hash') || empty($settings['options']['subscribed'])) {
+    return;
+  }
 
   $subscribed_settings = $settings['options']['subscribed'];
   $uid                 = $account->uid;
@@ -86,7 +93,9 @@ function subscribed_user_import_after_save($settings, $account, $password, $fiel
       $subscriptions = $type_subscriptions;
 
       foreach ($type_subscriptions as $publication_id => $schedule) {
-        if (empty($schedule[0])) unset($subscriptions[$publication_id]);
+        if (empty($schedule[0])) {
+          unset($subscriptions[$publication_id]);
+        }
       }
 
       $publications = publication_select_publications_and_terms($type);

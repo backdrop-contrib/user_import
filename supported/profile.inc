@@ -15,7 +15,10 @@ function profile_user_import_form_field_match() {
  * Implementation of hook_user_import_form_update_user().
  */
 function profile_user_import_form_update_user() {
-  $form['profile'] = array('title' => t('Profile'), 'description' => t('Affected: Profile fields.'));
+  $form['profile'] = array(
+    'title' => t('Profile'),
+    'description' => t('Affected: Profile fields.'),
+  );
 
   return $form;
 }
@@ -25,7 +28,9 @@ function profile_user_import_form_update_user() {
  */
 function profile_user_import_data($settings, $update_setting, $column_settings, $module, $field_id, $data, $column_id) {
 
-  if ($module != 'profile') return;
+  if ($module != 'profile') {
+    return;
+  }
 
   return trim($data[$column_id]);
 }
@@ -70,7 +75,9 @@ function profile_user_import_save_profile($field, $uid, $value, $updated, $updat
         return;
 
       case UPDATE_ADD:
-        if (empty($value) || (!empty($exists) && $exists != '')) return;
+        if (empty($value) || (!empty($exists) && $exists != '')) {
+          return;
+        }
 
       case UPDATE_REPLACE:
 
@@ -86,8 +93,8 @@ function profile_user_import_save_profile($field, $uid, $value, $updated, $updat
 
           $id = db_insert('profile_values')
             ->fields(array(
-            'fid'   => $field->fid,
-            'uid'   => $uid,
+            'fid' => $field->fid,
+            'uid' => $uid,
             'value' => $value,
           ))
             ->execute();
@@ -111,7 +118,9 @@ function profile_user_import_save_profile($field, $uid, $value, $updated, $updat
   }
   else {
 
-    if (empty($value)) return;
+    if (empty($value)) {
+      return;
+    }
 
     if ((empty($exists) && $exists != '') || $exists === FALSE) {
 
@@ -173,7 +182,7 @@ function user_import_profile_date(&$value, $field_type) {
   }
 
   // Get seleceted format.
-  $date_format = variable_get('user_import_profile_date_format', 'MM/DD/YYYY');
+  $date_format = config_get('user_import.settings', 'user_import_profile_date_format');
 
   if ($date_format == 'MM/DD/YYYY') {
     list($month, $day, $year) = explode('/', $value);

@@ -1,0 +1,10 @@
+{
+    "_config_name": "user_import.settings",
+    "user_import_profile_date_format": "MM/DD/YYYY",
+    "user_import_auto_imports_enabled": "FALSE",
+    "user_import_selectable_files": "novalue",
+    "user_import_max": "250",
+    "user_import_line_max": "1000",
+    "user_import_settings": "0",
+    "user_import_og_template": "dynamic value in file /user_import/user_import.module line 271"
+}

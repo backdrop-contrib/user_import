@@ -5,6 +5,10 @@
  * Drush integration for the User Import module.
  */
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_drush_help($command) {
   switch ($command) {
     case 'drush:user-import':
@@ -19,7 +23,7 @@ function user_import_drush_help($command) {
 }
 
 /**
- * Implementation of hook_drush_command().
+ * Implements hook_drush_command().
  *
  * In this hook, you specify which commands your
  * drush module makes available, what it does and
@@ -37,11 +41,11 @@ function user_import_drush_command() {
   $commands                = array();
   $commands['user-import'] = array(
     'description' => dt('Queue an import of users'),
-    'arguments'   => array(
-      'file'     => dt('The CSV file with user data'),
+    'arguments' => array(
+      'file' => dt('The CSV file with user data'),
       'template' => dt('Name of the template to use (optional, if not provided the default template is used)'),
     ),
-    'examples'    => array(
+    'examples' => array(
       dt('standard example') => 'drush user-import users.csv',
     ),
   );
@@ -64,7 +68,7 @@ function drush_user_import($original_file = NULL, $template_name = NULL) {
     }
   }
   else {
-    $template_id = variable_get('user_import_settings', '0');
+    $template_id = config_get('user_import.settings', 'user_import_settings');
 
     if (!$template_id) {
       return drush_set_error('no-default-template');
@@ -99,10 +103,10 @@ function drush_user_import($original_file = NULL, $template_name = NULL) {
   $import->roles           = $template->roles;
   $import->options         = $template->options;
   $import->setting         = 'import';
-  $result                  = drupal_write_record('user_import', $import);
+  $result                  = backdrop_write_record('user_import', $import);
 
   if ($result == SAVED_NEW) {
-    drush_print(dt('Successfully queued user import. The original CSV file !file has been copied to the Drupal installation and can be removed.', array('!file' => $original_file)));
+    drush_print(dt('Successfully queued user import. The original CSV file !file has been copied to the Backdrop installation and can be removed.', array('!file' => $original_file)));
   }
   else {
     drush_set_error('import_failed', dt('Unable to queue the user import.'));

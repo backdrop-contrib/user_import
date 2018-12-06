@@ -4,8 +4,8 @@
 if (module_exists('node_import') && module_exists('content')) {
 
   // Load the required API files.
-  include_once('./' . drupal_get_path('module', 'node_import') . '/node_import.api.php');
-  include_once('./' . drupal_get_path('module', 'node_import') . '/node_import.inc');
+  include_once('./' . backdrop_get_path('module', 'node_import') . '/node_import.api.php');
+  include_once('./' . backdrop_get_path('module', 'node_import') . '/node_import.inc');
 
 
   /**
@@ -42,7 +42,10 @@ if (module_exists('node_import') && module_exists('content')) {
    * Implementation of hook_user_import_form_update_user().
    */
   function content_profile_user_import_form_update_user() {
-    $form['content_profile'] = array('title' => t('Content Profile'), 'description' => t('Affected: fields in Content Profile nodes.'));
+    $form['content_profile'] = array(
+      'title' => t('Content Profile'),
+      'description' => t('Affected: fields in Content Profile nodes.'),
+    );
 
     return $form;
   }
@@ -51,7 +54,9 @@ if (module_exists('node_import') && module_exists('content')) {
    * Implementation of hook_user_import_data().
    */
   function content_profile_user_import_data($settings, $update_setting, $column_settings, $module, $field_id, $data, $column_id) {
-    if ($module != 'content_profile') return;
+    if ($module != 'content_profile') {
+      return;
+    }
 
     return trim($data[$column_id]);
   }
@@ -61,10 +66,14 @@ if (module_exists('node_import') && module_exists('content')) {
    */
   function content_profile_user_import_after_save($settings, $account, $password, $fields, $updated, $update_setting_per_module) {
 
-    if (!is_array($fields['content_profile'])) return;
+    if (!is_array($fields['content_profile'])) {
+      return;
+    }
 
     // check if it's an existing user and if content profile is to be updated
-    if ($updated && $update_setting_per_module['content_profile'] == UPDATE_NONE) return;
+    if ($updated && $update_setting_per_module['content_profile'] == UPDATE_NONE) {
+      return;
+    }
 
     // arrange values by content type
     foreach ($fields['content_profile'] as $column_id => $column_data) {
@@ -89,7 +98,9 @@ if (module_exists('node_import') && module_exists('content')) {
    */
   function content_profile_user_import_node($type, $content_profile, $account, $fields, $updated, $update_setting) {
 
-    if (empty($content_profile[$type])) return; // pass only those, which are used
+    if (empty($content_profile[$type])) {
+      return; // pass only those, which are used
+    }
 
     $errors      = array();
     $title_empty = time();
@@ -148,7 +159,7 @@ if (module_exists('node_import') && module_exists('content')) {
       node_save($node);
 
       if (!$node->nid) {
-        drupal_set_message(t('Unknown error on saving the node: %node_data! Check watchdog logs for details.', array('%node_data' => "$node->title ($node->type)")), 'error');
+        backdrop_set_message(t('Unknown error on saving the node: %node_data! Check watchdog logs for details.', array('%node_data' => "$node->title ($node->type)")), 'error');
       }
 
     }
@@ -161,5 +172,5 @@ if (module_exists('node_import') && module_exists('content')) {
 
 }
 else {
-  drupal_set_message(t('Please enable %module module!', array('%module' => 'node_import')));
+  backdrop_set_message(t('Please enable %module module!', array('%module' => 'node_import')));
 }

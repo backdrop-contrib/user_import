@@ -16,7 +16,7 @@ function field_user_import_form_field_match() {
       $options['field'][$field_name] = $value['label'];
     }
     else {
-      drupal_set_message(t('Field %field is not supported', array('%field' => $value['label'])), 'warning');
+      backdrop_set_message(t('Field %field is not supported', array('%field' => $value['label'])), 'warning');
     }
   }
 
@@ -28,7 +28,9 @@ function field_user_import_form_field_match() {
  */
 function field_user_import_data($settings, $update_setting, $column_settings, $module, $field_id, $data, $column_id) {
 
-  if ($module != 'field') return;
+  if ($module != 'field') {
+    return;
+  }
 
   $value = $data[$column_id];
 
@@ -42,7 +44,9 @@ function field_user_import_after_save($settings, $account, $password, $fields, $
 
   $fields_data = isset($fields['field']) ? $fields['field'] : array();
 
-  if (empty($fields_data)) return;
+  if (empty($fields_data)) {
+    return;
+  }
 
   $processors       = field_user_import_supported_fields();
   $delimiter        =  $settings['multi_value_delimiter'];
@@ -96,7 +100,7 @@ function field_user_import_taxonomy_field_processor($user_fields, $field_name, $
     // Get taxonomy term ID before saving if term already exists
     $field_info = field_info_field($field_name);
     $vocabulary = $field_info['settings']['allowed_values'][0]['vocabulary'];
-    $tid = taxonomy_get_term_by_name($values[$i], $vocabulary);
+    $tid = taxonomy_term_load_multiple_by_name($values[$i], $vocabulary);
 
     if (empty($tid)) {
       // Create a new taxonomy term
@@ -121,59 +125,59 @@ function field_user_import_supported_fields($output = 'all') {
   if (empty($supported)) {
     $supported['text'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save'     => 'field_user_import_default_field_processor',
+      'save' => 'field_user_import_default_field_processor',
     );
 
     $supported['list_boolean'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save'     => 'field_user_import_default_field_processor',
+      'save' => 'field_user_import_default_field_processor',
     );
 
     $supported['number_decimal'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save'     => 'field_user_import_default_field_processor',
+      'save' => 'field_user_import_default_field_processor',
     );
 
     $supported['number_float'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save'     => 'field_user_import_default_field_processor',
+      'save' => 'field_user_import_default_field_processor',
     );
 
     $supported['number_integer'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save'     => 'field_user_import_default_field_processor',
+      'save' => 'field_user_import_default_field_processor',
     );
 
     $supported['list_float'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save'     => 'field_user_import_default_field_processor',
+      'save' => 'field_user_import_default_field_processor',
     );
 
     $supported['list_integer'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save'     => 'field_user_import_default_field_processor',
+      'save' => 'field_user_import_default_field_processor',
     );
 
     $supported['list_text'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save'     => 'field_user_import_default_field_processor',
+      'save' => 'field_user_import_default_field_processor',
     );
 
     // 'format'? 'safe_value'? - DONE
     $supported['text_long'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save'     => 'field_user_import_default_field_processor',
+      'save' => 'field_user_import_default_field_processor',
     );
 
     // 'format'? 'safe_value'? 'summary'? 'safe_summary'?
     $supported['text_with_summary'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save'     => 'field_user_import_default_field_processor',
+      'save' => 'field_user_import_default_field_processor',
     );
 
     $supported['taxonomy_term_reference'] = array(
       'validate' => 'field_user_import_default_field_validator',
-      'save'     => 'field_user_import_taxonomy_field_processor',
+      'save' => 'field_user_import_taxonomy_field_processor',
     );
 
     /** Unsupported for the moment **/
@@ -195,13 +199,13 @@ function field_user_import_supported_fields($output = 'all') {
 //      'validate' => 'field_user_import_default_field_validator',
 //      'save' => 'field_user_import_default_field_processor',
 //    );
-//
+    //
 //    $supported['date'] = array(
 //      'validate' => 'field_user_import_default_field_validator',
 //      'save' => 'field_user_import_default_field_processor',
 //    );
-//
-//
+    //
+    //
 //    $supported['datestamp'] = array(
 //      'validate' => 'field_user_import_default_field_validator',
 //      'save' => 'field_user_import_default_field_processor',
@@ -214,7 +218,7 @@ function field_user_import_supported_fields($output = 'all') {
 
     // hook to add functions to this array.
     // Will call all modules implementing hook_field_user_import_supported_alter
-    drupal_alter('field_user_import_supported', $supported);
+    backdrop_alter('field_user_import_supported', $supported);
 
   }
 

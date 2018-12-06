@@ -41,9 +41,20 @@ function user_user_import_form_fieldset($import, $collapsed) {
  * Implementation of hook_user_import_form_update_user().
  */
 function user_user_import_form_update_user() {
-  $form['roles']    = array('title' => t('Roles'), 'description' => t('Affected: roles assigned to user.'));
-  $form['password'] = array('title' => t('Password'), 'description' => t('Affected: password.'), 'exclude_add' => TRUE);
-  $form['contact']  = array('title' => t('Contact'), 'description' => t('Affected: user contact option.'), 'exclude_add' => TRUE);
+  $form['roles']    = array(
+    'title' => t('Roles'),
+    'description' => t('Affected: roles assigned to user.'),
+  );
+  $form['password'] = array(
+    'title' => t('Password'),
+    'description' => t('Affected: password.'),
+    'exclude_add' => TRUE,
+  );
+  $form['contact']  = array(
+    'title' => t('Contact'),
+    'description' => t('Affected: user contact option.'),
+    'exclude_add' => TRUE,
+  );
 
   return $form;
 }
@@ -53,7 +64,9 @@ function user_user_import_form_update_user() {
  */
 function user_user_import_data($settings, $update_setting, $column_settings, $module, $field_id, $data, $column_id) {
 
-  if ($module != 'user') return;
+  if ($module != 'user') {
+    return;
+  }
 
   if ($field_id == 'email') {
     $value = trim($data[$column_id]);
@@ -147,6 +160,7 @@ function user_user_import_pre_save($settings, $account, $fields, $errors, $updat
   }
   else {
 
+    // TODO This variable was probably removed in Backdrop without replacement.
     $account_add['timezone'] = variable_get('date_default_timezone', @date_default_timezone_get());
     $account_add['status']   = 1;
     $account_add['init']     = $fields['user']['email'][0];
@@ -166,7 +180,9 @@ function user_user_import_pre_save($settings, $account, $fields, $errors, $updat
 
     // add selected roles
     foreach ($settings['roles'] as $rid => $role_set) {
-      if (!empty($role_set)) $account_add['roles'][$rid] = $rid;
+      if (!empty($role_set)) {
+        $account_add['roles'][$rid] = $rid;
+      }
     }
   }
 
@@ -192,40 +208,46 @@ function user_user_import_edit_roles_fields(&$form, $import, $collapsed) {
   $roles_data = user_roles();
 
   // remove 'anonymous user' option
-  while (list ($rid, $role_name) = each($roles_data)) {
-    if ($role_name != 'anonymous user' && $role_name != 'authenticated user') $roles[$rid] = $role_name;
+  while (list($rid, $role_name) = each($roles_data)) {
+    if ($role_name != 'anonymous user' && $role_name != 'authenticated user') {
+      $roles[$rid] = $role_name;
+    }
   }
 
   // roles selected
   if (!empty($import['roles'])) {
     foreach ($import['roles'] as $rid) {
-      if ($rid != 0) $roles_selected[] = $rid;
+      if ($rid != 0) {
+        $roles_selected[] = $rid;
+      }
     }
   }
 
-  if (empty($roles_selected)) $roles_selected[] = 2;
+  if (empty($roles_selected)) {
+    $roles_selected[] = 2;
+  }
 
   $form['role_selection'] = array(
-    '#type'        => 'fieldset',
-    '#title'       => t('Role Assign'),
-    '#weight'      => -80,
+    '#type' => 'fieldset',
+    '#title' => t('Role Assign'),
+    '#weight' => -80,
     '#collapsible' => TRUE,
-    '#collapsed'   => $collapsed,
+    '#collapsed' => $collapsed,
   );
 
   $form['role_selection']['roles'] = array(
-    '#title'         => t('Assign Role(s) To All Users'),
-    '#type'          => 'checkboxes',
-    '#options'       => $roles,
+    '#title' => t('Assign Role(s) To All Users'),
+    '#type' => 'checkboxes',
+    '#options' => $roles,
     '#default_value' => $roles_selected,
-    '#description'   => t("Select which role(s) all imported users should be assigned. The role 'authenticated user' is assigned automatically."),
+    '#description' => t("Select which role(s) all imported users should be assigned. The role 'authenticated user' is assigned automatically."),
   );
 
   $form['role_selection']['roles_new'] = array(
-    '#type'          => 'checkbox',
-    '#title'         => t('Add New Roles'),
+    '#type' => 'checkbox',
+    '#title' => t('Add New Roles'),
     '#default_value' => isset($import['roles_new']) ? $import['roles_new'] : 0,
-    '#description'   => t('Create imported role(s) that are not found and assign it to the user, in addition to any role(s) selected above. Warning: incorrect roles will be created if the incoming data includes typos.'),
+    '#description' => t('Create imported role(s) that are not found and assign it to the user, in addition to any role(s) selected above. Warning: incorrect roles will be created if the incoming data includes typos.'),
   );
 
   return;
@@ -234,41 +256,41 @@ function user_user_import_edit_roles_fields(&$form, $import, $collapsed) {
 function user_user_import_edit_email_fields(&$form, $import, $collapsed) {
 
   $form['email_message'] = array(
-    '#type'        => 'fieldset',
-    '#title'       => t('Email Message'),
+    '#type' => 'fieldset',
+    '#title' => t('Email Message'),
     '#description' => t('Welcome message to be sent to imported users. Leave blank to use the default !message. If an existing user account is updated no welcome email will be sent to that user. <strong>Note - if "Activate Accounts" option is enabled !login_url (one time login) will not work.</strong>', array('!message' => l(t('message'), 'admin/people/settings'))),
     '#collapsible' => TRUE,
-    '#collapsed'   => $collapsed,
+    '#collapsed' => $collapsed,
   );
 
   $form['email_message']['subject'] = array(
-    '#type'             => 'textfield',
-    '#title'            => t('Message Subject'),
-    '#default_value'    => isset($import['subject']) ? $import['subject'] : '',
-    '#description'      => t('Customize the subject of the welcome e-mail, which is sent to imported members.') . ' ' . t('Available variables are:') . ' !username, !site, !password, !uri, !uri_brief, !mailto, !date, !login_uri, !edit_uri, !login_url.',
+    '#type' => 'textfield',
+    '#title' => t('Message Subject'),
+    '#default_value' => isset($import['subject']) ? $import['subject'] : '',
+    '#description' => t('Customize the subject of the welcome e-mail, which is sent to imported members.') . ' ' . t('Available variables are:') . ' !username, !site, !password, !uri, !uri_brief, !mailto, !date, !login_uri, !edit_uri, !login_url.',
     '#element_validate' => array('user_import_send_email_subject_validate'),
   );
 
   $form['email_message']['message'] = array(
-    '#type'             => 'textarea',
-    '#title'            => t('Message'),
-    '#default_value'    => isset($import['message']) ? $import['message'] : '',
-    '#description'      => t('Customize the body of the welcome e-mail, which is sent to imported members.') . ' ' . t('Available variables are:') . ' !username, !site, !password, !uri, !uri_brief, !mailto, !login_uri, !edit_uri, !login_url.',
+    '#type' => 'textarea',
+    '#title' => t('Message'),
+    '#default_value' => isset($import['message']) ? $import['message'] : '',
+    '#description' => t('Customize the body of the welcome e-mail, which is sent to imported members.') . ' ' . t('Available variables are:') . ' !username, !site, !password, !uri, !uri_brief, !mailto, !login_uri, !edit_uri, !login_url.',
     '#element_validate' => array('user_import_send_email_message_validate'),
   );
 
   $form['email_message']['message_format'] = array(
-    '#type'          => 'radios',
-    '#title'         => t('Email Format'),
+    '#type' => 'radios',
+    '#title' => t('Email Format'),
     '#default_value' => isset($import['message_format']) ? $import['message_format'] : 0,
-    '#options'       => array(t('Plain Text'), t('HTML')),
+    '#options' => array(t('Plain Text'), t('HTML')),
   );
 
   $form['email_message']['message_css'] = array(
-    '#type'          => 'textarea',
-    '#title'         => t('CSS'),
+    '#type' => 'textarea',
+    '#title' => t('CSS'),
     '#default_value' => isset($import['message_css']) ? $import['message_css'] : '',
-    '#description'   => t('Use if sending HTML formated email.'),
+    '#description' => t('Use if sending HTML formated email.'),
   );
 
   return;
@@ -293,7 +315,9 @@ function _user_import_validate_email($email = NULL, $duplicates_allowed = FALSE)
 function user_user_import_roles_data($data, $new_roles_allowed) {
   $roles = array();
 
-  if (empty($data)) return;
+  if (empty($data)) {
+    return;
+  }
   $values = explode(',', $data);
 
   // check if any roles are specified that don't already exist

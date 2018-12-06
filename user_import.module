@@ -15,17 +15,17 @@ define('UPDATE_ADD', 2);
  */
 
 /**
- * Implementation of hook_theme().
+ * Implements hook_theme().
  */
 function user_import_theme() {
   return array(
-    'user_import_list'            => array(
+    'user_import_list' => array(
       'variables' => array(),
     ),
-    'user_import_edit'            => array(
+    'user_import_edit' => array(
       'render element' => 'form',
     ),
-    'user_import_errors_display'  => array(
+    'user_import_errors_display' => array(
       'variables' => array('settings' => NULL),
     ),
     'user_import_username_errors' => array(
@@ -45,86 +45,86 @@ function user_import_theme() {
 // }
 
 /**
- * Implementation of hook_perm().
+ * Implements hook_perm().
  */
 function user_import_permission() {
 
   return array(
-    'import users'        => array(
-      'title'       => t('Import users'),
+    'import users' => array(
+      'title' => t('Import users'),
       'description' => t('Import users.'),
     ),
     'limited user import' => array(
-      'title'       => t('Import users Reports'),
+      'title' => t('Import users Reports'),
       'description' => t('View import error reports.'),
     ),
   );
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function user_import_menu() {
   $items['admin/people/user_import']            = array(
-    'title'            => 'Import',
-    'description'      => 'Import or update users from a comma separated file (csv).',
-    'page callback'    => 'user_import_list',
+    'title' => 'Import',
+    'description' => 'Import or update users from a comma separated file (csv).',
+    'page callback' => 'user_import_list',
     'access arguments' => array('import users'),
-    'type'             => MENU_LOCAL_TASK,
-    'file'             => 'user_import.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'user_import.admin.inc',
   );
   $items['admin/people/user_import/list']       = array(
-    'title'            => 'List Imports',
+    'title' => 'List Imports',
     'access arguments' => array('import users'),
-    'weight'           => -10,
-    'type'             => MENU_DEFAULT_LOCAL_TASK,
-    'file'             => 'user_import.admin.inc',
+    'weight' => -10,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'file' => 'user_import.admin.inc',
   );
   $items['admin/people/user_import/add']        = array(
-    'title'            => 'New Import',
-    'page callback'    => 'user_import_preferences',
+    'title' => 'New Import',
+    'page callback' => 'user_import_preferences',
     'access arguments' => array('import users'),
-    'weight'           => -5,
-    'type'             => MENU_LOCAL_TASK,
-    'file'             => 'user_import.admin.inc',
+    'weight' => -5,
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'user_import.admin.inc',
   );
   $items['admin/people/user_import/continue/%'] = array(
-    'title'            => 'Continue',
-    'page callback'    => 'drupal_get_form',
-    'page arguments'   => array('user_import_confirm_continue', 4),
+    'title' => 'Continue',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('user_import_confirm_continue', 4),
     'access arguments' => array('import users'),
-    'type'             => MENU_CALLBACK,
-    'file'             => 'user_import.admin.inc',
+    'type' => MENU_CALLBACK,
+    'file' => 'user_import.admin.inc',
   );
   $items['admin/people/user_import/import/%']   = array(
-    'title'            => 'Import',
-    'page callback'    => 'drupal_get_form',
-    'page arguments'   => array('user_import_confirm_import', 4),
+    'title' => 'Import',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('user_import_confirm_import', 4),
     'access arguments' => array('import users'),
-    'type'             => MENU_CALLBACK,
-    'file'             => 'user_import.admin.inc',
+    'type' => MENU_CALLBACK,
+    'file' => 'user_import.admin.inc',
   );
   $items['admin/people/user_import/delete/%']   = array(
-    'title'            => 'Delete Import',
-    'page callback'    => 'drupal_get_form',
-    'page arguments'   => array('user_import_confirm_delete', 4),
+    'title' => 'Delete Import',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('user_import_confirm_delete', 4),
     'access arguments' => array('import users'),
-    'type'             => MENU_CALLBACK,
-    'file'             => 'user_import.admin.inc',
+    'type' => MENU_CALLBACK,
+    'file' => 'user_import.admin.inc',
   );
   $items['admin/people/user_import/configure']  = array(
-    'title'            => 'Configure',
-    'page callback'    => 'drupal_get_form',
-    'page arguments'   => array('user_import_configure_form'),
+    'title' => 'Configure',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('user_import_configure_form'),
     'access arguments' => array('import users'),
-    'type'             => MENU_LOCAL_TASK,
-    'file'             => 'user_import.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'user_import.admin.inc',
   );
   $items['admin/people/user_import/errors/%']   = array(
-    'title'            => 'Import Errors',
-    'page callback'    => 'user_import_limited_errors',
-    'page arguments'   => array(4),
-    'type'             => MENU_CALLBACK,
+    'title' => 'Import Errors',
+    'page callback' => 'user_import_limited_errors',
+    'page arguments' => array(4),
+    'type' => MENU_CALLBACK,
     'access arguments' => array('limited user import'),
   );
 
@@ -133,7 +133,7 @@ function user_import_menu() {
 
 
 /**
- * Implementation of hook_cron().
+ * Implements hook_cron().
  */
 function user_import_cron() {
   module_load_include('inc', 'user_import', 'user_import.import');
@@ -163,11 +163,21 @@ function user_import_continue_imports() {
 }
 
 /**
+ * Implements hook_config_info().
+ */
+function user_import_config_info() {
+  $prefixes['user_import.settings'] = array(
+    'label' => t('Module name settings'),
+    'group' => t('Configuration'),
+  );
+}
+
+/**
  * Trigger imports if new files are found durring a cron run.
  */
 function user_import_trigger_imports() {
 
-  $auto_imports_enabled = variable_get('user_import_auto_imports_enabled', FALSE);
+  $auto_imports_enabled = config_get('user_import.settings', 'user_import_auto_imports_enabled');
 
   if (empty($auto_imports_enabled)) {
     return;
@@ -243,7 +253,7 @@ function user_import_trigger_imports() {
 
         $file->filename    = $filename;
         $file->oldfilename = $filename;
-        $file->filepath    = drupal_get_path('module', 'user_import') . '/' . $filename;
+        $file->filepath    = backdrop_get_path('module', 'user_import') . '/' . $filename;
 
         $import_id = user_import_import_set($name, $file, $pointer, $processed, $valid, $field_match, $roles, $options, $setting, $import_id);
         $settings  = _user_import_settings_select($import_id);
@@ -268,16 +278,20 @@ function user_import_trigger_imports() {
  */
 function user_import_content_type_submit($form, &$form_state) {
   // user import template for Organic Groups content type
-  $templates                = variable_get('user_import_og_template', array());
+  $templates                = config_get('user_import.settings', 'user_import_og_template');
   $templates[$form['type']] = $form_state['values']['user_import_og'];
-  variable_set('user_import_og_template', $templates);
+  config_set('user_import.settings', 'user_import_og_template', $templates);
 }
 
 // - - - - - - - -  PAGES - - - - - - - -
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_limited_errors($import_id = NULL, $template_id = NULL) {
   if (empty($import_id) || !is_numeric($import_id)) {
-    drupal_goto('admin/people/user_import/' . $template_id);
+    backdrop_goto('admin/people/user_import/' . $template_id);
   }
 
   $pager_id   = 1;
@@ -295,9 +309,19 @@ function user_import_limited_errors($import_id = NULL, $template_id = NULL) {
   else {
 
     $header = array(
-      array('data' => t('ID'), 'field' => 'import_id', 'sort' => 'desc'),
-      array('data' => t('Data'), 'field' => 'data'),
-      array('data' => t('Errors'), 'field' => 'errors')
+      array(
+        'data' => t('ID'),
+        'field' => 'import_id',
+        'sort' => 'desc',
+      ),
+      array(
+        'data' => t('Data'),
+        'field' => 'data',
+      ),
+      array(
+        'data' => t('Errors'),
+        'field' => 'errors',
+      ),
     );
 
     $query = db_select('user_import_errors', 'uie')
@@ -314,15 +338,15 @@ function user_import_limited_errors($import_id = NULL, $template_id = NULL) {
 
     foreach ($result as $line) {
       $file_lines[] = array(
-        'data'   => unserialize($line->data),
-        'errors' => unserialize($line->errors)
+        'data' => unserialize($line->data),
+        'errors' => unserialize($line->errors),
       );
     }
 
     $output .= theme('user_import_errors_display', array(
-      'import'     => $import,
+      'import' => $import,
       'file_lines' => $file_lines,
-      'total'      => $total
+      'total' => $total,
     ));
   }
 
@@ -365,7 +389,7 @@ function theme_user_import_list() {
       t('processed'),
       $import_label,
       t('errors'),
-      t('status')
+      t('status'),
     );
 
     // info row
@@ -375,9 +399,18 @@ function theme_user_import_list() {
     $rows[0] = array(
       check_plain($import['oldfilename']),
       format_date($import['started'], 'small'),
-      array("data" => $import['processed'], "align" => 'center'),
-      array("data" => $import['valid'], "align" => 'center'),
-      array("data" => $errors_link, "align" => 'center'),
+      array(
+        "data" => $import['processed'],
+        "align" => 'center',
+      ),
+      array(
+        "data" => $import['valid'],
+        "align" => 'center',
+      ),
+      array(
+        "data" => $errors_link,
+        "align" => 'center',
+      ),
       $import['setting'],
     );
 
@@ -400,6 +433,10 @@ function theme_user_import_list() {
   return $output;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function theme_user_import_edit($variables) {
 
   $output = '';
@@ -407,43 +444,47 @@ function theme_user_import_edit($variables) {
   $form   = $variables['form'];
   $header = array(
     t('CSV column'),
-    t('Drupal fields'),
+    t('Backdrop fields'),
     t('Username'),
-    t('Abbreviate')
+    t('Abbreviate'),
   );
 
   foreach (element_children($form['field_match']) as $key) {
 
     $rows[] = array(
-      drupal_render($form['field_match'][$key]['csv']),
-      drupal_render($form['field_match'][$key]['field_match']),
-      drupal_render($form['field_match'][$key]['username']),
-      drupal_render($form['field_match'][$key]['abbreviate']),
+      backdrop_render($form['field_match'][$key]['csv']),
+      backdrop_render($form['field_match'][$key]['field_match']),
+      backdrop_render($form['field_match'][$key]['username']),
+      backdrop_render($form['field_match'][$key]['abbreviate']),
     );
   }
 
   $form['field_match']['#value'] = theme('table', array(
     'header' => $header,
-    'rows'   => $rows
+    'rows' => $rows,
   ));
 
   if (isset($form['remove'])) {
-    $output .= drupal_render($form['remove']);
+    $output .= backdrop_render($form['remove']);
   }
 
   if (isset($form['options'])) {
-    $output .= drupal_render($form['options']);
+    $output .= backdrop_render($form['options']);
   }
 
   if (isset($form['field_match'])) {
-    $output .= drupal_render($form['field_match']);
+    $output .= backdrop_render($form['field_match']);
   }
 
-  $output .= drupal_render_children($form);
+  $output .= backdrop_render_children($form);
 
   return $output;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function theme_user_import_errors_display($settings) {
 
   $output      = '';
@@ -472,13 +513,16 @@ function theme_user_import_errors_display($settings) {
               if (!empty($column_info['username'])) {
                 $header[$column_info['username']] = t('Name %sort', array('%sort' => $column_info['username']));
                 $row[$column_info['username']]    = array(
-                  "data"  => $field_data[0],
-                  "align" => "left"
+                  "data" => $field_data[0],
+                  "align" => "left",
                 );
               }
 
               if ($column_info['field_id'] == 'email') {
-                $row[0] = array("data" => $field_data[0], "align" => "left");
+                $row[0] = array(
+                  "data" => $field_data[0],
+                  "align" => "left",
+                );
               }
             }
           }
@@ -500,22 +544,26 @@ function theme_user_import_errors_display($settings) {
   // Output of table with the paging
   $output .= theme('table',
       array(
-        "header"     => $header,
-        "rows"       => $rows,
-        "attributes" => array(),
-        "sticky"     => FALSE,
-        // Table header will be sticky
-        "caption"    => '',
-        "colgroups"  => array(),
-        "empty"      => t("There are no errors.")
-        // The message to be displayed if table is empty
-      )
+    "header" => $header,
+    "rows" => $rows,
+    "attributes" => array(),
+    "sticky" => FALSE,
+    // Table header will be sticky
+    "caption" => '',
+    "colgroups" => array(),
+    "empty" => t("There are no errors.")
+        , // The message to be displayed if table is empty
+  )
     ) . theme("pager");
 
   //$output .= theme('table', array('header' => $header, 'rows' => $rows));
   return $output;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function theme_user_import_username_errors($errors) {
 
   if (empty($errors)) {
@@ -534,20 +582,20 @@ function theme_user_import_username_errors($errors) {
 function _user_import_settings_save($settings) {
   // Database field defaults.
   $database_fields = array(
-    'import_id'             => NULL,
-    'name'                  => '',
+    'import_id' => NULL,
+    'name' => '',
     'auto_import_directory' => '',
-    'filename'              => '',
-    'oldfilename'           => '',
-    'filepath'              => '',
-    'started'               => 0,
-    'pointer'               => 0,
-    'processed'             => 0,
-    'valid'                 => 0,
-    'field_match'           => array(),
-    'roles'                 => '',
-    'options'               => array(),
-    'setting'               => '',
+    'filename' => '',
+    'oldfilename' => '',
+    'filepath' => '',
+    'started' => 0,
+    'pointer' => 0,
+    'processed' => 0,
+    'valid' => 0,
+    'field_match' => array(),
+    'roles' => '',
+    'options' => array(),
+    'setting' => '',
   );
 
   // Form elements we never want to save in the options column.
@@ -560,7 +608,7 @@ function _user_import_settings_save($settings) {
     'submit',
     'op',
     0,
-    'return_path'
+    'return_path',
   );
   $form_variables = array_flip($form_variables);
 
@@ -626,25 +674,29 @@ function _user_import_settings_save($settings) {
 }
 
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_import_set($name = '', $file = '', $pointer = 0, $processed = 0, $valid = 0, $field_match = '', $roles = '', $options = '', $setting = '', $auto_import_directory = '', $import_id = '') {
   // Update settings for existing import.
   if (!empty($import_id)) {
 
     db_update('user_import')
       ->fields(array(
-        'name'                  => $name,
-        'auto_import_directory' => $auto_import_directory,
-        'filename'              => $file->filename,
-        'oldfilename'           => $file->oldfilename,
-        'filepath'              => $file->filepath,
-        'pointer'               => $pointer,
-        'processed'             => $processed,
-        'valid'                 => $valid,
-        'field_match'           => $field_match,
-        'roles'                 => $roles,
-        'options'               => $options,
-        'setting'               => $setting
-      ))
+      'name' => $name,
+      'auto_import_directory' => $auto_import_directory,
+      'filename' => $file->filename,
+      'oldfilename' => $file->oldfilename,
+      'filepath' => $file->filepath,
+      'pointer' => $pointer,
+      'processed' => $processed,
+      'valid' => $valid,
+      'field_match' => $field_match,
+      'roles' => $roles,
+      'options' => $options,
+      'setting' => $setting,
+    ))
       ->condition('import_id', $import_id)
       ->execute();
   }
@@ -652,20 +704,20 @@ function user_import_import_set($name = '', $file = '', $pointer = 0, $processed
 
     $import_id = db_insert('user_import')
       ->fields(array(
-        'name'                  => $name,
-        'auto_import_directory' => $auto_import_directory,
-        'filename'              => $file->filename,
-        'oldfilename'           => $file->oldfilename,
-        'filepath'              => $file->filepath,
-        'started'               => time(),
-        'pointer'               => $pointer,
-        'processed'             => $processed,
-        'valid'                 => $valid,
-        'field_match'           => $field_match,
-        'roles'                 => $roles,
-        'options'               => $options,
-        'setting'               => $setting
-      ))
+      'name' => $name,
+      'auto_import_directory' => $auto_import_directory,
+      'filename' => $file->filename,
+      'oldfilename' => $file->oldfilename,
+      'filepath' => $file->filepath,
+      'started' => time(),
+      'pointer' => $pointer,
+      'processed' => $processed,
+      'valid' => $valid,
+      'field_match' => $field_match,
+      'roles' => $roles,
+      'options' => $options,
+      'setting' => $setting,
+    ))
       ->execute();
   }
 
@@ -752,6 +804,10 @@ function _user_import_settings_deletion($import_id) {
 }
 
 // Used by user_import_og.module
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_profile_load($user) {
 
   $result = db_query('SELECT f.name, f.type, f.fid, v.value FROM {profile_field} f INNER JOIN {profile_values} v ON f.fid = v.fid WHERE uid = %d', $user->uid);
@@ -801,8 +857,8 @@ function user_import_load_supported() {
   static $loaded = FALSE;
 
   if (!$loaded) {
-    $path  = drupal_get_path('module', 'user_import') . '/supported';
-    $files = drupal_system_listing("/\.inc$/", $path, 'name', 0);
+    $path  = backdrop_get_path('module', 'user_import') . '/supported';
+    $files = backdrop_system_listing("/\.inc$/", $path, 'name', 0);
 
     foreach ($files as $module_name => $file) {
       if (module_exists($module_name)) {
@@ -815,11 +871,11 @@ function user_import_load_supported() {
 }
 
 /**
- * Implementation of hook_simpletest().
+ * Implements hook_simpletest().
  */
 function user_import_simpletest() {
   $module_name = 'user_import';
-  $dir         = drupal_get_path('module', $module_name) . '/tests';
+  $dir         = backdrop_get_path('module', $module_name) . '/tests';
   $tests       = file_scan_directory($dir, '\.test$');
 
   return array_keys($tests);
@@ -845,7 +901,7 @@ function _user_import_file_deletion($filepath, $filename, $old_filename, $ftp, $
     $file           = new stdClass();
     $file->uri      = $filepath;
     $file->filename = $filename;
-    $file->fid      = db_query("SELECT fid FROM {file_managed} WHERE uri = :filepath", array(':filepath' => $filepath))->fetchField();;
+    $file->fid      = db_query("SELECT fid FROM {file_managed} WHERE uri = :filepath", array(':filepath' => $filepath))->fetchField();
     $removed = file_delete($file);
   }
 
@@ -854,20 +910,20 @@ function _user_import_file_deletion($filepath, $filename, $old_filename, $ftp, $
   }
 
   if (empty($removed)) {
-    drupal_set_message(t("File error: file '%old_filename' (%filename) could not be deleted.", array(
+    backdrop_set_message(t("File error: file '%old_filename' (%filename) could not be deleted.", array(
       '%old_filename' => $oldfilename,
-      '%filename'     => $filename
+      '%filename' => $filename,
     )), 'error');
   }
   else {
-    drupal_set_message(t("File '%old_filename' was deleted.", array('%old_filename' => $old_filename)));
+    backdrop_set_message(t("File '%old_filename' was deleted.", array('%old_filename' => $old_filename)));
   }
 
   return;
 }
 
 /**
- * Implementation of hook_mail().
+ * Implements hook_mail().
  */
 function user_import_mail($key, &$message, $params) {
 
@@ -898,7 +954,7 @@ function user_import_mail($key, &$message, $params) {
 }
 
 /**
- * Modify the drupal mail system to send HTML emails.
+ * Modify the backdrop mail system to send HTML emails.
  *
  * See http://drupal.org/node/900794.
  */
@@ -918,12 +974,12 @@ class UserImportMailSystem implements MailSystemInterface {
   }
 
   /**
-   * Send an e-mail message, using Drupal variables and default settings.
+   * Send an e-mail message, using Backdrop variables and default settings.
    *
    * @see <a href="http://php.net/manual/en/function.mail.php
    * " title="http://php.net/manual/en/function.mail.php
    * " rel="nofollow">http://php.net/manual/en/function.mail.php
-   * </a>   * @see drupal_mail()
+   * </a>   * @see backdrop_mail()
    *
    * @param $message
    *   A message array, as described in hook_mail_alter().
@@ -935,18 +991,27 @@ class UserImportMailSystem implements MailSystemInterface {
     foreach ($message['headers'] as $name => $value) {
       $mimeheaders[] = $name . ': ' . mime_header_encode($value);
     }
-    $line_endings = variable_get('mail_line_endings', MAIL_LINE_ENDINGS);
+    $line_endings = settings_get('mail_line_endings', MAIL_LINE_ENDINGS);
     return mail(
       $message['to'],
       mime_header_encode($message['subject']),
       // Note: e-mail uses CRLF for line-endings. PHP's API requires LF
-      // on Unix and CRLF on Windows. Drupal automatically guesses the
+      // on Unix and CRLF on Windows. Backdrop automatically guesses the
       // line-ending format appropriate for your system. If you need to
       // override this, adjust $conf['mail_line_endings'] in settings.php.
       preg_replace('@\r?\n@', $line_endings, $message['body']),
       // For headers, PHP's API suggests that we use CRLF normally,
       // but some MTAs incorrectly replace LF with CRLF. See #234403.
       join("\n", $mimeheaders)
+    );
+  }
+
+  /**
+   * Implements hook_autoload_info().
+   */
+  function user_import_autoload_info() {
+    return array(
+      'UserImportMailSystem' => 'user_import.module',
     );
   }
 }

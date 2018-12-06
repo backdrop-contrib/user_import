@@ -5,6 +5,10 @@
  * Provide administration configuration pages to import users.
  */
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_confirm_delete($form, &$form_state, $import_id) {
 
   $form['import_id'] = array(
@@ -19,12 +23,20 @@ function user_import_confirm_delete($form, &$form_state, $import_id) {
     t('Delete'), t('Cancel'));
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_confirm_delete_submit($form, &$form_state) {
   if ($form_state['values']['confirm']) {
     user_import_delete($form_state['values']['import_id']);
   }
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_list($action = NULL, $import_id = NULL) {
 
   // clear incomplete imports
@@ -55,7 +67,11 @@ function user_import_list($action = NULL, $import_id = NULL) {
     $result = $query->execute();
 
     foreach ($result as $line) {
-      $rows[] = array('import_id' => $line->import_id, 'data' => unserialize($line->data), 'errors' => unserialize($line->errors));
+      $rows[] = array(
+        'import_id' => $line->import_id,
+        'data' => unserialize($line->data),
+        'errors' => unserialize($line->errors),
+      );
     }
 
     $output = theme('user_import_errors_display', array('import' => $import, 'file_lines' => $rows, 'total' => $total));
@@ -69,22 +85,26 @@ function user_import_list($action = NULL, $import_id = NULL) {
   return $output;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_preferences($import_id = NULL, $template_id = NULL) {
 
   if (empty($import_id)) {
-    $private_path = variable_get('file_private_path', FALSE);
+    $private_path = config_get('system.performance', 'file_private_path');
 
     // Private path hasn't been set, show a message instead of the form.
     if (!$private_path) {
-      drupal_set_message(t('!path needs to be set before users can be imported.', array('!path' => l('Private file system path', 'admin/config/media/file-system', array('query' => array('destination' => 'admin/people/user_import/add'))))), 'warning');
+      backdrop_set_message(t('!path needs to be set before users can be imported.', array('!path' => l('Private file system path', 'admin/config/media/file-system', array('query' => array('destination' => 'admin/people/user_import/add'))))), 'warning');
       return ' ';
     }
 
 
-    $output = drupal_get_form('user_import_add_form');
+    $output = backdrop_get_form('user_import_add_form');
   }
   else {
-    $output = drupal_get_form('user_import_edit', $import_id, $template_id);
+    $output = backdrop_get_form('user_import_edit', $import_id, $template_id);
   }
 
   return $output;
@@ -92,6 +112,10 @@ function user_import_preferences($import_id = NULL, $template_id = NULL) {
 
 
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_confirm_continue($form, &$form_state, $import_id) {
 
   $form['import_id'] = array(
@@ -106,12 +130,20 @@ function user_import_confirm_continue($form, &$form_state, $import_id) {
     t('Continue'), t('Cancel'));
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_confirm_continue_submit($form, &$form_state) {
   if ($form_state['values']['confirm']) {
     user_import_continue($form_state['values']['import_id']);
   }
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_continue($import_id = NULL) {
 
   if (!empty($import_id) && is_numeric($import_id)) {
@@ -120,9 +152,13 @@ function user_import_continue($import_id = NULL) {
     _user_import_process($import);
   }
 
-  drupal_goto('admin/people/user_import');
+  backdrop_goto('admin/people/user_import');
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_confirm_import($form, &$form_state, $import_id) {
 
   $form['import_id'] = array(
@@ -137,12 +173,20 @@ function user_import_confirm_import($form, &$form_state, $import_id) {
     t('Import'), t('Cancel'));
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_confirm_import_submit($form, &$form_state) {
   if ($form_state['values']['confirm']) {
     user_import_import($form_state['values']['import_id']);
   }
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_import($import_id = NULL) {
 
   if (!empty($import_id) && is_numeric($import_id)) {
@@ -151,18 +195,24 @@ function user_import_import($import_id = NULL) {
     _user_import_initialise_import($import);
   }
 
-  drupal_goto('admin/people/user_import');
+  backdrop_goto('admin/people/user_import');
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_delete($import_id = NULL, $return_path = 'admin/people/user_import') {
 
-  if (empty($import_id) || !is_numeric($import_id)) drupal_goto($return_path);
+  if (empty($import_id) || !is_numeric($import_id)) {
+    backdrop_goto($return_path);
+  }
 
   $import = _user_import_settings_select($import_id);
   _user_import_settings_deletion($import_id);
   //_user_import_file_deletion($import['filepath'], $import['filename'], $import['oldfilename'], $import['ftp']);
   file_unmanaged_delete($import['filepath']);
-  drupal_goto($return_path);
+  backdrop_goto($return_path);
 
   return;
 }
@@ -171,15 +221,16 @@ function user_import_delete($import_id = NULL, $return_path = 'admin/people/user
  * Configuration form define (settings affect all user imports)
  */
 function user_import_configure_form() {
+  $config = config('user_import.settings');
 
   $form['selectable_files'] = array(
-    '#type'        => 'fieldset',
-    '#title'       => t('Uploads Directory'),
+    '#type' => 'fieldset',
+    '#title' => t('Uploads Directory'),
     '#collapsible' => TRUE,
-    '#collapsed'   => TRUE,
+    '#collapsed' => TRUE,
   );
 
-  if (variable_get('user_import_selectable_files', 0) == 0) {
+  if ($config->get('user_import_selectable_files') == 0) {
     $selectable_files_description = t('This option provides a directory where files can be uploaded, and then selected when setting up an import.');
   }
   else {
@@ -187,51 +238,51 @@ function user_import_configure_form() {
   }
 
   $form['selectable_files']['selectable_files'] = array(
-    '#type'          => 'checkbox',
-    '#title'         => t('Enable Uploads Directory'),
-    '#description'   => $selectable_files_description,
-    '#default_value' => variable_get('user_import_selectable_files', 0),
+    '#type' => 'checkbox',
+    '#title' => t('Enable Uploads Directory'),
+    '#description' => $selectable_files_description,
+    '#default_value' => $config->get('user_import_selectable_files'),
   );
 
 
   $form['auto_imports'] = array(
-    '#type'        => 'fieldset',
-    '#title'       => t('Automated Imports'),
+    '#type' => 'fieldset',
+    '#title' => t('Automated Imports'),
     '#collapsible' => TRUE,
-    '#collapsed'   => TRUE,
+    '#collapsed' => TRUE,
   );
 
   $form['auto_imports']['auto_imports_enabled'] = array(
-    '#type'          => 'checkbox',
-    '#title'         => t('Enable Automated Imports'),
-    '#description'   => t('Each import template will have the option to create a directory which will be scanned for any files that have been uploaded to it,
+    '#type' => 'checkbox',
+    '#title' => t('Enable Automated Imports'),
+    '#description' => t('Each import template will have the option to create a directory which will be scanned for any files that have been uploaded to it,
                            and when a file is found it will automatically be used to create new user accounts. Directories are scanned durring !cron runs.', array('!cron' => l(t('cron'), 'admin/config/system/cron'))),
-    '#default_value' => variable_get('user_import_auto_imports_enabled', 0),
+    '#default_value' => $config->get('user_import_auto_imports_enabled'),
   );
 
   $form['performance'] = array(
-    '#type'        => 'fieldset',
-    '#title'       => t('Performance'),
+    '#type' => 'fieldset',
+    '#title' => t('Performance'),
     '#collapsible' => TRUE,
-    '#collapsed'   => TRUE,
+    '#collapsed' => TRUE,
   );
 
   $form['performance']['user_import_max'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('Maximum Users/Process'),
-    '#default_value' => variable_get('user_import_max', 250),
-    '#size'          => 10,
-    '#maxlength'     => 10,
-    '#description'   => t('Maximum number of users to import each time the file is processed, useful for controling the rate at which emails are sent out.'),
+    '#type' => 'textfield',
+    '#title' => t('Maximum Users/Process'),
+    '#default_value' => $config->get('user_import_max'),
+    '#size' => 10,
+    '#maxlength' => 10,
+    '#description' => t('Maximum number of users to import each time the file is processed, useful for controling the rate at which emails are sent out.'),
   );
 
   $form['performance']['user_import_line_max'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('Maximum length of line'),
-    '#default_value' => variable_get('user_import_line_max', 1000),
-    '#size'          => 10,
-    '#maxlength'     => 10,
-    '#description'   => t('The default is set at 1,000 characters, if a line in your csv is longer than this you should set a higher maximum here. Setting higher maximums will slow down imports.'),
+    '#type' => 'textfield',
+    '#title' => t('Maximum length of line'),
+    '#default_value' => $config->get('user_import_line_max'),
+    '#size' => 10,
+    '#maxlength' => 10,
+    '#description' => t('The default is set at 1,000 characters, if a line in your csv is longer than this you should set a higher maximum here. Setting higher maximums will slow down imports.'),
   );
 
   if (module_exists('profile')) {
@@ -242,17 +293,17 @@ function user_import_configure_form() {
       'YYYY/DD/MM' => 'YYYY/DD/MM',
     );
     $form['profile']                        = array(
-      '#type'        => 'fieldset',
-      '#title'       => t('Profile Settings'),
+      '#type' => 'fieldset',
+      '#title' => t('Profile Settings'),
       '#collapsible' => TRUE,
-      '#collapsed'   => TRUE,
+      '#collapsed' => TRUE,
     );
     $form['profile']['profile_date_format'] = array(
-      '#type'          => 'select',
-      '#title'         => t('Date field format'),
-      '#description'   => t('Select a format for importing dates into user profiles (Profile module).'),
-      '#default_value' => variable_get('user_import_profile_date_format', 'MM/DD/YYYY'),
-      '#options'       => $date_options,
+      '#type' => 'select',
+      '#title' => t('Date field format'),
+      '#description' => t('Select a format for importing dates into user profiles (Profile module).'),
+      '#default_value' => $config->get('user_import_profile_date_format'),
+      '#options' => $date_options,
     );
   }
 
@@ -261,56 +312,67 @@ function user_import_configure_form() {
   if (!empty($saved_templates)) {
 
     $form['settings_templates'] = array(
-      '#type'        => 'fieldset',
-      '#title'       => t('Settings Templates'),
+      '#type' => 'fieldset',
+      '#title' => t('Settings Templates'),
       '#collapsible' => TRUE,
-      '#collapsed'   => TRUE,
+      '#collapsed' => TRUE,
     );
 
     $templates_list = array('-- none --');
 
-    foreach ($saved_templates AS $template) {
+    foreach ($saved_templates as $template) {
       $templates_list[$template['import_id']]   = $template['name'];
       $templates_delete[$template['import_id']] = $template['name'];
     }
 
     $form['settings_templates']['user_import_settings'] = array(
-      '#type'          => 'select',
-      '#title'         => t('Default Settings'),
-      '#description'   => t('Select if you want to use a previously saved set of settings as default for all imports.'),
-      '#default_value' => variable_get('user_import_settings', 0),
-      '#options'       => $templates_list,
+      '#type' => 'select',
+      '#title' => t('Default Settings'),
+      '#description' => t('Select if you want to use a previously saved set of settings as default for all imports.'),
+      '#default_value' => $config->get('user_import_settings'),
+      '#options' => $templates_list,
     );
 
 
     $form['settings_templates']['templates'] = array(
-      '#type'    => 'checkboxes',
-      '#title'   => t('Delete Templates'),
+      '#type' => 'checkboxes',
+      '#title' => t('Delete Templates'),
       '#options' => $templates_delete,
     );
 
   }
 
   $form['submit'] = array(
-    '#type'  => 'submit',
+    '#type' => 'submit',
     '#value' => t('Save'),
   );
 
   return $form;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_configure_form_validate($form, &$form_state) {
+  $config = config('user_import.settings');
 
   if (is_numeric($form_state['values']['user_import_max'])) {
-    if ($form_state['values']['user_import_max'] < 10) form_set_error('user_import_max', t("Value should be at least 10."));
+    if ($form_state['values']['user_import_max'] < 10) {
+      form_set_error('user_import_max', t("Value should be at least 10."));
+    }
   }
   else {
     form_set_error('user_import_max', t('Value must be a number.'));
   }
 
   if (is_numeric($form_state['values']['user_import_line_max'])) {
-    if ($form_state['values']['user_import_line_max'] < 1000) form_set_error('user_import_line_max', t("Value must be higher than 1000."));
-    if ($form_state['values']['user_import_line_max'] > 1000000) form_set_error('user_import_line_max', t("Value must be lower than 1,000,000."));
+    if ($form_state['values']['user_import_line_max'] < 1000) {
+      form_set_error('user_import_line_max', t("Value must be higher than 1000."));
+    }
+    if ($form_state['values']['user_import_line_max'] > 1000000) {
+      form_set_error('user_import_line_max', t("Value must be lower than 1,000,000."));
+    }
   }
   else {
     form_set_error('user_import_line_max', t('Value must be a number.'));
@@ -318,7 +380,7 @@ function user_import_configure_form_validate($form, &$form_state) {
 
   // Check private files path is set.
   if (!empty($form_state['values']['auto_imports_enabled'])) {
-    $file_private_path = variable_get('file_private_path', FALSE);
+    $file_private_path = config_get('system.performance', 'file_private_path');
 
     if (!$file_private_path) {
       form_set_error('auto_imports_enabled', t('The !private_file_path must be set to use this feature.', array('!private_file_path' => l(t('Private file system path'), 'admin/config/media/file-system'))));
@@ -327,7 +389,7 @@ function user_import_configure_form_validate($form, &$form_state) {
 
   // Check private files path is set.
   if (!empty($form_state['values']['selectable_files'])) {
-    $file_private_path = variable_get('file_private_path', FALSE);
+    $file_private_path = config_get('system.performance', 'file_private_path');
 
     if (!$file_private_path) {
       form_set_error('selectable_files', t('The !private_file_path must be set to use the Uploads Directory feature.', array('!private_file_path' => l(t('Private file system path'), 'admin/config/media/file-system'))));
@@ -337,21 +399,25 @@ function user_import_configure_form_validate($form, &$form_state) {
   return;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_configure_form_submit($form, &$form_state) {
   $deleted = '';
   settype($form_state['values']['user_import_max'], 'integer');
   settype($form_state['values']['user_import_line_max'], 'integer');
-  variable_set('user_import_max', $form_state['values']['user_import_max']);
-  variable_set('user_import_line_max', $form_state['values']['user_import_line_max']);
+  config_set('user_import.settings', 'user_import_max', $form_state['values']['user_import_max']);
+  config_set('user_import.settings', 'user_import_line_max', $form_state['values']['user_import_line_max']);
 
   $user_import_settings = isset($form_state['values']['user_import_settings']) ? $form_state['values']['user_import_settings'] : 0;
-  variable_set('user_import_settings', $user_import_settings);
+  config_set('user_import.settings', 'user_import_settings', $user_import_settings);
 
   $profile_date_format = isset($form_state['values']['profile_date_format']) ? $form_state['values']['profile_date_format'] : 0;
-  variable_set('user_import_profile_date_format', $profile_date_format);
+  config_set('user_import.settings', 'user_import_profile_date_format', $profile_date_format);
 
-  variable_set('user_import_selectable_files', $form_state['values']['selectable_files']);
-  variable_set('user_import_auto_imports_enabled', $form_state['values']['auto_imports_enabled']);
+  config_set('user_import.settings', 'user_import_selectable_files', $form_state['values']['selectable_files']);
+  config_set('user_import.settings', 'user_import_auto_imports_enabled', $form_state['values']['auto_imports_enabled']);
 
   // Create a directory for processing incoming files if auto imports are enabled.
   if (!empty($form_state['values']['auto_imports_enabled'])) {
@@ -370,16 +436,20 @@ function user_import_configure_form_submit($form, &$form_state) {
       if (!empty($import_id)) {
 
         $template = _user_import_settings_select($import_id);
-        if (!empty($deleted)) $deleted .= ', ';
+        if (!empty($deleted)) {
+          $deleted .= ', ';
+        }
         $deleted .= $template['name'];
         _user_import_settings_deletion($import_id);
       }
     }
   }
 
-  if (!empty($deleted)) drupal_set_message(t('Settings templates deleted: @deleted', array('@deleted' => $deleted)));
+  if (!empty($deleted)) {
+    backdrop_set_message(t('Settings templates deleted: @deleted', array('@deleted' => $deleted)));
+  }
 
-  drupal_set_message(t('Configuration settings have been saved.'));
+  backdrop_set_message(t('Configuration settings have been saved.'));
   $form_state['redirect'] = 'admin/people/user_import';
 }
 
@@ -388,11 +458,12 @@ function user_import_configure_form_submit($form, &$form_state) {
  *  Form to select file.
  **/
 function user_import_add_form($import_id = NULL) {
+  $config = config('user_import.settings');
 
   $form = array();
   $ftp_files = array();
 
-  if (variable_get('user_import_selectable_files', 0) == 1) {
+  if ($config->get('user_import_selectable_files') == 1) {
     $ftp_files = _user_import_ftp_files();
   }
 
@@ -404,23 +475,23 @@ function user_import_add_form($import_id = NULL) {
   if ($settings) {
 
     $saved_settings = array(t('-- none --'));
-    foreach ($settings AS $settings_set) {
+    foreach ($settings as $settings_set) {
       $saved_settings[$settings_set['import_id']] = $settings_set['name'];
     }
 
     $form['import_template_select'] = array(
-      '#type'          => 'select',
-      '#title'         => t('Saved Settings'),
-      '#description'   => t('Select if you want to use a previously saved set of settings.'),
-      '#default_value' => variable_get('user_import_settings', 0),
-      '#options'       => $saved_settings,
+      '#type' => 'select',
+      '#title' => t('Saved Settings'),
+      '#description' => t('Select if you want to use a previously saved set of settings.'),
+      '#default_value' => $config->get('user_import_settings'),
+      '#options' => $saved_settings,
     );
 
   }
 
   $form['next'] = array(
-    '#type'  => 'submit',
-    '#value' => t('Next')
+    '#type' => 'submit',
+    '#value' => t('Next'),
   );
 
   // Set form parameters so we can accept file uploads.
@@ -429,6 +500,10 @@ function user_import_add_form($import_id = NULL) {
   return $form;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_add_form_validate($form, &$form_state) {
 
   if (isset($form_state['values']['file_ftp']) && !empty($form_state['values']['file_ftp'])) {
@@ -451,6 +526,10 @@ function user_import_add_form_validate($form, &$form_state) {
   return;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_add_form_submit($form, &$form_state) {
   $redirect = 'admin/people/user_import/add/';
 
@@ -481,25 +560,33 @@ function user_import_add_form_submit($form, &$form_state) {
   $form_state['redirect'] = $redirect;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_delimiter_form(&$form, $value = ',') {
   $form['file_settings'] = array(
-    '#type'        => 'fieldset',
-    '#title'       => t('File Settings'),
+    '#type' => 'fieldset',
+    '#title' => t('File Settings'),
     '#collapsible' => TRUE,
-    '#collapsed'   => TRUE,
+    '#collapsed' => TRUE,
     '#description' => t("File column delimiter"),
   );
 
   $form['file_settings']['delimiter'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('Delimiter'),
-    '#size'          => 4,
+    '#type' => 'textfield',
+    '#title' => t('Delimiter'),
+    '#size' => 4,
     '#default_value' => $value,
-    '#required'      => TRUE,
-    '#description'   => t("The column delimiter for the file. Use '/t' for Tab."),
+    '#required' => TRUE,
+    '#description' => t("The column delimiter for the file. Use '/t' for Tab."),
   );
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_edit($form, $form_state, $import_id, $template_id = NULL) {
 
   // load code for supported modules
@@ -511,7 +598,7 @@ function user_import_edit($form, $form_state, $import_id, $template_id = NULL) {
   $import['template_id'] = $template_id;
 
   $form['ftp'] = array(
-    '#type'  => 'value',
+    '#type' => 'value',
     '#value' => $import['options']['ftp'],
   );
 
@@ -521,22 +608,22 @@ function user_import_edit($form, $form_state, $import_id, $template_id = NULL) {
   }
 
   $form['import_id'] = array(
-    '#type'  => 'value',
+    '#type' => 'value',
     '#value' => $import_id,
   );
 
   $form['setting'] = array(
-    '#type'  => 'value',
+    '#type' => 'value',
     '#value' => $import['setting'],
   );
 
   $form['return_path'] = array(
-    '#type'          => 'value',
+    '#type' => 'value',
     '#default_value' => 'admin/people/user_import',
   );
 
   $form['og_id'] = array(
-    '#type'          => 'value',
+    '#type' => 'value',
     '#default_value' => 0,
   );
 
@@ -546,32 +633,42 @@ function user_import_edit($form, $form_state, $import_id, $template_id = NULL) {
 
   $collapsed            = (empty($import['name'])) ? FALSE : TRUE;
   $additional_fieldsets = module_invoke_all('user_import_form_fieldset', $import, $collapsed);
-  if (is_array($additional_fieldsets)) $form = $form + $additional_fieldsets;
+  if (is_array($additional_fieldsets)) {
+    $form = $form + $additional_fieldsets;
+  }
 
   $update_user = module_invoke_all('user_import_form_update_user');
 
   if (is_array($update_user)) {
 
     $form['update_user'] = array(
-      '#type'        => 'fieldset',
-      '#title'       => t('Update Existing Users'),
+      '#type' => 'fieldset',
+      '#title' => t('Update Existing Users'),
       '#collapsible' => TRUE,
-      '#collapsed'   => TRUE,
-      '#tree'        => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
     );
 
     foreach ($update_user as $module => $display) {
 
-      $options = array(UPDATE_NONE => t('No Update'), UPDATE_REPLACE => t('Replace Data'), UPDATE_ADD => t('Add Data'));
-      if (isset($display['exclude_add']) && $display['exclude_add'] == TRUE) unset($options[UPDATE_ADD]);
-      if (isset($display['exclude_replace']) && $display['exclude_replace'] == TRUE) unset($options[UPDATE_REPLACE]);
+      $options = array(
+        UPDATE_NONE => t('No Update'),
+        UPDATE_REPLACE => t('Replace Data'),
+        UPDATE_ADD => t('Add Data'),
+      );
+      if (isset($display['exclude_add']) && $display['exclude_add'] == TRUE) {
+        unset($options[UPDATE_ADD]);
+      }
+      if (isset($display['exclude_replace']) && $display['exclude_replace'] == TRUE) {
+        unset($options[UPDATE_REPLACE]);
+      }
 
       $form['update_user'][$module] = array(
-        '#type'          => 'radios',
-        '#title'         => $display['title'],
-        '#options'       => $options,
+        '#type' => 'radios',
+        '#title' => $display['title'],
+        '#options' => $options,
         '#default_value' => empty($import['options']['update_user'][$module]) ? UPDATE_NONE : $import['options']['update_user'][$module],
-        '#description'   => $display['description'],
+        '#description' => $display['description'],
       );
     }
   }
@@ -580,30 +677,34 @@ function user_import_edit($form, $form_state, $import_id, $template_id = NULL) {
   if ($import['setting'] != 'import' && $import['setting'] != 'imported') {
 
     $form['test'] = array(
-      '#type'   => 'submit',
-      '#value'  => t('Test'),
+      '#type' => 'submit',
+      '#value' => t('Test'),
       '#weight' => 100,
       '#submit' => array('user_import_test_submit', 'user_import_edit_submit'),
     );
   }
 
   $form['import'] = array(
-    '#type'   => 'submit',
-    '#value'  => t('Import'),
+    '#type' => 'submit',
+    '#value' => t('Import'),
     '#weight' => 100,
     '#submit' => array('user_import_import_submit', 'user_import_edit_submit'),
   );
 
   $form['cancel'] = array(
-    '#type'     => 'submit',
-    '#value'    => t('Cancel'),
-    '#weight'   => 100,
+    '#type' => 'submit',
+    '#value' => t('Cancel'),
+    '#weight' => 100,
     '#validate' => array('user_import_edit_cancel_validate'),
   );
 
   return $form;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_edit_cancel_validate($form, &$form_state) {
 
   // if import was being added - delete file
@@ -617,6 +718,10 @@ function user_import_edit_cancel_validate($form, &$form_state) {
   $form_state['redirect'] = 'admin/people/user_import';
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_edit_validate($form, &$form_state) {
   $email  = FALSE;
   $fields = array();
@@ -631,15 +736,19 @@ function user_import_edit_validate($form, &$form_state) {
     $fields[$values['field_match']] = $values['field_match'];
 
     // check email address has been selected
-    if ($values['field_match'] == 'user-email') $email = TRUE;
+    if ($values['field_match'] == 'user-email') {
+      $email = TRUE;
+    }
   }
 
-  if (!$email) form_set_error('email', t('One column of the csv file must be set as the email address.'));
+  if (!$email) {
+    form_set_error('email', t('One column of the csv file must be set as the email address.'));
+  }
 
   if ($form_state['values']['name']) {
     $form_state['values']['name'] = rtrim($form_state['values']['name']);
 
-    if (drupal_strlen($form_state['values']['name']) < 1 || drupal_strlen($form_state['values']['name']) > 25) {
+    if (backdrop_strlen($form_state['values']['name']) < 1 || backdrop_strlen($form_state['values']['name']) > 25) {
       form_set_error('name', t('Name of saved settings must be 25 characters or less.'));
     }
   }
@@ -675,7 +784,7 @@ function user_import_template_new_submit($form, &$form_state) {
 
 
   _user_import_initialise_import($form_state['values']);
-  drupal_set_message(t("'%name' was saved as a settings template.", array('%name' => $form_state['values']['name'])));
+  backdrop_set_message(t("'%name' was saved as a settings template.", array('%name' => $form_state['values']['name'])));
 
   // reload settings page
   $form_state['redirect'] = 'admin/people/user_import/add/' . $import_id;
@@ -700,7 +809,7 @@ function user_import_template_update_submit($form, &$form_state) {
   $form_state['values']['import_id'] = $template_id;
   $form_state['values']['name']      = $form['#current_template'];
   _user_import_initialise_import($form_state['values']);
-  drupal_set_message(t("'%name' settings template was updated.", array('%name' => $form['#current_template'])));
+  backdrop_set_message(t("'%name' settings template was updated.", array('%name' => $form['#current_template'])));
 
   // reload settings page
   $form_state['redirect'] = 'admin/people/user_import/add/' . $import_id;
@@ -713,7 +822,7 @@ function user_import_template_update_submit($form, &$form_state) {
  */
 function user_import_test_submit($form, &$form_state) {
   $form_state['values']['setting'] = 'test';
-  drupal_set_message(t('Tested'));
+  backdrop_set_message(t('Tested'));
 }
 
 /**
@@ -721,9 +830,13 @@ function user_import_test_submit($form, &$form_state) {
  */
 function user_import_import_submit($form, &$form_state) {
   $form_state['values']['setting'] = 'import';
-  drupal_set_message(t('Imported'));
+  backdrop_set_message(t('Imported'));
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_move_file_for_processing($source, $file_name) {
   // Make sure processing directory exists.
   user_import_create_directory(NULL, 'processing');
@@ -756,7 +869,9 @@ function user_import_edit_submit($form, &$form_state) {
     $filepath       = user_import_move_file_for_processing($form_state['values']['filepath']);
   }
 
-  if (!empty($form_state['values']['og_id'])) $form_state['values']['groups'][$form_state['values']['og_id']] = $form_state['values']['og_id'];
+  if (!empty($form_state['values']['og_id'])) {
+    $form_state['values']['groups'][$form_state['values']['og_id']] = $form_state['values']['og_id'];
+  }
   $form_state['values']['ftp']                = $form_state['values']['ftp'];
   $form_state['values']                       = _user_import_settings_save($form_state['values']);
   $form_state['values']['save']['update']     = NULL;
@@ -766,11 +881,15 @@ function user_import_edit_submit($form, &$form_state) {
   _user_import_process($form_state['values']);
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_add_file_form(&$form, $ftp_files = NULL) {
 
   $form['browser'] = array(
-    '#type'        => 'fieldset',
-    '#title'       => t('Browser Upload'),
+    '#type' => 'fieldset',
+    '#title' => t('Browser Upload'),
     '#collapsible' => TRUE,
     '#description' => t("Upload a CSV file."),
   );
@@ -780,35 +899,35 @@ function user_import_add_file_form(&$form, $ftp_files = NULL) {
   }
 
   $form['browser']['file_upload'] = array(
-    '#type'        => 'file',
-    '#title'       => t('CSV File'),
-    '#size'        => 40,
+    '#type' => 'file',
+    '#title' => t('CSV File'),
+    '#size' => 40,
     '#description' => check_plain(t('Select the CSV file to be imported.') . ' ' . $file_size),
   );
 
   if (!empty($ftp_files)) {
 
     $form['ftp'] = array(
-      '#type'        => 'fieldset',
-      '#title'       => t('FTP Upload'),
+      '#type' => 'fieldset',
+      '#title' => t('FTP Upload'),
       '#collapsible' => TRUE,
-      '#collapsed'   => TRUE,
+      '#collapsed' => TRUE,
       '#description' => t("Any files uploaded to the 'user_import' directory using FTP can be selected for import here. Useful if the import file is too large for upload via the browser."),
     );
 
     $form['ftp']['file_ftp'] = array(
-      '#type'          => 'radios',
-      '#title'         => t('Files'),
+      '#type' => 'radios',
+      '#title' => t('Files'),
       '#default_value' => '0',
-      '#options'       => $ftp_files,
+      '#options' => $ftp_files,
     );
 
     // reload the page to show any files that have been added by FTP
     $form['ftp']['scan'] = array(
-      '#type'     => 'submit',
-      '#value'    => t('Check for new files'),
+      '#type' => 'submit',
+      '#value' => t('Check for new files'),
       '#validate' => array(),
-      '#submit'   => array(),
+      '#submit' => array(),
     );
 
   }
@@ -816,20 +935,24 @@ function user_import_add_file_form(&$form, $ftp_files = NULL) {
   return;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_edit_file_fields(&$form, $import) {
 
   $form['filename'] = array(
-    '#type'  => 'value',
+    '#type' => 'value',
     '#value' => $import['filename'],
   );
 
   $form['oldfilename'] = array(
-    '#type'  => 'value',
+    '#type' => 'value',
     '#value' => $import['oldfilename'],
   );
 
   $form['filepath'] = array(
-    '#type'  => 'value',
+    '#type' => 'value',
     '#value' => $import['filepath'],
   );
 
@@ -864,7 +987,9 @@ function _user_import_file_open($filepath, $filename) {
 function _user_import_file($import_id = NULL, $ftp_file_selected = NULL) {
 
   static $file;
-  if (!empty($file)) return $file;
+  if (!empty($file)) {
+    return $file;
+  }
 
   // File was uploaded through browser.
   if (empty($ftp_file_selected) && empty($import_id)) {
@@ -872,7 +997,9 @@ function _user_import_file($import_id = NULL, $ftp_file_selected = NULL) {
     db_delete('file_managed')->condition('uri', 'temporary://' . $_FILES['files']['name']['file_upload'])->execute();
 
     $file = file_save_upload('file_upload', array('file_validate_extensions' => array('csv txt')), FALSE, FILE_EXISTS_RENAME);
-    if (!empty($file)) return $file;
+    if (!empty($file)) {
+      return $file;
+    }
   }
 
   // File was uploaded by FTP
@@ -901,7 +1028,7 @@ function _user_import_file($import_id = NULL, $ftp_file_selected = NULL) {
 // get info on files  uploaded via FTP
 function _user_import_ftp_files() {
 
-  //$directory       = opendir(drupal_get_path('module', 'user_import'));
+  //$directory       = opendir(backdrop_get_path('module', 'user_import'));
 
   $files       = file_scan_directory('private://user_import/uploads/selectable', '/.*$/');
   $filenames[] = t('none');
@@ -914,7 +1041,7 @@ function _user_import_ftp_files() {
 }
 
 // delete incomplete import settings, where only the file has been uploaded
-function  _user_import_incomplete_deletion() {
+function _user_import_incomplete_deletion() {
 
   $result = db_query("SELECT * FROM {user_import} WHERE setting = 'file set'");
 
@@ -935,7 +1062,7 @@ function  _user_import_incomplete_deletion() {
 function user_import_create_directory($directory_name, $path_prefix = 'uploads/') {
 
   if (!file_stream_wrapper_valid_scheme('private')) {
-    drupal_set_message(t('Directory %path could not be created as the Private files path has not been set.', array('%path' => $directory_name)), 'warning');
+    backdrop_set_message(t('Directory %path could not be created as the Private files path has not been set.', array('%path' => $directory_name)), 'warning');
   }
 
   $path = 'private://user_import/' . $path_prefix . $directory_name;
@@ -948,6 +1075,10 @@ function user_import_create_directory($directory_name, $path_prefix = 'uploads/'
 
 // - - - - - - - -  MISC - - - - - - - -
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_import_form_field_match(&$form, $import) {
 
   $delimiter = isset($import['options']['delimiter']) && !empty($import['options']['delimiter']) ? $import['options']['delimiter'] : ',';
@@ -956,7 +1087,7 @@ function user_import_form_field_match(&$form, $import) {
   $data_row  = _user_import_file_row($form['filename']['#value'], $handle, $delimiter);
 
   $fieldmatch_description_parts = array(
-    '<strong>' . t('Drupal fields') . ':</strong> ' . t("Match columns in CSV file to drupal user fields, leave as '----' to ignore the column."),
+    '<strong>' . t('Backdrop fields') . ':</strong> ' . t("Match columns in CSV file to backdrop user fields, leave as '----' to ignore the column."),
     '<strong>' . t('Username') . ':</strong> ' . t("If username is selected for multiple fields, the username will be built in the order selected. Otherwise, the username will be randomly generated."),
     '<strong>' . t('Abbreviate') . ':</strong> ' . t("Use the first letter of a field in uppercase for the Username, e.g. 'john' -> 'J'."),
   );
@@ -964,13 +1095,13 @@ function user_import_form_field_match(&$form, $import) {
   $fieldmatch_description = theme('item_list', array('items' => $fieldmatch_description_parts));
 
   $form['field_match'] = array(
-    '#type'        => 'fieldset',
-    '#title'       => t('Field Match'),
+    '#type' => 'fieldset',
+    '#title' => t('Field Match'),
     '#description' => $fieldmatch_description,
-    '#weight'      => -90,
+    '#weight' => -90,
     '#collapsible' => TRUE,
-    '#collapsed'   => $collapsed,
-    '#tree'        => TRUE,
+    '#collapsed' => $collapsed,
+    '#tree' => TRUE,
   );
 
   // add default and email address options
@@ -990,7 +1121,9 @@ function user_import_form_field_match(&$form, $import) {
   $row  = 0;
   $sort = array(t('--'), 1, 2, 3, 4);
 
-  if (empty($data_row)) return;
+  if (empty($data_row)) {
+    return;
+  }
 
   foreach ($data_row as $data_cell) {
 
@@ -999,23 +1132,23 @@ function user_import_form_field_match(&$form, $import) {
     );
 
     $form['field_match'][$row]['csv'] = array(
-      '#markup' => check_plain(drupal_substr($data_cell, 0, 40)),
+      '#markup' => check_plain(backdrop_substr($data_cell, 0, 40)),
     );
 
     $form['field_match'][$row]['field_match'] = array(
-      '#type'          => 'select',
+      '#type' => 'select',
       '#default_value' => isset($import['field_match'][$row]['field_match']) ? $import['field_match'][$row]['field_match'] : $user_fields[0],
-      '#options'       => $user_fields,
+      '#options' => $user_fields,
     );
 
     $form['field_match'][$row]['username'] = array(
-      '#type'          => 'select',
+      '#type' => 'select',
       '#default_value' => isset($import['field_match'][$row]['username']) ? $import['field_match'][$row]['username'] : $sort[0],
-      '#options'       => $sort,
+      '#options' => $sort,
     );
 
     $form['field_match'][$row]['abbreviate'] = array(
-      '#type'          => 'checkbox',
+      '#type' => 'checkbox',
       '#default_value' => isset($import['field_match'][$row]['abbreviate']) ? $import['field_match'][$row]['abbreviate'] : NULL,
     );
 
@@ -1051,12 +1184,14 @@ function _user_import_initialise_import($import) {
 
   switch ($import['setting']) {
     case 'imported':
-      drupal_set_message(t('File has already been imported'), 'error');
+      backdrop_set_message(t('File has already been imported'), 'error');
       break;
 
-    // add setting template values to new import settings
+      // add setting template values to new import settings
     case 'file set':
-      if (empty($import['template_id'])) return $import;
+      if (empty($import['template_id'])) {
+        return $import;
+      }
       $template                = _user_import_settings_select($import['template_id']);
       $template['import_id']   = $import['import_id'];
       $template['filename']    = $import['filename'];
@@ -1092,7 +1227,7 @@ function _user_import_initialise_import($import) {
 
     default:
       _user_import_process($import);
-      drupal_set_message(t('Imported'));
+      backdrop_set_message(t('Imported'));
       break;
   }
 
@@ -1112,7 +1247,9 @@ function _user_import_errors_display_delete($import_id) {
 
 function _user_import_profile($key = 'fid', $return_value = NULL) {
 
-  if (!module_exists('profile')) return;
+  if (!module_exists('profile')) {
+    return;
+  }
 
   static $fields_static;
   $fields = array();
@@ -1130,7 +1267,9 @@ function _user_import_profile($key = 'fid', $return_value = NULL) {
     }
   }
 
-  if (empty($fields_static)) return array();
+  if (empty($fields_static)) {
+    return array();
+  }
 
   // return all profile fields info, or just specific type
   if (empty($return_value)) {

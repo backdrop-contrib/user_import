@@ -18,7 +18,7 @@ if (module_exists('location_user')) {
    */
   function location_user_import_form_update_user() {
     $form['location'] = array(
-      'title'       => t('Location'),
+      'title' => t('Location'),
       'description' => t('Affected: fields in user Location.'),
     );
 

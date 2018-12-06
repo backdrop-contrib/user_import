@@ -1,0 +1,12 @@
+[UserImportWebTestCase]
+name = UserImportWebTestCase
+description = UserImportWebTestCase
+group = user_import
+file = user_import.test
+
+[UserImportBasicsTestCase]
+name = Import Users (Basics)
+description = Import users from a CSV file, test basic functions.
+group = User Import
+file = user_import.test
+

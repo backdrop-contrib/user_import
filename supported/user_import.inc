@@ -53,6 +53,8 @@ function _user_import_send_email($account, $password, $profile, $subject, $body,
   // hook_mail()) that the message they want to send comes from.
   $module = 'user_import';
   $key    = 'welcome';
+  
+  debug($account);
 
   // Specify 'to' and 'from' addresses.
   $to   = $account->mail;

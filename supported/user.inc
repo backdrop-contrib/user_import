@@ -116,13 +116,13 @@ function user_user_import_pre_save($settings, $account, $fields, $errors, $updat
 
   $account_add['mail'] = $fields['user']['email'][0];
 
-  if (!empty($account['uid'])) {
+  if (!empty($account->uid)) {
 
     // update roles
     switch ($update_setting_per_module['roles']) {
       case UPDATE_ADD:
         // include currently assigned roles
-        foreach ($account['roles'] as $rid => $role_name) {
+        foreach ($account->roles as $rid => $role_name) {
           $account_add['roles'][$rid] = $rid;
         }
 
@@ -154,7 +154,7 @@ function user_user_import_pre_save($settings, $account, $fields, $errors, $updat
       $account_add['contact'] = $settings['contact'];
     }
     else {
-      $account_add['contact'] = isset($account['contact']) ? $account['contact'] : '';
+      $account_add['contact'] = isset($account->contact) ? $account->contact : '';
     }
 
   }

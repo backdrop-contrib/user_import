@@ -76,7 +76,7 @@ function _user_import_process($settings) {
         }
 
         $errors           = user_import_errors();
-        $account          = array();
+        $account          = entity_create('user', array());
         $existing_account = FALSE;
         $updated          = FALSE;
 
@@ -93,22 +93,21 @@ function _user_import_process($settings) {
         $account_additions = module_invoke_all('user_import_pre_save', $settings, $account, $fields, $errors, $update_setting_per_module);
 
         foreach ($account_additions as $field_name => $value) {
-          $account[$field_name] = $value;
+          $account->$field_name = $value;
         }
-
         if (empty($errors)) {
 
           if ($settings['setting'] == 'import') {
 
             if ($existing_account) {
-              $account = user_save($existing_account, $account);
+              user_save($account);
               $updated = TRUE;
             }
             else {
               // Only set a user name if we are not updating an existing record.
-              $account['name'] = _user_import_create_username($username_order, $username_data, $username_abbreviate, $settings['username_space']);
-              $password        = $account['pass'];
-              $account         = user_save('', $account);
+              $account->name = _user_import_create_username($username_order, $username_data, $username_abbreviate, $settings['username_space']);
+              $password        = $account->pass;
+              user_save($account);
             }
 
             module_invoke_all('user_import_after_save', $settings, $account, $password, $fields, $updated, $update_setting_per_module);
@@ -126,7 +125,7 @@ function _user_import_process($settings) {
 
       // save lines that have fatal errors
       if (!empty($errors)) {
-        $account_email = isset($account['email']) ? $account['email'] : '';
+        $account_email = isset($account->email) ? $account->email : '';
         _user_import_errors_display_save($settings['import_id'], $fields, $account_email, $errors);
       }
     }

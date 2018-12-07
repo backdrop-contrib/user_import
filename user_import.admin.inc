@@ -92,7 +92,7 @@ function user_import_list($action = NULL, $import_id = NULL) {
 function user_import_preferences($import_id = NULL, $template_id = NULL) {
 
   if (empty($import_id)) {
-    $private_path = config_get('system.performance', 'file_private_path');
+    $private_path = config_get('system.core', 'file_private_path');
 
     // Private path hasn't been set, show a message instead of the form.
     if (!$private_path) {

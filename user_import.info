@@ -1,5 +1,5 @@
 name = User Import
-description = "Import users into Drupal from a CSV file."
+description = "Import users into Backdrop from a CSV file."
 backdrop = 1.x
 type = module
 package = Deployment

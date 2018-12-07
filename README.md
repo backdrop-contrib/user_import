@@ -39,7 +39,7 @@ Import users into Backdrop from a CSV file (Comma Separated File).
 
 ## Credits
 
- - Ported to BackdropCMS by [@docwilmot](https://github.com/docwilmot)
+ - Ported to BackdropCMS by [Laryn Kragt Bakker](https://github.com/laryn) - [CEDC.org](https://cedc.org)
  - Created and maintained for Backdrop by [Robert Castelo](http://drupal.org/user/3555) - [CodePositive](http://www.codepositive.com)
  - A script by [David McIntosh](neofactor.com) informed the development of this module.
  - Patches, documentation and code provided by community members including spatz4000, mfredrickson, idealso, and Nedio Rogers. 

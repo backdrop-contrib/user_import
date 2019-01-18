@@ -65,22 +65,23 @@ function user_import_permission() {
  * Implements hook_menu().
  */
 function user_import_menu() {
-  $items['admin/people/user_import']            = array(
+  $items['admin/people/user_import'] = array(
     'title' => 'Import',
     'description' => 'Import or update users from a comma separated file (csv).',
     'page callback' => 'user_import_list',
     'access arguments' => array('import users'),
     'type' => MENU_LOCAL_TASK,
     'file' => 'user_import.admin.inc',
+    'weight' => 2,
   );
-  $items['admin/people/user_import/list']       = array(
+  $items['admin/people/user_import/list'] = array(
     'title' => 'List Imports',
     'access arguments' => array('import users'),
     'weight' => -10,
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'file' => 'user_import.admin.inc',
   );
-  $items['admin/people/user_import/add']        = array(
+  $items['admin/people/user_import/add'] = array(
     'title' => 'New Import',
     'page callback' => 'user_import_preferences',
     'access arguments' => array('import users'),
@@ -96,7 +97,7 @@ function user_import_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'user_import.admin.inc',
   );
-  $items['admin/people/user_import/import/%']   = array(
+  $items['admin/people/user_import/import/%'] = array(
     'title' => 'Import',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('user_import_confirm_import', 4),
@@ -104,7 +105,7 @@ function user_import_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'user_import.admin.inc',
   );
-  $items['admin/people/user_import/delete/%']   = array(
+  $items['admin/people/user_import/delete/%'] = array(
     'title' => 'Delete Import',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('user_import_confirm_delete', 4),
@@ -112,7 +113,7 @@ function user_import_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'user_import.admin.inc',
   );
-  $items['admin/people/user_import/configure']  = array(
+  $items['admin/people/user_import/configure'] = array(
     'title' => 'Configure',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('user_import_configure_form'),
@@ -120,7 +121,7 @@ function user_import_menu() {
     'type' => MENU_LOCAL_TASK,
     'file' => 'user_import.admin.inc',
   );
-  $items['admin/people/user_import/errors/%']   = array(
+  $items['admin/people/user_import/errors/%'] = array(
     'title' => 'Import Errors',
     'page callback' => 'user_import_limited_errors',
     'page arguments' => array(4),

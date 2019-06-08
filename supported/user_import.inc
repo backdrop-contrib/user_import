@@ -373,9 +373,9 @@ function _user_import_publication_email(&$variables, $account, $subscribed, $for
   $id_hash               = identity_hash_select_hash($account->uid);
   $variables['!id_hash'] = $id_hash->hash;
 
-  while (list($type, $subscriptions) = each($subscribed)) {
+  foreach ($subscribed as $type => $subscriptions) {
 
-    while (list($publication_id, $shedule) = each($subscriptions)) {
+    foreach ($subscriptions as $publication_id => $shedule) {
 
       if (!empty($shedule[0])) {
 

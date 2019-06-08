@@ -192,7 +192,7 @@ function user_user_import_edit_roles_fields(&$form, $import, $collapsed) {
   $roles_data = user_roles();
 
   // remove 'anonymous user' option
-  while (list ($rid, $role_name) = each($roles_data)) {
+  foreach ($roles_data as $rid => $role_name) {
     if ($role_name != 'anonymous user' && $role_name != 'authenticated user') $roles[$rid] = $role_name;
   }
 

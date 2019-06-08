@@ -73,6 +73,7 @@ function _user_import_send_email($account, $password, $profile, $subject, $body,
     'body'         => $body,
     'email_format' => $format,
     'css'          => $css,
+    'user'         => $account,
   );
 
   _user_import_publication_email($params, $account, $subscribed, $format);
@@ -312,8 +313,8 @@ function user_import_template_unique_name_validate($form, &$form_state) {
  * Validate that a email subject line has been set if Send Email is enabled.
  */
 function user_import_send_email_subject_validate($element, &$form_state) {
-  if (!empty($form_state['values']['send_email']) && empty($form_state['values']['subject'])) {
-    form_error($element, t('If Send Email has been enabled then an <strong>email subject</strong> line must set.'));
+  if (!empty($form_state['values']['send_email']) && (empty($form_state['values']['subject']) && !empty($form_state['values']['message']))) {
+    form_error($element, t('If Send Email has been enabled then either both <strong>email subject</strong> and <strong>email message</strong> must be set, or none of them.'));
   }
 }
 
@@ -321,8 +322,8 @@ function user_import_send_email_subject_validate($element, &$form_state) {
  * Validate that a email message has been set if Send Email is enabled.
  */
 function user_import_send_email_message_validate($element, &$form_state) {
-  if (!empty($form_state['values']['send_email']) && empty($form_state['values']['message'])) {
-    form_error($element, t('If Send Email has been enabled then an <strong>email message</strong> must set.'));
+  if (!empty($form_state['values']['send_email']) && (empty($form_state['values']['message']) && !empty($form_state['values']['subject']))) {
+    form_error($element, t('If Send Email has been enabled then either both <strong>email subject</strong> and <strong>email message</strong> must be set, or none of them.'));
   }
 }
 

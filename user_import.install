@@ -152,13 +152,7 @@ function user_import_schema() {
 function user_import_install() {
 
   // Add a new mail system for HTML emails.
-  // TODO This variable was probably removed in Backdrop without replacement.
-  $mail_system = variable_get('mail_system', array('default-system' => 'DefaultMailSystem'));
-  $mail_system['user_import'] = 'UserImportMailSystem';
-  // TODO This variable was probably removed in Backdrop without replacement.
-  variable_set('mail_system', $mail_system);
-  // Dynamically generated variable data was detected on the following lines.
-  // /user_import/user_import.module line 271
+  $mailconfig = config_set('system.mail', 'user_import', 'UserImportMailSystem');
 }
 
 
@@ -169,47 +163,11 @@ function user_import_uninstall() {
   config_clear('user_import.settings', 'user_import_settings');
   config_clear('user_import.settings', 'user_import_max');
   config_clear('user_import.settings', 'user_import_line_max');
-  // TODO This variable was probably removed in Backdrop without replacement.
+  // This variable was probably removed in Backdrop without replacement.
   variable_del('user_export_checked_usernames');
   config_clear('user_import.settings', 'user_import_profile_date_format');
-
-  //
-  // TODO This variable was probably removed in Backdrop without replacement.
-  $mail_system = variable_get('mail_system', array('default-system' => 'DefaultMailSystem'));
-  unset($mail_system['user_import']);
-  // TODO This variable was probably removed in Backdrop without replacement.
-  variable_set('mail_system', $mail_system);
+  config_clear('system.mail', 'user_import');
 }
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function user_import_update_1() { }
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function user_import_update_2() { }
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function user_import_update_3() { }
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function user_import_update_4() { }
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function user_import_update_5() { }
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function user_import_update_6001() { }
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function user_import_update_6002() { }
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function user_import_update_6003() { }
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function user_import_update_7200(&$sandbox) { }
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function user_import_update_7201() { }
 
 /**
  * Implements hook_update_last_removed().

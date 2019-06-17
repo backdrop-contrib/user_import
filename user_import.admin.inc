@@ -847,7 +847,7 @@ function _user_import_file_open($filepath, $filename) {
   $handle = @fopen($filepath, "r");
 
   if (!$handle) {
-    form_set_error('file', t("Could not find the csv file '%filename'", array('%filename' => $filename)), 'error');
+    form_set_error('file', t("Could not find the csv file '%filename'", array('%filename' => $filename)));
 
     return t("Please add your file again.");
   }
@@ -1036,7 +1036,7 @@ function _user_import_file_row($filename, $handle, $delimiter = ',') {
   $data_row = @fgetcsv($handle, 1000000, $delimiter);
 
   if (!$data_row) {
-    form_set_error('file', t("Could not get data, the file '%filename' is either empty or has incompatible line endings.", array('%filename' => $filename)), 'error');
+    form_set_error('file', t('Could not get data, the file %filename is either empty or has incompatible line endings.', array('%filename' => $filename)));
   }
 
   return $data_row;

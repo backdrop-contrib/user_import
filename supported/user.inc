@@ -236,7 +236,7 @@ function user_user_import_edit_email_fields(&$form, $import, $collapsed) {
   $form['email_message'] = array(
     '#type'        => 'fieldset',
     '#title'       => t('Email Message'),
-    '#description' => t('Welcome message to be sent to imported users. Leave blank to use the default !message. If an existing user account is updated no welcome email will be sent to that user. <strong>Note - if "Activate Accounts" option is enabled !login_url (one time login) will not work.</strong>', array('!message' => l(t('message'), 'admin/people/settings'))),
+    '#description' => t('Welcome message to be sent to imported users. Leave blank to use the default !message. If an existing user account is updated no welcome email will be sent to that user. <strong>Note - if "Activate Accounts" option is enabled !login_url (one time login) will not work.</strong>', array('!message' => l(t('message'), 'admin/config/people/accounts'))),
     '#collapsible' => TRUE,
     '#collapsed'   => $collapsed,
   );

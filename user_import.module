@@ -203,6 +203,7 @@ function user_import_trigger_imports() {
       $options     = isset($settings['options']) ? serialize($settings['options']) : '';
       $setting     = 'import';
 
+      $file = new stdClass();
       $file->filename    = $filename_new;
       $file->oldfilename = $import_file->filename;
       $file->filepath    = 'private://user_import/processing/' . $filename_new;
@@ -950,8 +951,3 @@ class UserImportMailSystem implements MailSystemInterface {
     );
   }
 }
-
-
-
-
-

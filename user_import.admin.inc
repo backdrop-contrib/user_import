@@ -1038,6 +1038,9 @@ function _user_import_file_row($filename, $handle, $delimiter = ',') {
   if (!$data_row) {
     form_set_error('file', t('Could not get data, the file %filename is either empty or has incompatible line endings.', array('%filename' => $filename)));
   }
+  if (1 == count($data_row)) {
+    form_set_error('file', t('The first line of %filename consists of a single field. This probably means that you have set the wrong delimiter.', array('%filename' => $filename)));
+  }
 
   return $data_row;
 }

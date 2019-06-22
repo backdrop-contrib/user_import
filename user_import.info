@@ -1,12 +1,10 @@
 name = User Import
 description = "Import users into Drupal from a CSV file."
 core = 7.x
+configure = admin/people/user_import/configure
 package = Deployment
 files[] = user_import.module
 files[] = user_import.install
 files[] = user_import.admin.inc
 files[] = user_import.import.inc
 files[] = user_import.test
-
-
-

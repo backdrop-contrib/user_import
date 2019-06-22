@@ -188,12 +188,14 @@ function user_user_import_after_save($settings, $account, $password, $fields, $u
 }
 
 function user_user_import_edit_roles_fields(&$form, $import, $collapsed) {
-  $roles      = array();
-  $roles_data = user_roles();
+  $roles = user_roles();
 
-  // remove 'anonymous user' option
-  foreach ($roles_data as $rid => $role_name) {
-    if ($role_name != 'anonymous user' && $role_name != 'authenticated user') $roles[$rid] = $role_name;
+  // remove 'anonymous user' and 'authenticated user' options
+  if (($key = array_search(t('anonymous user'), $roles)) !== FALSE) {
+    unset($roles[$key]);
+  }
+  if (($key = array_search(t('authenticated user'), $roles)) !== FALSE) {
+    unset($roles[$key]);
   }
 
   // roles selected

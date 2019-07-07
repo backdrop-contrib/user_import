@@ -131,7 +131,7 @@ USAGE
   For more detailed instructions (with pictures) please go to the
   documentation pages for this module:
 
-  http://drupal.org/node/137653
+  https://www.drupal.org/node/137653
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 

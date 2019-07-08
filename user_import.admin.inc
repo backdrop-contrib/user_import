@@ -234,28 +234,6 @@ function user_import_configure_form() {
     '#description'   => t('The default is set at 1,000 characters, if a line in your csv is longer than this you should set a higher maximum here. Setting higher maximums will slow down imports.'),
   );
 
-  if (module_exists('profile')) {
-    $date_options                           = array(
-      'MM/DD/YYYY' => 'MM/DD/YYYY',
-      'DD/MM/YYYY' => 'DD/MM/YYYY',
-      'YYYY/MM/DD' => 'YYYY/MM/DD',
-      'YYYY/DD/MM' => 'YYYY/DD/MM',
-    );
-    $form['profile']                        = array(
-      '#type'        => 'fieldset',
-      '#title'       => t('Profile Settings'),
-      '#collapsible' => TRUE,
-      '#collapsed'   => TRUE,
-    );
-    $form['profile']['profile_date_format'] = array(
-      '#type'          => 'select',
-      '#title'         => t('Date field format'),
-      '#description'   => t('Select a format for importing dates into user profiles (Profile module).'),
-      '#default_value' => variable_get('user_import_profile_date_format', 'MM/DD/YYYY'),
-      '#options'       => $date_options,
-    );
-  }
-
   $saved_templates = _user_import_settings_select(NULL, TRUE);
 
   if (!empty($saved_templates)) {
@@ -269,7 +247,7 @@ function user_import_configure_form() {
 
     $templates_list = array('-- none --');
 
-    foreach ($saved_templates AS $template) {
+    foreach ($saved_templates as $template) {
       $templates_list[$template['import_id']]   = $template['name'];
       $templates_delete[$template['import_id']] = $template['name'];
     }
@@ -347,9 +325,6 @@ function user_import_configure_form_submit($form, &$form_state) {
   $user_import_settings = isset($form_state['values']['user_import_settings']) ? $form_state['values']['user_import_settings'] : 0;
   variable_set('user_import_settings', $user_import_settings);
 
-  $profile_date_format = isset($form_state['values']['profile_date_format']) ? $form_state['values']['profile_date_format'] : 0;
-  variable_set('user_import_profile_date_format', $profile_date_format);
-
   variable_set('user_import_selectable_files', $form_state['values']['selectable_files']);
   variable_set('user_import_auto_imports_enabled', $form_state['values']['auto_imports_enabled']);
 
@@ -404,7 +379,7 @@ function user_import_add_form($import_id = NULL) {
   if ($settings) {
 
     $saved_settings = array(t('-- none --'));
-    foreach ($settings AS $settings_set) {
+    foreach ($settings as $settings_set) {
       $saved_settings[$settings_set['import_id']] = $settings_set['name'];
     }
 
@@ -1111,44 +1086,4 @@ function _user_import_errors_display_delete($import_id) {
   db_query('DELETE FROM {user_import_errors} WHERE import_id = :import_id', array(':import_id' => $import_id));
 
   return;
-}
-
-function _user_import_profile($key = 'fid', $return_value = NULL) {
-
-  if (!module_exists('profile')) return;
-
-  static $fields_static;
-  $fields = array();
-
-  // avoid making more than one database call for profile info
-  if (empty($fields_static)) {
-
-    $results = db_query("SELECT * FROM {profile_field}");
-
-    foreach ($results as $row) {
-      // don't include private fields
-      if (user_access('administer users') || $row->visibility != PROFILE_PRIVATE) {
-        $fields_static[] = $row;
-      }
-    }
-  }
-
-  if (empty($fields_static)) return array();
-
-  // return all profile fields info, or just specific type
-  if (empty($return_value)) {
-
-    foreach ($fields_static as $field) {
-      $fields[$field->{$key}] = $field;
-    }
-  }
-  else {
-    foreach ($fields_static as $field) {
-      $fields[$field->{$key}] = $field->{$return_value};
-    }
-  }
-
-  asort($fields);
-
-  return $fields;
 }

@@ -78,16 +78,6 @@ function _user_import_send_email($account, $password, $profile, $subject, $body,
 
   _user_import_publication_email($params, $account, $subscribed, $format);
 
-  // import info to profile
-  if (module_exists('profile') && is_array($profile)) {
-
-    $profile_name = _user_import_profile('fid', 'name');
-
-    foreach ($profile_name as $fid => $field_name) {
-      $params['!' . $field_name] = $profile[$fid];
-    }
-  }
-
   $language = user_preferred_language($account);
 
   // Whether or not to automatically send the mail when drupal_mail() is
@@ -363,41 +353,4 @@ function user_import_edit_remove_file_validate($form, &$form_state) {
   //_user_import_file_deletion($settings['filepath'], $settings['filename'], $settings['oldfilename'], $settings['options']['ftp']);
   file_unmanaged_delete($settings['filepath']);
   drupal_goto('admin/people/user_import/add');
-}
-
-function _user_import_publication_email(&$variables, $account, $subscribed, $format) {
-
-  if (!module_exists('publication') || !module_exists('schedule') || !module_exists('identity_hash')) {
-    return;
-  }
-
-  $id_hash               = identity_hash_select_hash($account->uid);
-  $variables['!id_hash'] = $id_hash->hash;
-
-  foreach ($subscribed as $type => $subscriptions) {
-
-    foreach ($subscriptions as $publication_id => $shedule) {
-
-      if (!empty($shedule[0])) {
-
-        $publication = publication_select_publications($type, $publication_id);
-
-        $update_link      = url('subscribed/preferences/' . $publication_id . '/' . $id_hash->hash, array('absolute' => TRUE));
-        $unsubscribe_link = url('subscribed/delete/' . $publication_id . '/' . $id_hash->hash, array('absolute' => TRUE));
-
-        if ($format == 1) {
-
-          $variables['!subscribed_links'] .= '<strong>' . $publication->title . '</strong><br />' .
-            '<a href="' . $update_link . '">' . t('Update Preferences') . '</a> | <a href="' . $unsubscribe_link . '">' . t('Unsubscribe') . '</a><br />';
-
-        }
-        else {
-
-          $variables['!subscribed_links'] .= $publication->title . "\n" .
-            ' - ' . t('Update Preferences') . ' ' . $update_link . '\n' .
-            ' - ' . t('Unsubscribe') . ' ' . $unsubscribe_link . '\n';
-        }
-      }
-    }
-  }
 }

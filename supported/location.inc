@@ -1,6 +1,6 @@
 <?php
 
-// Functionality depends on User Location.
+// Functionality depends on User Locations (part of Locations project).
 if (module_exists('location_user')) {
 
   /**

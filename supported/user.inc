@@ -191,6 +191,7 @@ function user_user_import_after_save($settings, $account, $password, $fields, $u
  * Role assign.
  */
 function user_user_import_edit_roles_fields(&$form, $import, $collapsed) {
+  if (!user_access('user import assign roles')) return;
   $roles = user_roles(TRUE);
 
   // remove 'authenticated user' always [2].

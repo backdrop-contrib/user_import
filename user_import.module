@@ -48,15 +48,19 @@ function user_import_theme() {
  * Implementation of hook_perm().
  */
 function user_import_permission() {
-
   return array(
     'import users'        => array(
       'title'       => t('Import users'),
-      'description' => t('Import users.'),
+      'description' => t('Permission to import users.'),
     ),
     'limited user import' => array(
       'title'       => t('Import users Reports'),
-      'description' => t('View import error reports.'),
+      'description' => t('Permission to view import error reports.'),
+    ),
+    'user import assign roles' => array(
+      'title'       => t('User import assign roles'),
+      'description' => t('Permission to assign roles, including the <em>Administrator</em> role, when importing users.'),
+      'warning'     => t('Warning: Give to trusted roles only; this permission has security implications.'),
     ),
   );
 }

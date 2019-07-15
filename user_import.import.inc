@@ -27,6 +27,7 @@ function _user_import_process($settings) {
 
   while ($data = fgetcsv($handle, $line_max, $delimiter)) {
 
+    // Reset error array prior to testing
     $errors = user_import_errors(FALSE, TRUE);
 
     // if importing, check we are not over max number of imports per cron
@@ -141,7 +142,17 @@ function _user_import_process($settings) {
   return $settings;
 }
 
-// errors for user being imported
+/**
+ * Function to accumulate an array accumulating errors for import.
+ *
+ * @param string|bool $error
+ *   A string describing the error, or FALSE.
+ * @param bool $clear
+ *   TRUE if the $errors array shall be cleared.
+ *
+ * @return array
+ *   The array with all the errors.
+ */
 function user_import_errors($error = FALSE, $clear = FALSE) {
 
   static $errors = array();

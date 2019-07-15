@@ -172,6 +172,34 @@ function user_import_delete($import_id = NULL, $return_path = 'admin/people/user
  */
 function user_import_configure_form() {
 
+  $form['general'] = array(
+    '#type'        => 'fieldset',
+    '#title'       => t('General'),
+    '#collapsible' => TRUE,
+    '#collapsed'   => TRUE,
+  );
+
+  $form['general']['delimiter'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Delimiter'),
+    '#size'          => 4,
+    '#default_value' => variable_get('user_import_delimiter', ','),
+    '#required'      => TRUE,
+    '#description'   => t("The default column delimiter. Use '\\t' for Tab."),
+  );
+
+  $form['general']['encoding'] = array(
+    '#type'          => 'select',
+    '#title'         => t('Character Encoding'),
+    '#options' => array(
+      'UTF-8' => t('UTF-8'),
+      'Windows-1252' => t('Windows-1252'),
+    ),
+    '#default_value' => variable_get('user_import_encoding', 'UTF-8'),
+    '#required'      => TRUE,
+    '#description'   => t('Select the default encoding.'),
+  );
+
   $form['selectable_files'] = array(
     '#type'        => 'fieldset',
     '#title'       => t('Uploads Directory'),
@@ -317,6 +345,9 @@ function user_import_configure_form_validate($form, &$form_state) {
 
 function user_import_configure_form_submit($form, &$form_state) {
   $deleted = '';
+  variable_set('user_import_delimiter', $form_state['values']['delimiter']);
+  variable_set('user_import_encoding', $form_state['values']['encoding']);
+
   settype($form_state['values']['user_import_max'], 'integer');
   settype($form_state['values']['user_import_line_max'], 'integer');
   variable_set('user_import_max', $form_state['values']['user_import_max']);
@@ -371,9 +402,80 @@ function user_import_add_form($import_id = NULL) {
     $ftp_files = _user_import_ftp_files();
   }
 
-  user_import_add_file_form($form, $ftp_files);
+  $form['browser'] = array(
+    '#type'        => 'fieldset',
+    '#title'       => t('Browser Upload'),
+    '#collapsible' => TRUE,
+    '#description' => t("Upload a CSV file."),
+  );
 
-  user_import_delimiter_form($form);
+  if (function_exists('file_upload_max_size')) {
+    $file_size = t('Maximum file size: @size.', array('@size' => format_size(file_upload_max_size())));
+  }
+
+  $form['browser']['file_upload'] = array(
+    '#type'        => 'file',
+    '#title'       => t('CSV File'),
+    '#size'        => 40,
+    '#description' => check_plain(t('Select the CSV file to be imported.') . ' ' . $file_size),
+  );
+
+  if (!empty($ftp_files)) {
+
+    $form['ftp'] = array(
+      '#type'        => 'fieldset',
+      '#title'       => t('FTP Upload'),
+      '#collapsible' => TRUE,
+      '#collapsed'   => TRUE,
+      '#description' => t("Any files uploaded to the 'user_import' directory using FTP can be selected for import here. Useful if the import file is too large for upload via the browser."),
+    );
+
+    $form['ftp']['file_ftp'] = array(
+      '#type'          => 'radios',
+      '#title'         => t('Files'),
+      '#default_value' => '0',
+      '#options'       => $ftp_files,
+    );
+
+    // reload the page to show any files that have been added by FTP
+    $form['ftp']['scan'] = array(
+      '#type'     => 'submit',
+      '#value'    => t('Check for new files'),
+      '#validate' => array(),
+      '#submit'   => array(),
+    );
+
+  }
+
+  $form['file_settings'] = array(
+    '#type'        => 'fieldset',
+    '#title'       => t('File Settings'),
+    '#collapsible' => TRUE,
+    '#collapsed'   => FALSE,
+    '#description' => t("File column delimiter"),
+  );
+
+  $form['file_settings']['delimiter'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Delimiter'),
+    '#size'          => 4,
+    '#default_value' => variable_get('user_import_delimiter', ','),
+    '#required'      => TRUE,
+    '#description'   => t("The column delimiter for the file. Use '/t' for Tab."),
+  );
+
+  $form['file_settings']['encoding'] = array(
+    '#type'          => 'select',
+    '#title'         => t('Character Encoding'),
+    '#options' => array(
+      'UTF-8' => t('UTF-8'),
+      'Windows-1252' => t('Windows-1252'),
+    ),
+    '#default_value' => variable_get('user_import_encoding', 'UTF-8'),
+    '#required'      => TRUE,
+    '#description'   => t('Select the encoding used in the file.'),
+  );
+
   $settings = _user_import_settings_select(NULL, TRUE);
 
   if ($settings) {
@@ -390,7 +492,6 @@ function user_import_add_form($import_id = NULL) {
       '#default_value' => variable_get('user_import_settings', 0),
       '#options'       => $saved_settings,
     );
-
   }
 
   $form['next'] = array(
@@ -400,7 +501,6 @@ function user_import_add_form($import_id = NULL) {
 
   // Set form parameters so we can accept file uploads.
   $form['#attributes'] = array('enctype' => 'multipart/form-data');
-
   return $form;
 }
 
@@ -454,25 +554,6 @@ function user_import_add_form_submit($form, &$form_state) {
   }
 
   $form_state['redirect'] = $redirect;
-}
-
-function user_import_delimiter_form(&$form, $value = ',') {
-  $form['file_settings'] = array(
-    '#type'        => 'fieldset',
-    '#title'       => t('File Settings'),
-    '#collapsible' => TRUE,
-    '#collapsed'   => TRUE,
-    '#description' => t("File column delimiter"),
-  );
-
-  $form['file_settings']['delimiter'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('Delimiter'),
-    '#size'          => 4,
-    '#default_value' => $value,
-    '#required'      => TRUE,
-    '#description'   => t("The column delimiter for the file. Use '/t' for Tab."),
-  );
 }
 
 function user_import_edit($form, $form_state, $import_id, $template_id = NULL) {
@@ -741,56 +822,6 @@ function user_import_edit_submit($form, &$form_state) {
   _user_import_process($form_state['values']);
 }
 
-function user_import_add_file_form(&$form, $ftp_files = NULL) {
-
-  $form['browser'] = array(
-    '#type'        => 'fieldset',
-    '#title'       => t('Browser Upload'),
-    '#collapsible' => TRUE,
-    '#description' => t("Upload a CSV file."),
-  );
-
-  if (function_exists('file_upload_max_size')) {
-    $file_size = t('Maximum file size: @size.', array('@size' => format_size(file_upload_max_size())));
-  }
-
-  $form['browser']['file_upload'] = array(
-    '#type'        => 'file',
-    '#title'       => t('CSV File'),
-    '#size'        => 40,
-    '#description' => check_plain(t('Select the CSV file to be imported.') . ' ' . $file_size),
-  );
-
-  if (!empty($ftp_files)) {
-
-    $form['ftp'] = array(
-      '#type'        => 'fieldset',
-      '#title'       => t('FTP Upload'),
-      '#collapsible' => TRUE,
-      '#collapsed'   => TRUE,
-      '#description' => t("Any files uploaded to the 'user_import' directory using FTP can be selected for import here. Useful if the import file is too large for upload via the browser."),
-    );
-
-    $form['ftp']['file_ftp'] = array(
-      '#type'          => 'radios',
-      '#title'         => t('Files'),
-      '#default_value' => '0',
-      '#options'       => $ftp_files,
-    );
-
-    // reload the page to show any files that have been added by FTP
-    $form['ftp']['scan'] = array(
-      '#type'     => 'submit',
-      '#value'    => t('Check for new files'),
-      '#validate' => array(),
-      '#submit'   => array(),
-    );
-
-  }
-
-  return;
-}
-
 function user_import_edit_file_fields(&$form, $import) {
 
   $form['filename'] = array(
@@ -924,11 +955,11 @@ function user_import_create_directory($directory_name, $path_prefix = 'uploads/'
 // - - - - - - - -  MISC - - - - - - - -
 
 function user_import_form_field_match(&$form, $import) {
-
   $delimiter = isset($import['options']['delimiter']) && !empty($import['options']['delimiter']) ? $import['options']['delimiter'] : ',';
+  $encoding  = isset($import['options']['encoding'])  && !empty($import['options']['encoding'])  ? $import['options']['encoding'] : 'UTF-8';
   $collapsed = (empty($import['name'])) ? FALSE : TRUE;
   $handle    = _user_import_file_open($form['filepath']['#value'], $form['filename']['#value']);
-  $data_row  = _user_import_file_row($form['filename']['#value'], $handle, $delimiter);
+  $data_row  = _user_import_file_row($form['filename']['#value'], $handle, $delimiter, $encoding);
 
   $fieldmatch_description_parts = array(
     '<strong>' . t('Drupal fields') . ':</strong> ' . t("Match columns in CSV file to drupal user fields, leave as '----' to ignore the column."),
@@ -1001,13 +1032,14 @@ function user_import_form_field_match(&$form, $import) {
 }
 
 // get first row of file
-function _user_import_file_row($filename, $handle, $delimiter = ',') {
+function _user_import_file_row($filename, $handle, $delimiter = ',', $sencoding = 'UTF-8') {
 
   // Handle folks who may list 'tab' as 't' or 'tab'
   if (strtolower($delimiter) == 't' || strtolower($delimiter) == 'tab' || $delimiter == '\t' || $delimiter == '/t') {
     $delimiter = '\t';
   }
 
+  // Ignore errors, just set error if it fails.
   $data_row = @fgetcsv($handle, 1000000, $delimiter);
 
   if (!$data_row) {
@@ -1015,6 +1047,22 @@ function _user_import_file_row($filename, $handle, $delimiter = ',') {
   }
   if (1 == count($data_row)) {
     form_set_error('file', t('The first line of %filename consists of a single field. This probably means that you have set the wrong delimiter.', array('%filename' => $filename)));
+  }
+  $err = $ii = 0;
+  foreach ($data_row as $field) {
+    if ('UTF-8' != $sencoding) {
+      $field = mb_convert_encoding ($field, 'UTF-8', $sencoding);
+      $data_row[$ii] = $field;
+    }
+    $encoding = mb_check_encoding($field, 'UTF-8');
+    if (!$encoding) {
+      $data_row[$ii] = '-???-';
+      $err++;
+    }
+    $ii++;
+  }
+  if ($err) {
+    form_set_error('file', t('The first line of %filename contains an illegal character. This probably means that you have set the wrong encoding.', array('%filename' => $filename)));
   }
 
   return $data_row;

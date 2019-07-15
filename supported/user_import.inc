@@ -137,14 +137,6 @@ function _user_import_edit_settings_fields(&$form, $import, $collapsed) {
     '#description'   => t("User accounts will not be visible to other users until their owner logs in. Select this option to make all imported user accounts visible. <strong>Note - one time login links in welcome emails will no longer work if this option is enabled.</strong>"),
   );
 
-  $form['optional']['delimiter'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('File Delimiter'),
-    '#size'          => 4,
-    '#default_value' => isset($import['delimiter']) ? $import['delimiter'] : ',',
-    '#description'   => t("The column delimiter for the file. Use '/t' for Tab."),
-  );
-
   $form['optional']['multi_value_delimiter'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Multi Value Delimiter'),
@@ -158,6 +150,32 @@ function _user_import_edit_settings_fields(&$form, $import, $collapsed) {
     '#title'         => t('Email Domain'),
     '#description'   => t("Create an email address with the combined contents of Email Address (in Field Match above) and this field. <em><br />For example if Email Address is 'Luthor' and Email Domain is '@lexcorp.com', the account address woud be 'luthor@lexcorp.com'. <br />Note that '@example.com' is recommended for dummy addresses.</em>"),
     '#default_value' => isset($import['email_domain']) ? $import['email_domain'] : '',
+  );
+
+  $delimiter = isset($import['delimiter']) ? $import['delimiter'] : ',';
+  $encoding = isset($import['encoding']) ? $import['encoding'] : 'UTF-8';
+
+  $form['optional']['delimiter'] = array(
+    '#type'          => 'hidden',
+    '#value'         => $delimiter,
+  );
+
+  $form['optional']['encoding'] = array(
+    '#type'          => 'hidden',
+    '#value'         => $encoding,
+  );
+
+  $form['filesettings'] = array(
+    '#type'        => 'fieldset',
+    '#title'       => t('File Settings'),
+    '#weight'      => -84,
+    '#collapsible' => TRUE,
+    '#collapsed'   => $collapsed,
+  );
+
+  // These should not be options in this form.
+  $form['filesettings']['delimiter'] = array(
+    '#markup' => t('File Delimiter: "') . $delimiter . '".<br />' . t('Character Encoding') . ': "' . $encoding . '".</p>',
   );
 
   return;

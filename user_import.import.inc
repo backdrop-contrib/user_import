@@ -15,6 +15,7 @@ function _user_import_process($settings) {
   $username_abbreviate       = array();
   $first_line_skip           = 0;
   $delimiter                 = isset($settings['delimiter']) && !empty($settings['delimiter']) ? $settings['delimiter'] : ',';
+  $sencoding                 = isset($settings['encoding']) && !empty($settings['encoding']) ? $settings['encoding'] : 'UTF-8';
 
   ini_set('auto_detect_line_endings', TRUE);
   $handle = @fopen($settings['filepath'], "r");
@@ -29,6 +30,19 @@ function _user_import_process($settings) {
 
     // Reset error array prior to testing
     $errors = user_import_errors(FALSE, TRUE);
+    $ii = 0;
+    foreach ($data as $field) {
+      if ('UTF-8' != $sencoding) {
+        $field = mb_convert_encoding ($field, 'UTF-8', $sencoding);
+        $data[$ii] = $field;
+      }
+      $encoding = mb_check_encoding($field, 'UTF-8');
+      if (!$encoding) {
+        user_import_errors(t('record contains an illegal character'));
+        $data[$ii] = '-???-';
+      }
+      $ii++;
+    }
 
     // if importing, check we are not over max number of imports per cron
     if ($settings['setting'] == 'import' && $processed_counter >= $import_max) {

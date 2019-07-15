@@ -166,6 +166,8 @@ function user_import_uninstall() {
   variable_del('user_import_max');
   variable_del('user_import_line_max');
   variable_del('user_export_checked_usernames');
+  variable_del('user_import_delimiter');
+  variable_del('user_import_encoding');
 
   //
   $mail_system = variable_get('mail_system', array('default-system' => 'DefaultMailSystem'));

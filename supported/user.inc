@@ -286,14 +286,25 @@ function user_user_import_edit_email_fields(&$form, $import, $collapsed) {
     '#type' => 'radios',
     '#title' => t('Email Format'),
     '#default_value' => isset($import['message_format']) ? $import['message_format'] : 0,
-    '#options' => array(t('Plain Text'), t('HTML')),
+    '#options' => array(
+      0 => t('Plain Text'),
+      1 => t('HTML'),
+    ),
   );
 
+  // CSS Field only needs to show for HTML format
   $form['email_message']['message_css'] = array(
     '#type' => 'textarea',
     '#title' => t('CSS'),
     '#default_value' => isset($import['message_css']) ? $import['message_css'] : '',
-    '#description' => t('Use if sending HTML formatted email.'),
+    '#description' => t('Add CSS styles here if desired, not including &lt;style&gt; or &lt;/style&gt;.'),
+    '#states' => array(
+      'invisible' => array(
+        ':input[name="message_format"]' => array(
+          'value' => 0,
+        ),
+      ),
+    ),
   );
 
   return;

@@ -1060,7 +1060,7 @@ function user_import_create_directory($directory_name, $path_prefix = 'uploads/'
   $directory_created = file_prepare_directory($path, FILE_CREATE_DIRECTORY);
 
   if ($directory_created) {
-    file_create_htaccess($path);
+    file_save_htaccess($path);
   }
 }
 

@@ -54,16 +54,14 @@ function _user_import_send_email($account, $password, $profile, $subject, $body,
   $module = 'user_import';
   $key    = 'welcome';
   
-  debug($account);
-
   // Specify 'to' and 'from' addresses.
   $to   = $account->mail;
-  $from = config_get('system.performance', 'site_mail');
+  $from = config_get('system.core', 'site_mail');
 
   $params = array(
     '!username' => $account->name,
     '!uid' => $account->uid,
-    '!site' => config_get('system.performance', 'site_name'),
+    '!site' => config_get('system.core', 'site_name'),
     '!login_url' => user_pass_reset_url($account),
     '!password' => $password,
     '!uri' => $base_url,
@@ -76,19 +74,8 @@ function _user_import_send_email($account, $password, $profile, $subject, $body,
     'body' => $body,
     'email_format' => $format,
     'css' => $css,
+    'user' => $account,
   );
-
-  _user_import_publication_email($params, $account, $subscribed, $format);
-
-  // import info to profile
-  if (module_exists('profile') && is_array($profile)) {
-
-    $profile_name = _user_import_profile('fid', 'name');
-
-    foreach ($profile_name as $fid => $field_name) {
-      $params['!' . $field_name] = $profile[$fid];
-    }
-  }
 
   $language = user_preferred_language($account);
 
@@ -98,7 +85,7 @@ function _user_import_send_email($account, $password, $profile, $subject, $body,
   $send = TRUE;
 
   $sent = backdrop_mail($module, $key, $to, $language, $params, $from, $send);
-
+  
   return;
 }
 
@@ -149,14 +136,6 @@ function _user_import_edit_settings_fields(&$form, $import, $collapsed) {
     '#description' => t("User accounts will not be visible to other users until their owner logs in. Select this option to make all imported user accounts visible. <strong>Note - one time login links in welcome emails will no longer work if this option is enabled.</strong>"),
   );
 
-  $form['optional']['delimiter'] = array(
-    '#type' => 'textfield',
-    '#title' => t('File Delimiter'),
-    '#size' => 4,
-    '#default_value' => isset($import['delimiter']) ? $import['delimiter'] : ',',
-    '#description' => t("The column delimiter for the file. Use '/t' for Tab."),
-  );
-
   $form['optional']['multi_value_delimiter'] = array(
     '#type' => 'textfield',
     '#title' => t('Multi Value Delimiter'),
@@ -170,6 +149,32 @@ function _user_import_edit_settings_fields(&$form, $import, $collapsed) {
     '#title' => t('Email Domain'),
     '#description' => t("Create an email address with the combined contents of Email Address (in Field Match above) and this field. <em><br />For example if Email Address is 'Luthor' and Email Domain is '@lexcorp.com', the account address woud be 'luthor@lexcorp.com'. <br />Note that '@example.com' is recommended for dummy addresses.</em>"),
     '#default_value' => isset($import['email_domain']) ? $import['email_domain'] : '',
+  );
+
+  $delimiter = isset($import['delimiter']) ? $import['delimiter'] : ',';
+  $encoding = isset($import['encoding']) ? $import['encoding'] : 'UTF-8';
+
+  $form['optional']['delimiter'] = array(
+    '#type'          => 'hidden',
+    '#value'         => $delimiter,
+  );
+
+  $form['optional']['encoding'] = array(
+    '#type'          => 'hidden',
+    '#value'         => $encoding,
+  );
+
+  $form['filesettings'] = array(
+    '#type'        => 'fieldset',
+    '#title'       => t('File Settings'),
+    '#weight'      => -84,
+    '#collapsible' => TRUE,
+    '#collapsed'   => $collapsed,
+  );
+
+  // These should not be options in this form.
+  $form['filesettings']['delimiter'] = array(
+    '#markup' => t('File Delimiter: "') . $delimiter . '".<br />' . t('Character Encoding') . ': "' . $encoding . '".</p>',
   );
 
   return;
@@ -228,7 +233,7 @@ function _user_import_edit_template_fields(&$form, $import) {
     $form['save'] = array(
       '#type' => 'fieldset',
       '#title' => t('Saved Settings'),
-      '#description' => t("If changes have neen made to the settings since they where last saved you can update the saved template, or save them as a new template."),
+      '#description' => t("If changes have been made to the settings since they where last saved you can update the saved template, or save them as a new template."),
       '#weight' => 90,
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
@@ -321,8 +326,8 @@ function user_import_template_unique_name_validate($form, &$form_state) {
  * Validate that a email subject line has been set if Send Email is enabled.
  */
 function user_import_send_email_subject_validate($element, &$form_state) {
-  if (!empty($form_state['values']['send_email']) && empty($form_state['values']['subject'])) {
-    form_error($element, t('If Send Email has been enabled then an <strong>email subject</strong> line must set.'));
+  if (!empty($form_state['values']['send_email']) && (empty($form_state['values']['subject']) && !empty($form_state['values']['message']))) {
+    form_error($element, t('If Send Email has been enabled then either both <strong>email subject</strong> and <strong>email message</strong> must be set, or none of them.'));
   }
 }
 
@@ -330,8 +335,8 @@ function user_import_send_email_subject_validate($element, &$form_state) {
  * Validate that a email message has been set if Send Email is enabled.
  */
 function user_import_send_email_message_validate($element, &$form_state) {
-  if (!empty($form_state['values']['send_email']) && empty($form_state['values']['message'])) {
-    form_error($element, t('If Send Email has been enabled then an <strong>email message</strong> must set.'));
+  if (!empty($form_state['values']['send_email']) && (empty($form_state['values']['message']) && !empty($form_state['values']['subject']))) {
+    form_error($element, t('If Send Email has been enabled then either both <strong>email subject</strong> and <strong>email message</strong> must be set, or none of them.'));
   }
 }
 
@@ -371,41 +376,4 @@ function user_import_edit_remove_file_validate($form, &$form_state) {
   //_user_import_file_deletion($settings['filepath'], $settings['filename'], $settings['oldfilename'], $settings['options']['ftp']);
   file_unmanaged_delete($settings['filepath']);
   backdrop_goto('admin/people/user_import/add');
-}
-
-function _user_import_publication_email(&$variables, $account, $subscribed, $format) {
-
-  if (!module_exists('publication') || !module_exists('schedule') || !module_exists('identity_hash')) {
-    return;
-  }
-
-  $id_hash               = identity_hash_select_hash($account->uid);
-  $variables['!id_hash'] = $id_hash->hash;
-
-  while (list($type, $subscriptions) = each($subscribed)) {
-
-    while (list($publication_id, $shedule) = each($subscriptions)) {
-
-      if (!empty($shedule[0])) {
-
-        $publication = publication_select_publications($type, $publication_id);
-
-        $update_link      = url('subscribed/preferences/' . $publication_id . '/' . $id_hash->hash, array('absolute' => TRUE));
-        $unsubscribe_link = url('subscribed/delete/' . $publication_id . '/' . $id_hash->hash, array('absolute' => TRUE));
-
-        if ($format == 1) {
-
-          $variables['!subscribed_links'] .= '<strong>' . $publication->title . '</strong><br />' .
-            '<a href="' . $update_link . '">' . t('Update Preferences') . '</a> | <a href="' . $unsubscribe_link . '">' . t('Unsubscribe') . '</a><br />';
-
-        }
-        else {
-
-          $variables['!subscribed_links'] .= $publication->title . "\n" .
-            ' - ' . t('Update Preferences') . ' ' . $update_link . '\n' .
-            ' - ' . t('Unsubscribe') . ' ' . $unsubscribe_link . '\n';
-        }
-      }
-    }
-  }
 }

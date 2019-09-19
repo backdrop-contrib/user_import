@@ -1,5 +1,6 @@
 name = User Import
 description = "Import users into Backdrop from a CSV file."
+configure = admin/people/user_import/configure
 backdrop = 1.x
 type = module
 package = Deployment

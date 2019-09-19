@@ -223,6 +223,34 @@ function user_import_delete($import_id = NULL, $return_path = 'admin/people/user
 function user_import_configure_form() {
   $config = config('user_import.settings');
 
+  $form['general'] = array(
+    '#type'        => 'fieldset',
+    '#title'       => t('General'),
+    '#collapsible' => TRUE,
+    '#collapsed'   => TRUE,
+  );
+
+  $form['general']['delimiter'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Delimiter'),
+    '#size'          => 4,
+    '#default_value' => $config->get('user_import_delimiter'),
+    '#required'      => TRUE,
+    '#description'   => t("The default column delimiter. Use '\\t' for Tab."),
+  );
+
+  $form['general']['encoding'] = array(
+    '#type'          => 'select',
+    '#title'         => t('Character Encoding'),
+    '#options' => array(
+      'UTF-8' => t('UTF-8'),
+      'Windows-1252' => t('Windows-1252'),
+    ),
+    '#default_value' => $config->get('user_import_encoding'),
+    '#required'      => TRUE,
+    '#description'   => t('Select the default encoding.'),
+  );
+
   $form['selectable_files'] = array(
     '#type' => 'fieldset',
     '#title' => t('Uploads Directory'),
@@ -284,28 +312,6 @@ function user_import_configure_form() {
     '#maxlength' => 10,
     '#description' => t('The default is set at 1,000 characters, if a line in your csv is longer than this you should set a higher maximum here. Setting higher maximums will slow down imports.'),
   );
-
-  if (module_exists('profile')) {
-    $date_options                           = array(
-      'MM/DD/YYYY' => 'MM/DD/YYYY',
-      'DD/MM/YYYY' => 'DD/MM/YYYY',
-      'YYYY/MM/DD' => 'YYYY/MM/DD',
-      'YYYY/DD/MM' => 'YYYY/DD/MM',
-    );
-    $form['profile']                        = array(
-      '#type' => 'fieldset',
-      '#title' => t('Profile Settings'),
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-    );
-    $form['profile']['profile_date_format'] = array(
-      '#type' => 'select',
-      '#title' => t('Date field format'),
-      '#description' => t('Select a format for importing dates into user profiles (Profile module).'),
-      '#default_value' => $config->get('user_import_profile_date_format'),
-      '#options' => $date_options,
-    );
-  }
 
   $saved_templates = _user_import_settings_select(NULL, TRUE);
 
@@ -405,19 +411,20 @@ function user_import_configure_form_validate($form, &$form_state) {
  */
 function user_import_configure_form_submit($form, &$form_state) {
   $deleted = '';
+  $config = config('user_import.settings');
+  $config->set('user_import_delimiter', $form_state['values']['delimiter']);
+  $config->set('user_import_encoding', $form_state['values']['encoding']);
+
   settype($form_state['values']['user_import_max'], 'integer');
   settype($form_state['values']['user_import_line_max'], 'integer');
-  config_set('user_import.settings', 'user_import_max', $form_state['values']['user_import_max']);
-  config_set('user_import.settings', 'user_import_line_max', $form_state['values']['user_import_line_max']);
+  $config->set('user_import_max', $form_state['values']['user_import_max']);
+  $config->set('user_import_line_max', $form_state['values']['user_import_line_max']);
 
   $user_import_settings = isset($form_state['values']['user_import_settings']) ? $form_state['values']['user_import_settings'] : 0;
-  config_set('user_import.settings', 'user_import_settings', $user_import_settings);
+  $config->set('user_import_settings', $user_import_settings);
 
-  $profile_date_format = isset($form_state['values']['profile_date_format']) ? $form_state['values']['profile_date_format'] : 0;
-  config_set('user_import.settings', 'user_import_profile_date_format', $profile_date_format);
-
-  config_set('user_import.settings', 'user_import_selectable_files', $form_state['values']['selectable_files']);
-  config_set('user_import.settings', 'user_import_auto_imports_enabled', $form_state['values']['auto_imports_enabled']);
+  $config->set('user_import_selectable_files', $form_state['values']['selectable_files']);
+  $config->set('user_import_auto_imports_enabled', $form_state['values']['auto_imports_enabled']);
 
   // Create a directory for processing incoming files if auto imports are enabled.
   if (!empty($form_state['values']['auto_imports_enabled'])) {
@@ -467,9 +474,80 @@ function user_import_add_form($import_id = NULL) {
     $ftp_files = _user_import_ftp_files();
   }
 
-  user_import_add_file_form($form, $ftp_files);
+  $form['browser'] = array(
+    '#type'        => 'fieldset',
+    '#title'       => t('Browser Upload'),
+    '#collapsible' => TRUE,
+    '#description' => t("Upload a CSV file."),
+  );
 
-  user_import_delimiter_form($form);
+  if (function_exists('file_upload_max_size')) {
+    $file_size = t('Maximum file size: @size.', array('@size' => format_size(file_upload_max_size())));
+  }
+
+  $form['browser']['file_upload'] = array(
+    '#type'        => 'file',
+    '#title'       => t('CSV File'),
+    '#size'        => 40,
+    '#description' => check_plain(t('Select the CSV file to be imported.') . ' ' . $file_size),
+  );
+
+  if (!empty($ftp_files)) {
+
+    $form['ftp'] = array(
+      '#type'        => 'fieldset',
+      '#title'       => t('FTP Upload'),
+      '#collapsible' => TRUE,
+      '#collapsed'   => TRUE,
+      '#description' => t("Any files uploaded to the 'user_import' directory using FTP can be selected for import here. Useful if the import file is too large for upload via the browser."),
+    );
+
+    $form['ftp']['file_ftp'] = array(
+      '#type'          => 'radios',
+      '#title'         => t('Files'),
+      '#default_value' => '0',
+      '#options'       => $ftp_files,
+    );
+
+    // reload the page to show any files that have been added by FTP
+    $form['ftp']['scan'] = array(
+      '#type'     => 'submit',
+      '#value'    => t('Check for new files'),
+      '#validate' => array(),
+      '#submit'   => array(),
+    );
+
+  }
+
+  $form['file_settings'] = array(
+    '#type'        => 'fieldset',
+    '#title'       => t('File Settings'),
+    '#collapsible' => TRUE,
+    '#collapsed'   => FALSE,
+    '#description' => t("File column delimiter"),
+  );
+
+  $form['file_settings']['delimiter'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Delimiter'),
+    '#size'          => 4,
+    '#default_value' => $config->get('user_import_delimiter'),
+    '#required'      => TRUE,
+    '#description'   => t("The column delimiter for the file. Use '/t' for Tab."),
+  );
+
+  $form['file_settings']['encoding'] = array(
+    '#type'          => 'select',
+    '#title'         => t('Character Encoding'),
+    '#options' => array(
+      'UTF-8' => t('UTF-8'),
+      'Windows-1252' => t('Windows-1252'),
+    ),
+    '#default_value' => $config->get('user_import_encoding'),
+    '#required'      => TRUE,
+    '#description'   => t('Select the encoding used in the file.'),
+  );
+
   $settings = _user_import_settings_select(NULL, TRUE);
 
   if ($settings) {
@@ -486,7 +564,6 @@ function user_import_add_form($import_id = NULL) {
       '#default_value' => $config->get('user_import_settings'),
       '#options' => $saved_settings,
     );
-
   }
 
   $form['next'] = array(
@@ -496,7 +573,6 @@ function user_import_add_form($import_id = NULL) {
 
   // Set form parameters so we can accept file uploads.
   $form['#attributes'] = array('enctype' => 'multipart/form-data');
-
   return $form;
 }
 
@@ -560,33 +636,6 @@ function user_import_add_form_submit($form, &$form_state) {
   $form_state['redirect'] = $redirect;
 }
 
-/**
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
- */
-function user_import_delimiter_form(&$form, $value = ',') {
-  $form['file_settings'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('File Settings'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#description' => t("File column delimiter"),
-  );
-
-  $form['file_settings']['delimiter'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Delimiter'),
-    '#size' => 4,
-    '#default_value' => $value,
-    '#required' => TRUE,
-    '#description' => t("The column delimiter for the file. Use '/t' for Tab."),
-  );
-}
-
-/**
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
- */
 function user_import_edit($form, $form_state, $import_id, $template_id = NULL) {
 
   // load code for supported modules
@@ -881,64 +930,6 @@ function user_import_edit_submit($form, &$form_state) {
   _user_import_process($form_state['values']);
 }
 
-/**
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
- */
-function user_import_add_file_form(&$form, $ftp_files = NULL) {
-
-  $form['browser'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Browser Upload'),
-    '#collapsible' => TRUE,
-    '#description' => t("Upload a CSV file."),
-  );
-
-  if (function_exists('file_upload_max_size')) {
-    $file_size = t('Maximum file size: @size.', array('@size' => format_size(file_upload_max_size())));
-  }
-
-  $form['browser']['file_upload'] = array(
-    '#type' => 'file',
-    '#title' => t('CSV File'),
-    '#size' => 40,
-    '#description' => check_plain(t('Select the CSV file to be imported.') . ' ' . $file_size),
-  );
-
-  if (!empty($ftp_files)) {
-
-    $form['ftp'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('FTP Upload'),
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-      '#description' => t("Any files uploaded to the 'user_import' directory using FTP can be selected for import here. Useful if the import file is too large for upload via the browser."),
-    );
-
-    $form['ftp']['file_ftp'] = array(
-      '#type' => 'radios',
-      '#title' => t('Files'),
-      '#default_value' => '0',
-      '#options' => $ftp_files,
-    );
-
-    // reload the page to show any files that have been added by FTP
-    $form['ftp']['scan'] = array(
-      '#type' => 'submit',
-      '#value' => t('Check for new files'),
-      '#validate' => array(),
-      '#submit' => array(),
-    );
-
-  }
-
-  return;
-}
-
-/**
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
- */
 function user_import_edit_file_fields(&$form, $import) {
 
   $form['filename'] = array(
@@ -970,7 +961,7 @@ function _user_import_file_open($filepath, $filename) {
   $handle = @fopen($filepath, "r");
 
   if (!$handle) {
-    form_set_error('file', t("Could not find the csv file '%filename'", array('%filename' => $filename)), 'error');
+    form_set_error('file', t("Could not find the csv file '%filename'", array('%filename' => $filename)));
 
     return t("Please add your file again.");
   }
@@ -1080,11 +1071,11 @@ function user_import_create_directory($directory_name, $path_prefix = 'uploads/'
  * @see http://drupal.org/node/1354
  */
 function user_import_form_field_match(&$form, $import) {
-
   $delimiter = isset($import['options']['delimiter']) && !empty($import['options']['delimiter']) ? $import['options']['delimiter'] : ',';
+  $encoding  = isset($import['options']['encoding'])  && !empty($import['options']['encoding'])  ? $import['options']['encoding'] : 'UTF-8';
   $collapsed = (empty($import['name'])) ? FALSE : TRUE;
   $handle    = _user_import_file_open($form['filepath']['#value'], $form['filename']['#value']);
-  $data_row  = _user_import_file_row($form['filename']['#value'], $handle, $delimiter);
+  $data_row  = _user_import_file_row($form['filename']['#value'], $handle, $delimiter, $encoding);
 
   $fieldmatch_description_parts = array(
     '<strong>' . t('Backdrop fields') . ':</strong> ' . t("Match columns in CSV file to backdrop user fields, leave as '----' to ignore the column."),
@@ -1159,17 +1150,37 @@ function user_import_form_field_match(&$form, $import) {
 }
 
 // get first row of file
-function _user_import_file_row($filename, $handle, $delimiter = ',') {
+function _user_import_file_row($filename, $handle, $delimiter = ',', $sencoding = 'UTF-8') {
 
   // Handle folks who may list 'tab' as 't' or 'tab'
   if (strtolower($delimiter) == 't' || strtolower($delimiter) == 'tab' || $delimiter == '\t' || $delimiter == '/t') {
     $delimiter = '\t';
   }
 
+  // Ignore errors, just set error if it fails.
   $data_row = @fgetcsv($handle, 1000000, $delimiter);
 
   if (!$data_row) {
-    form_set_error('file', t("Could not get data, the file '%filename' is either empty or has incompatible line endings.", array('%filename' => $filename)), 'error');
+    form_set_error('file', t('Could not get data, the file %filename is either empty or has incompatible line endings.', array('%filename' => $filename)));
+  }
+  if (1 == count($data_row)) {
+    form_set_error('file', t('The first line of %filename consists of a single field. This probably means that you have set the wrong delimiter.', array('%filename' => $filename)));
+  }
+  $err = $ii = 0;
+  foreach ($data_row as $field) {
+    if ('UTF-8' != $sencoding) {
+      $field = mb_convert_encoding ($field, 'UTF-8', $sencoding);
+      $data_row[$ii] = $field;
+    }
+    $encoding = mb_check_encoding($field, 'UTF-8');
+    if (!$encoding) {
+      $data_row[$ii] = '-???-';
+      $err++;
+    }
+    $ii++;
+  }
+  if ($err) {
+    form_set_error('file', t('The first line of %filename contains an illegal character. This probably means that you have set the wrong encoding.', array('%filename' => $filename)));
   }
 
   return $data_row;
@@ -1243,48 +1254,4 @@ function _user_import_errors_display_delete($import_id) {
   db_query('DELETE FROM {user_import_errors} WHERE import_id = :import_id', array(':import_id' => $import_id));
 
   return;
-}
-
-function _user_import_profile($key = 'fid', $return_value = NULL) {
-
-  if (!module_exists('profile')) {
-    return;
-  }
-
-  static $fields_static;
-  $fields = array();
-
-  // avoid making more than one database call for profile info
-  if (empty($fields_static)) {
-
-    $results = db_query("SELECT * FROM {profile_field}");
-
-    foreach ($results as $row) {
-      // don't include private fields
-      if (user_access('administer users') || $row->visibility != PROFILE_PRIVATE) {
-        $fields_static[] = $row;
-      }
-    }
-  }
-
-  if (empty($fields_static)) {
-    return array();
-  }
-
-  // return all profile fields info, or just specific type
-  if (empty($return_value)) {
-
-    foreach ($fields_static as $field) {
-      $fields[$field->{$key}] = $field;
-    }
-  }
-  else {
-    foreach ($fields_static as $field) {
-      $fields[$field->{$key}] = $field->{$return_value};
-    }
-  }
-
-  asort($fields);
-
-  return $fields;
 }

@@ -192,20 +192,21 @@ function field_user_import_supported_fields($output = 'all') {
 //      'save' => 'field_user_import_default_field_processor',
 //    );
 
-
-    /** Not core - move to their own .inc files **/
+    /** Not core - processor in their own .inc files **/
 
 //    $supported['datetime'] = array(
 //      'validate' => 'field_user_import_default_field_validator',
 //      'save' => 'field_user_import_default_field_processor',
 //    );
-    //
-//    $supported['date'] = array(
-//      'validate' => 'field_user_import_default_field_validator',
-//      'save' => 'field_user_import_default_field_processor',
-//    );
-    //
-    //
+
+// Commented in for now.
+// https://drupal.stackexchange.com/q/281761/12076
+    $supported['date'] = array(
+      'validate' => 'field_user_import_default_field_validator',
+      'save' => 'date_user_import_field_processor',
+    );
+
+
 //    $supported['datestamp'] = array(
 //      'validate' => 'field_user_import_default_field_validator',
 //      'save' => 'field_user_import_default_field_processor',

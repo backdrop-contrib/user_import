@@ -122,8 +122,8 @@ function user_user_import_pre_save($settings, $account, $fields, $errors, $updat
     switch ($update_setting_per_module['roles']) {
       case UPDATE_ADD:
         // include currently assigned roles
-        foreach ($account->roles as $rid => $role_name) {
-          $account_add['roles'][$rid] = $rid;
+        foreach ($account->roles as $role_name => $role_label) {
+          $account_add['roles'][$role_name] = $role_name;
         }
 
       case UPDATE_REPLACE:
@@ -132,9 +132,9 @@ function user_user_import_pre_save($settings, $account, $fields, $errors, $updat
           $account_add['roles'] = array();
         }
 
-        foreach ($settings['roles'] as $rid => $role_set) {
+        foreach ($settings['roles'] as $role_name => $role_set) {
           if (!empty($role_set)) {
-            $account_add['roles'][$rid] = $rid;
+            $account_add['roles'][$role_name] = $role_name;
           }
         }
 
@@ -179,9 +179,9 @@ function user_user_import_pre_save($settings, $account, $fields, $errors, $updat
     }
 
     // add selected roles
-    foreach ($settings['roles'] as $rid => $role_set) {
+    foreach ($settings['roles'] as $role_name => $role_set) {
       if (!empty($role_set)) {
-        $account_add['roles'][$rid] = $rid;
+        $account_add['roles'][$role_name] = $role_name;
       }
     }
   }
@@ -203,28 +203,31 @@ function user_user_import_after_save($settings, $account, $password, $fields, $u
   return;
 }
 
+/**
+ * Role assign.
+ */
 function user_user_import_edit_roles_fields(&$form, $import, $collapsed) {
-  $roles      = array();
-  $roles_data = user_roles();
+  if (!user_access('user import assign roles')) return;
+  $roles_data = user_roles(TRUE);
 
-  // remove 'anonymous user' option
-  while (list($rid, $role_name) = each($roles_data)) {
-    if ($role_name != 'anonymous user' && $role_name != 'authenticated user') {
-      $roles[$rid] = $role_name;
+  // remove 'authenticated user' option
+  foreach ($roles_data as $role_name => $role_label) {
+    if ($role_name != 'authenticated') {
+      $roles[$role_name] = $role_label;
     }
   }
 
   // roles selected
   if (!empty($import['roles'])) {
-    foreach ($import['roles'] as $rid) {
-      if ($rid != 0) {
-        $roles_selected[] = $rid;
+    foreach ($import['roles'] as $role_name) {
+      if ($role_name) {
+        $roles_selected[] = $role_name;
       }
     }
   }
 
   if (empty($roles_selected)) {
-    $roles_selected[] = 2;
+    $roles_selected[] = 'authenticated';
   }
 
   $form['role_selection'] = array(
@@ -329,7 +332,7 @@ function user_user_import_roles_data($data, $new_roles_allowed) {
 
     if (!empty($role)) {
       // only add if role is recognized or adding new roles is allowed
-      if (empty($new_roles_allowed) && !array_search($role, $existing_roles)) {
+      if (empty($new_roles_allowed) && empty($existing_roles[$role])) {
         $unrecognised[] = $role;
       }
       else {
@@ -340,7 +343,7 @@ function user_user_import_roles_data($data, $new_roles_allowed) {
   }
 
   if (!empty($unrecognised)) {
-    user_import_errors(t('The following unrecognised roles were specified:') . implode(',', $unrecognised));
+    user_import_errors(t('The following unrecognised roles were specified: ') . implode(',', $unrecognised));
   }
 
   return $roles;
@@ -396,7 +399,6 @@ function user_user_import_after_save_role($account, $new_roles_allowed, $account
     }
 
     if ($need_update) {
-
       user_save($account, array('roles' => $account_roles));
     }
   }

@@ -35,20 +35,9 @@ function user_import_theme() {
 }
 
 /**
- * Implementation of hook_help().
- */
-// function user_import_help($path, $arg) {
-//   switch ($path) {
-//     case 'admin/people/user_import':
-//       return t("Import or update users from a comma separated file (csv). Click 'Import' to start a new import.");
-//   }
-// }
-
-/**
  * Implements hook_perm().
  */
 function user_import_permission() {
-
   return array(
     'import users' => array(
       'title' => t('Import users'),
@@ -57,6 +46,11 @@ function user_import_permission() {
     'limited user import' => array(
       'title' => t('Import users Reports'),
       'description' => t('View import error reports.'),
+    ),
+    'user import assign roles' => array(
+      'title'       => t('User import assign roles'),
+      'description' => t('Assign roles, including the <em>Administrator</em> role, when importing users.'),
+      'warning'     => t('Warning: Give to trusted roles only; this permission has security implications.'),
     ),
   );
 }
@@ -214,6 +208,7 @@ function user_import_trigger_imports() {
       $options     = isset($settings['options']) ? serialize($settings['options']) : '';
       $setting     = 'import';
 
+      $file = new stdClass();
       $file->filename    = $filename_new;
       $file->oldfilename = $import_file->filename;
       $file->filepath    = 'private://user_import/processing/' . $filename_new;
@@ -804,26 +799,6 @@ function _user_import_settings_deletion($import_id) {
   return;
 }
 
-// Used by user_import_og.module
-/**
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
- */
-function user_import_profile_load($user) {
-
-  $result = db_query('SELECT f.name, f.type, f.fid, v.value FROM {profile_field} f INNER JOIN {profile_values} v ON f.fid = v.fid WHERE uid = %d', $user->uid);
-
-  foreach ($result as $field) {
-
-    if (empty($profile[$field->fid])) {
-      $profile[$field->fid] = _profile_field_serialize($field->type) ? unserialize($field->value) : $field->value;
-    }
-
-  }
-
-  return $profile;
-}
-
 function _user_import_unconcatenate_field_match($settings) {
 
   $settings_updated = array();
@@ -930,9 +905,9 @@ function user_import_mail($key, &$message, $params) {
 
   switch ($key) {
     case 'welcome':
+      unset($params['user']);
       $message['subject'] = (empty($params['subject'])) ? _user_mail_text('register_admin_created_subject', $message['language'], $params) : strtr($params['subject'], $params);
-      $body               = (empty($params['body'])) ? _user_mail_text('register_admin_created_body', $message['language'], $params) : strtr($params['body'], $params);
-
+      $body = (empty($params['body'])) ? _user_mail_text('register_admin_created_body', $message['language'], $params) : strtr($params['body'], $params);
       if ($params['email_format'] == 1) {
         $message['headers']['Content-Type'] = 'text/html; charset=UTF-8';
 
@@ -955,7 +930,7 @@ function user_import_mail($key, &$message, $params) {
 }
 
 /**
- * Modify the backdrop mail system to send HTML emails.
+ * Modify the Backdrop mail system to send HTML emails.
  *
  * See http://drupal.org/node/900794.
  */
@@ -1016,8 +991,3 @@ class UserImportMailSystem implements MailSystemInterface {
     );
   }
 }
-
-
-
-
-

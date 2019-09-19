@@ -16,6 +16,7 @@ function _user_import_process($settings) {
   $username_abbreviate       = array();
   $first_line_skip           = 0;
   $delimiter                 = isset($settings['delimiter']) && !empty($settings['delimiter']) ? $settings['delimiter'] : ',';
+  $sencoding                 = isset($settings['encoding']) && !empty($settings['encoding']) ? $settings['encoding'] : 'UTF-8';
 
   ini_set('auto_detect_line_endings', TRUE);
   $handle = @fopen($settings['filepath'], "r");
@@ -30,7 +31,21 @@ function _user_import_process($settings) {
 
   while ($data = fgetcsv($handle, $line_max, $delimiter)) {
 
+    // Reset error array prior to testing
     $errors = user_import_errors(FALSE, TRUE);
+    $ii = 0;
+    foreach ($data as $field) {
+      if ('UTF-8' != $sencoding) {
+        $field = mb_convert_encoding ($field, 'UTF-8', $sencoding);
+        $data[$ii] = $field;
+      }
+      $encoding = mb_check_encoding($field, 'UTF-8');
+      if (!$encoding) {
+        user_import_errors(t('record contains an illegal character'));
+        $data[$ii] = '-???-';
+      }
+      $ii++;
+    }
 
     // if importing, check we are not over max number of imports per cron
     if ($settings['setting'] == 'import' && $processed_counter >= $import_max) {
@@ -69,27 +84,22 @@ function _user_import_process($settings) {
           // Read in data if present for concatenating a user name.
           if ($column_settings['username'] > 0) {
 
-            $username_data[$column_id]       = $data[$column_id];
-            $username_order[$column_id]      = $column_settings['username'];
+            $username_data[$column_id] = $data[$column_id];
+            $username_order[$column_id] = $column_settings['username'];
             $username_abbreviate[$column_id] = $column_settings['abbreviate'];
           }
         }
 
-        $errors           = user_import_errors();
-        $account          = entity_create('user', array());
-        $existing_account = FALSE;
-        $updated          = FALSE;
+        $errors = user_import_errors();
+        $account = entity_create('user', array());
+        $updated = FALSE;
 
         // if we update existing users matched by email (and therefore passed validation even if this email already exists)
         // look for and use an existing account.
         if ($update_setting && !empty($fields['user']['email'][0])) {
-          $existing_account = user_load_by_mail($fields['user']['email'][0]);
-          if ($existing_account) {
-            $account = (array) $existing_account;
-          }
+          $account = user_load_by_mail($fields['user']['email'][0]);
         }
 
-        // if $account['uid'] is not empty then we can assume the account is being updated
         $account_additions = module_invoke_all('user_import_pre_save', $settings, $account, $fields, $errors, $update_setting_per_module);
 
         foreach ($account_additions as $field_name => $value) {
@@ -98,15 +108,15 @@ function _user_import_process($settings) {
         if (empty($errors)) {
 
           if ($settings['setting'] == 'import') {
-
-            if ($existing_account) {
+            // if $account->uid is not empty then we can assume the account is being updated
+            if ($account && $account->uid) {
               user_save($account);
               $updated = TRUE;
             }
             else {
               // Only set a user name if we are not updating an existing record.
               $account->name = _user_import_create_username($username_order, $username_data, $username_abbreviate, $settings['username_space']);
-              $password        = $account->pass;
+              $password = $account->pass;
               user_save($account);
             }
 
@@ -145,10 +155,16 @@ function _user_import_process($settings) {
   return $settings;
 }
 
-// errors for user being imported
 /**
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
+ * Function to accumulate an array accumulating errors for import.
+ *
+ * @param string|bool $error
+ *   A string describing the error, or FALSE.
+ * @param bool $clear
+ *   TRUE if the $errors array shall be cleared.
+ *
+ * @return array
+ *   The array with all the errors.
  */
 function user_import_errors($error = FALSE, $clear = FALSE) {
 

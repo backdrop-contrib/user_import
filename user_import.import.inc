@@ -6,8 +6,8 @@ function _user_import_process($settings) {
   user_import_load_supported();
 
   $remaining_data            = FALSE;
-  $line_max                  = $config->get('user_import_line_max');
-  $import_max                = $config->get('user_import_max');
+  $line_max                  = $config->get('line_max');
+  $import_max                = $config->get('import_max');
   $field_match               = _user_import_unconcatenate_field_match($settings['field_match']);
   $update_setting            = _user_import_update_user_check($settings['options']['update_user']);
   $update_setting_per_module = $settings['options']['update_user'];

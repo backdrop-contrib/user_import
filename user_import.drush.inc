@@ -68,7 +68,7 @@ function drush_user_import($original_file = NULL, $template_name = NULL) {
     }
   }
   else {
-    $template_id = config_get('user_import.settings', 'user_import_settings');
+    $template_id = config_get('user_import.settings', 'default_settings');
 
     if (!$template_id) {
       return drush_set_error('no-default-template');

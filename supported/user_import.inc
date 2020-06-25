@@ -205,7 +205,7 @@ function _user_import_edit_template_fields(&$form, $import) {
       '#description' => t('Name to identify these settings by.'),
     );
 
-    $auto_imports_enabled = $config->get('user_import_auto_imports_enabled');
+    $auto_imports_enabled = $config->get('auto_imports_enabled');
 
     if (!empty($auto_imports_enabled)) {
       $form['save']['auto_import_directory'] = array(
@@ -247,7 +247,7 @@ function _user_import_edit_template_fields(&$form, $import) {
       '#description' => t("Update '%name' settings template", array('%name' => $import['name'])),
     );
 
-    $auto_imports_enabled = $config->get('user_import_auto_imports_enabled');
+    $auto_imports_enabled = $config->get('auto_imports_enabled');
 
     if (!empty($auto_imports_enabled)) {
       $form['save']['auto_import_directory'] = array(
@@ -279,7 +279,7 @@ function _user_import_edit_template_fields(&$form, $import) {
       '#description' => t('Name to identify these settings by.'),
     );
 
-    $auto_imports_enabled = $config->get('user_import_auto_imports_enabled');
+    $auto_imports_enabled = $config->get('auto_imports_enabled');
 
     if (!empty($auto_imports_enabled)) {
       $form['save']['auto_import_directory'] = array(

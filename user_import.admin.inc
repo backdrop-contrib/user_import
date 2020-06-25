@@ -234,7 +234,7 @@ function user_import_configure_form() {
     '#type'          => 'textfield',
     '#title'         => t('Delimiter'),
     '#size'          => 4,
-    '#default_value' => $config->get('user_import_delimiter'),
+    '#default_value' => $config->get('delimiter'),
     '#required'      => TRUE,
     '#description'   => t("The default column delimiter. Use '\\t' for Tab."),
   );
@@ -246,7 +246,7 @@ function user_import_configure_form() {
       'UTF-8' => t('UTF-8'),
       'Windows-1252' => t('Windows-1252'),
     ),
-    '#default_value' => $config->get('user_import_encoding'),
+    '#default_value' => $config->get('encoding'),
     '#required'      => TRUE,
     '#description'   => t('Select the default encoding.'),
   );
@@ -258,7 +258,7 @@ function user_import_configure_form() {
     '#collapsed' => TRUE,
   );
 
-  if ($config->get('user_import_selectable_files') == 0) {
+  if ($config->get('selectable_files') == 0) {
     $selectable_files_description = t('This option provides a directory where files can be uploaded, and then selected when setting up an import.');
   }
   else {
@@ -269,7 +269,7 @@ function user_import_configure_form() {
     '#type' => 'checkbox',
     '#title' => t('Enable Uploads Directory'),
     '#description' => $selectable_files_description,
-    '#default_value' => $config->get('user_import_selectable_files'),
+    '#default_value' => $config->get('selectable_files'),
   );
 
 
@@ -285,7 +285,7 @@ function user_import_configure_form() {
     '#title' => t('Enable Automated Imports'),
     '#description' => t('Each import template will have the option to create a directory which will be scanned for any files that have been uploaded to it,
                            and when a file is found it will automatically be used to create new user accounts. Directories are scanned durring !cron runs.', array('!cron' => l(t('cron'), 'admin/config/system/cron'))),
-    '#default_value' => $config->get('user_import_auto_imports_enabled'),
+    '#default_value' => $config->get('auto_imports_enabled'),
   );
 
   $form['performance'] = array(
@@ -296,19 +296,22 @@ function user_import_configure_form() {
   );
 
   $form['performance']['user_import_max'] = array(
-    '#type' => 'textfield',
+    '#type' => 'number',
     '#title' => t('Maximum Users/Process'),
     '#default_value' => $config->get('user_import_max'),
     '#size' => 10,
+    '#min' => 10,
     '#maxlength' => 10,
-    '#description' => t('Maximum number of users to import each time the file is processed, useful for controling the rate at which emails are sent out.'),
+    '#description' => t('Maximum number of users to import each time the file is processed, useful for controlling the rate at which emails are sent out.'),
   );
 
-  $form['performance']['user_import_line_max'] = array(
-    '#type' => 'textfield',
+  $form['performance']['line_max'] = array(
+    '#type' => 'number',
     '#title' => t('Maximum length of line'),
-    '#default_value' => $config->get('user_import_line_max'),
+    '#default_value' => $config->get('line_max'),
     '#size' => 10,
+    '#min' => 1000,
+    '#max' => 1000000,
     '#maxlength' => 10,
     '#description' => t('The default is set at 1,000 characters, if a line in your csv is longer than this you should set a higher maximum here. Setting higher maximums will slow down imports.'),
   );
@@ -331,11 +334,11 @@ function user_import_configure_form() {
       $templates_delete[$template['import_id']] = $template['name'];
     }
 
-    $form['settings_templates']['user_import_settings'] = array(
+    $form['settings_templates']['default_settings'] = array(
       '#type' => 'select',
       '#title' => t('Default Settings'),
       '#description' => t('Select if you want to use a previously saved set of settings as default for all imports.'),
-      '#default_value' => $config->get('user_import_settings'),
+      '#default_value' => $config->get('default_settings'),
       '#options' => $templates_list,
     );
 
@@ -362,27 +365,6 @@ function user_import_configure_form() {
  */
 function user_import_configure_form_validate($form, &$form_state) {
   $config = config('user_import.settings');
-
-  if (is_numeric($form_state['values']['user_import_max'])) {
-    if ($form_state['values']['user_import_max'] < 10) {
-      form_set_error('user_import_max', t("Value should be at least 10."));
-    }
-  }
-  else {
-    form_set_error('user_import_max', t('Value must be a number.'));
-  }
-
-  if (is_numeric($form_state['values']['user_import_line_max'])) {
-    if ($form_state['values']['user_import_line_max'] < 1000) {
-      form_set_error('user_import_line_max', t("Value must be higher than 1000."));
-    }
-    if ($form_state['values']['user_import_line_max'] > 1000000) {
-      form_set_error('user_import_line_max', t("Value must be lower than 1,000,000."));
-    }
-  }
-  else {
-    form_set_error('user_import_line_max', t('Value must be a number.'));
-  }
 
   // Check private files path is set.
   if (!empty($form_state['values']['auto_imports_enabled'])) {
@@ -412,19 +394,18 @@ function user_import_configure_form_validate($form, &$form_state) {
 function user_import_configure_form_submit($form, &$form_state) {
   $deleted = '';
   $config = config('user_import.settings');
-  $config->set('user_import_delimiter', $form_state['values']['delimiter']);
-  $config->set('user_import_encoding', $form_state['values']['encoding']);
+  $config->set('delimiter', $form_state['values']['delimiter']);
+  $config->set('encoding', $form_state['values']['encoding']);
 
-  settype($form_state['values']['user_import_max'], 'integer');
-  settype($form_state['values']['user_import_line_max'], 'integer');
   $config->set('user_import_max', $form_state['values']['user_import_max']);
-  $config->set('user_import_line_max', $form_state['values']['user_import_line_max']);
+  $config->set('line_max', $form_state['values']['line_max']);
 
-  $user_import_settings = isset($form_state['values']['user_import_settings']) ? $form_state['values']['user_import_settings'] : 0;
-  $config->set('user_import_settings', $user_import_settings);
+  $default_settings = isset($form_state['values']['default_settings']) ? $form_state['values']['default_settings'] : 0;
+  $config->set('default_settings', $default_settings);
 
-  $config->set('user_import_selectable_files', $form_state['values']['selectable_files']);
-  $config->set('user_import_auto_imports_enabled', $form_state['values']['auto_imports_enabled']);
+  $config->set('selectable_files', $form_state['values']['selectable_files']);
+  $config->set('auto_imports_enabled', $form_state['values']['auto_imports_enabled']);
+  $config->save();
 
   // Create a directory for processing incoming files if auto imports are enabled.
   if (!empty($form_state['values']['auto_imports_enabled'])) {
@@ -470,7 +451,7 @@ function user_import_add_form($import_id = NULL) {
   $form = array();
   $ftp_files = array();
 
-  if ($config->get('user_import_selectable_files') == 1) {
+  if ($config->get('selectable_files') == 1) {
     $ftp_files = _user_import_ftp_files();
   }
 
@@ -531,7 +512,7 @@ function user_import_add_form($import_id = NULL) {
     '#type'          => 'textfield',
     '#title'         => t('Delimiter'),
     '#size'          => 4,
-    '#default_value' => $config->get('user_import_delimiter'),
+    '#default_value' => $config->get('delimiter'),
     '#required'      => TRUE,
     '#description'   => t("The column delimiter for the file. Use '/t' for Tab."),
   );
@@ -543,7 +524,7 @@ function user_import_add_form($import_id = NULL) {
       'UTF-8' => t('UTF-8'),
       'Windows-1252' => t('Windows-1252'),
     ),
-    '#default_value' => $config->get('user_import_encoding'),
+    '#default_value' => $config->get('encoding'),
     '#required'      => TRUE,
     '#description'   => t('Select the encoding used in the file.'),
   );
@@ -561,7 +542,7 @@ function user_import_add_form($import_id = NULL) {
       '#type' => 'select',
       '#title' => t('Saved Settings'),
       '#description' => t('Select if you want to use a previously saved set of settings.'),
-      '#default_value' => $config->get('user_import_settings'),
+      '#default_value' => $config->get('default_settings'),
       '#options' => $saved_settings,
     );
   }

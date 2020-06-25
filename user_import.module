@@ -172,7 +172,7 @@ function user_import_config_info() {
  */
 function user_import_trigger_imports() {
 
-  $auto_imports_enabled = config_get('user_import.settings', 'user_import_auto_imports_enabled');
+  $auto_imports_enabled = config_get('user_import.settings', 'auto_imports_enabled');
 
   if (empty($auto_imports_enabled)) {
     return;
@@ -274,9 +274,9 @@ function user_import_trigger_imports() {
  */
 function user_import_content_type_submit($form, &$form_state) {
   // user import template for Organic Groups content type
-  $templates                = config_get('user_import.settings', 'user_import_og_template');
+  $templates                = config_get('user_import.settings', 'og_template');
   $templates[$form['type']] = $form_state['values']['user_import_og'];
-  config_set('user_import.settings', 'user_import_og_template', $templates);
+  config_set('user_import.settings', 'og_template', $templates);
 }
 
 // - - - - - - - -  PAGES - - - - - - - -

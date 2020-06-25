@@ -351,7 +351,8 @@ function user_import_configure_form() {
 
   }
 
-  $form['submit'] = array(
+  $form['actions']['#type'] = 'actions';
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
   );
@@ -547,7 +548,8 @@ function user_import_add_form($import_id = NULL) {
     );
   }
 
-  $form['next'] = array(
+  $form['actions']['#type'] = 'actions';
+  $form['actions']['next'] = array(
     '#type' => 'submit',
     '#value' => t('Next'),
   );
@@ -703,10 +705,10 @@ function user_import_edit($form, $form_state, $import_id, $template_id = NULL) {
     }
   }
 
+  $form['actions']['#type'] = 'actions';
   // don't show test option if import has started
   if ($import['setting'] != 'import' && $import['setting'] != 'imported') {
-
-    $form['test'] = array(
+    $form['actions']['test'] = array(
       '#type' => 'submit',
       '#value' => t('Test'),
       '#weight' => 100,
@@ -714,14 +716,14 @@ function user_import_edit($form, $form_state, $import_id, $template_id = NULL) {
     );
   }
 
-  $form['import'] = array(
+  $form['actions']['import'] = array(
     '#type' => 'submit',
     '#value' => t('Import'),
     '#weight' => 100,
     '#submit' => array('user_import_import_submit', 'user_import_edit_submit'),
   );
 
-  $form['cancel'] = array(
+  $form['actions']['cancel'] = array(
     '#type' => 'submit',
     '#value' => t('Cancel'),
     '#weight' => 100,

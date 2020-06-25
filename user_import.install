@@ -160,12 +160,6 @@ function user_import_install() {
  * Implements hook_uninstall().
  */
 function user_import_uninstall() {
-  config_clear('user_import.settings', 'user_import_settings');
-  config_clear('user_import.settings', 'user_import_max');
-  config_clear('user_import.settings', 'user_import_line_max');
-  // This variable was probably removed in Backdrop without replacement.
-  variable_del('user_export_checked_usernames');
-  config_clear('user_import.settings', 'user_import_profile_date_format');
   config_clear('system.mail', 'user_import');
 }
 
@@ -181,13 +175,10 @@ function user_import_update_last_removed() {
  */
 function user_import_update_1000() {
   $config = config('user_import.settings');
-  $config->set('user_import_profile_date_format', update_variable_get('user_import_profile_date_format', 'MM/DD/YYYY'));
-  $config->set('user_import_auto_imports_enabled', update_variable_get('user_import_auto_imports_enabled', 'FALSE'));
-  $config->set('user_import_selectable_files', update_variable_get('user_import_selectable_files', 'novalue'));
+  $config->set('auto_imports_enabled', update_variable_get('user_import_auto_imports_enabled', 0));
   $config->set('user_import_max', update_variable_get('user_import_max', '250'));
-  $config->set('user_import_line_max', update_variable_get('user_import_line_max', '1000'));
-  $config->set('user_import_settings', update_variable_get('user_import_settings', '0'));
-  $config->set('user_import_og_template', update_variable_get('user_import_og_template', 'dynamic value in file /user_import/user_import.module line 271'));
+  $config->set('line_max', update_variable_get('user_import_line_max', '1000'));
+  $config->set('default_settings', update_variable_get('user_import_settings', 0));
   update_variable_del('user_import_profile_date_format');
   update_variable_del('user_import_auto_imports_enabled');
   update_variable_del('user_import_selectable_files');

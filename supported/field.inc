@@ -41,7 +41,6 @@ function field_user_import_data($settings, $update_setting, $column_settings, $m
  * Implementation of hook_user_import_after_save().
  */
 function field_user_import_after_save($settings, $account, $password, $fields, $updated, $update_setting_per_module) {
-
   $fields_data = isset($fields['field']) ? $fields['field'] : array();
 
   if (empty($fields_data)) {
@@ -51,7 +50,7 @@ function field_user_import_after_save($settings, $account, $password, $fields, $
   $processors       = field_user_import_supported_fields();
   $delimiter        =  $settings['multi_value_delimiter'];
   $user_fields      = user_load($account->uid);
-  $processed_fields = array();
+  $updated = 0;
 
   foreach ($fields_data as $field_name => $data) {
     $field_info         = field_info_field($field_name);
@@ -62,11 +61,12 @@ function field_user_import_after_save($settings, $account, $password, $fields, $
     $values = explode($delimiter, $data[0]);
 
     // Use callback function to process info for field before saving.
-    $processed_fields[$field_name] = $processor_function($user_fields, $field_name, $values);
+    $account->$field_name = $processor_function($user_fields, $field_name, $values);
+    $updated = 1;
   }
 
-  if (!empty($processed_fields)) {
-    user_save($account, $processed_fields);
+  if ($updated) {
+    user_save($account);
   }
 
   return;

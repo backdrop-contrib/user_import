@@ -48,7 +48,7 @@ function field_user_import_after_save($settings, $account, $password, $fields, $
   }
 
   $processors       = field_user_import_supported_fields();
-  $delimiter        =  $settings['multi_value_delimiter'];
+  $delimiter        = $settings['multi_value_delimiter'];
   $user_fields      = user_load($account->uid);
   $updated = 0;
 
@@ -94,7 +94,8 @@ function field_user_import_taxonomy_field_processor($user_fields, $field_name, $
 
   for ($i = 0; $i < count($values); $i++) {
     if (empty($values[$i])) {
-      continue; // Do not save empty fields
+      // Do not save empty fields
+      continue;
     }
 
     // Get taxonomy term ID before saving if term already exists
@@ -117,7 +118,6 @@ function field_user_import_taxonomy_field_processor($user_fields, $field_name, $
 
   return $field;
 }
-
 
 function field_user_import_supported_fields($output = 'all') {
   static $supported = array();
@@ -182,40 +182,39 @@ function field_user_import_supported_fields($output = 'all') {
 
     /** Unsupported for the moment **/
 
-//    $supported['file'] = array(
-//      'validate' => 'field_user_import_default_field_validator',
-//      'save' => 'field_user_import_default_field_processor',
-//    );
+    //    $supported['file'] = array(
+    //      'validate' => 'field_user_import_default_field_validator',
+    //      'save' => 'field_user_import_default_field_processor',
+    //    );
 
-//    $supported['image'] = array(
-//      'validate' => 'field_user_import_default_field_validator',
-//      'save' => 'field_user_import_default_field_processor',
-//    );
+    //    $supported['image'] = array(
+    //      'validate' => 'field_user_import_default_field_validator',
+    //      'save' => 'field_user_import_default_field_processor',
+    //    );
 
     /** Not core - processor in their own .inc files **/
 
-//    $supported['datetime'] = array(
-//      'validate' => 'field_user_import_default_field_validator',
-//      'save' => 'field_user_import_default_field_processor',
-//    );
+    //    $supported['datetime'] = array(
+    //      'validate' => 'field_user_import_default_field_validator',
+    //      'save' => 'field_user_import_default_field_processor',
+    //    );
 
-// Commented in for now.
-// https://drupal.stackexchange.com/q/281761/12076
+    // Commented in for now.
+    // https://drupal.stackexchange.com/q/281761/12076
     $supported['date'] = array(
       'validate' => 'field_user_import_default_field_validator',
       'save' => 'date_user_import_field_processor',
     );
 
+    //    $supported['datestamp'] = array(
+    //      'validate' => 'field_user_import_default_field_validator',
+    //      'save' => 'field_user_import_default_field_processor',
+    //    );
 
-//    $supported['datestamp'] = array(
-//      'validate' => 'field_user_import_default_field_validator',
-//      'save' => 'field_user_import_default_field_processor',
-//    );
-
-//    $supported['addressfield'] = array(
-//      'validate' => 'field_user_import_default_field_validator',
-//      'save' => 'field_user_import_default_field_processor',
-//    );
+    //    $supported['addressfield'] = array(
+    //      'validate' => 'field_user_import_default_field_validator',
+    //      'save' => 'field_user_import_default_field_processor',
+    //    );
 
     // hook to add functions to this array.
     // Will call all modules implementing hook_field_user_import_supported_alter

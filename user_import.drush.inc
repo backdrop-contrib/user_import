@@ -13,10 +13,13 @@ function user_import_drush_help($command) {
   switch ($command) {
     case 'drush:user-import':
       return dt('Queue an import of users from a CSV file');
+
     case 'error:template-not-found':
       return dt('Template not found');
+
     case 'error:file-not-found':
       return dt('File not found');
+
     case 'error:no-default-template':
       return dt('There is no default template configured');
   }

@@ -155,7 +155,6 @@ function user_import_install() {
   $mailconfig = config_set('system.mail', 'user_import', 'UserImportMailSystem');
 }
 
-
 /**
  * Implements hook_uninstall().
  */

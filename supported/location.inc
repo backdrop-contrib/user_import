@@ -115,4 +115,3 @@ if (module_exists('location_user')) {
   }
 
 }
-

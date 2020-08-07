@@ -36,7 +36,7 @@ function _user_import_process($settings) {
     $ii = 0;
     foreach ($data as $field) {
       if ('UTF-8' != $sencoding) {
-        $field = mb_convert_encoding ($field, 'UTF-8', $sencoding);
+        $field = mb_convert_encoding($field, 'UTF-8', $sencoding);
         $data[$ii] = $field;
       }
       $encoding = mb_check_encoding($field, 'UTF-8');
@@ -188,7 +188,6 @@ function _user_import_create_username($order, $data, $abbreviate, $username_spac
     asort($order);
     //reset($order);
 
-
     //while (list ($file_column, $sequence) = each ($order)) {
     foreach ($order as $file_column => $sequence) {
 
@@ -227,14 +226,22 @@ function _user_import_sanitise_username($username) {
   // username cannot contain an illegal character
   $username = preg_replace('/[^\x80-\xF7 [:alnum:]@_.-]/', '', $username);
   $username = preg_replace(
-    '/[\x{80}-\x{A0}' . // Non-printable ISO-8859-1 + NBSP
-      '\x{AD}' . // Soft-hyphen
-      '\x{2000}-\x{200F}' . // Various space characters
-      '\x{2028}-\x{202F}' . // Bidirectional text overrides
-      '\x{205F}-\x{206F}' . // Various text hinting characters
-      '\x{FEFF}' . // Byte order mark
-      '\x{FF01}-\x{FF60}' . // Full-width latin
-      '\x{FFF9}-\x{FFFD}' . // Replacement characters
+  // Non-printable ISO-8859-1 + NBSP
+    '/[\x{80}-\x{A0}' .
+  // Soft-hyphen
+      '\x{AD}' .
+  // Various space characters
+      '\x{2000}-\x{200F}' .
+  // Bidirectional text overrides
+      '\x{2028}-\x{202F}' .
+  // Various text hinting characters
+      '\x{205F}-\x{206F}' .
+  // Byte order mark
+      '\x{FEFF}' .
+  // Full-width latin
+      '\x{FF01}-\x{FF60}' .
+  // Replacement characters
+      '\x{FFF9}-\x{FFFD}' .
       '\x{0}]/u',
     '', $username);
 
@@ -286,7 +293,9 @@ function _user_import_unique_username($username, $start = FALSE) {
   return $username;
 }
 
-// Update settings for existing import
+/**
+ * Update settings for existing import
+ */
 function _user_import_settings_update($pointer, $processed, $valid, $setting, $import_id) {
 
   if (empty($import_id)) {
@@ -295,11 +304,11 @@ function _user_import_settings_update($pointer, $processed, $valid, $setting, $i
 
   db_update('user_import')
     ->fields(array(
-    'pointer' => $pointer,
-    'processed' => $processed,
-    'valid' => $valid,
-    'setting' => $setting,
-  ))
+      'pointer' => $pointer,
+      'processed' => $processed,
+      'valid' => $valid,
+      'setting' => $setting,
+    ))
     ->condition('import_id', $import_id)
     ->execute();
 }
@@ -331,7 +340,9 @@ function _user_import_random_username() {
   return $username;
 }
 
-// check if any updates are to be made
+/**
+ * check if any updates are to be made
+ */
 function _user_import_update_user_check($settings) {
 
   foreach ($settings as $setting) {
@@ -349,10 +360,10 @@ function _user_import_errors_display_save($import_id, $data, $email, $errors) {
 
   $id = db_insert('user_import_errors')
     ->fields(array(
-    'import_id' => $import_id,
-    'data' => serialize($data),
-    'errors' => serialize($errors),
-  ))
+      'import_id' => $import_id,
+      'data' => serialize($data),
+      'errors' => serialize($errors),
+    ))
     ->execute();
 
   return;
@@ -376,4 +387,3 @@ function _user_import_save_progress($status, $remaining_data, $pointer, $process
 
   return $status;
 }
-

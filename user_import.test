@@ -9,8 +9,8 @@ class UserImportWebTestCase extends DrupalWebTestCase {
 
   /**
    *  Select CSV file (the included example file)
-  */
-  function settingsFileSelect() {
+   */
+  public function settingsFileSelect() {
     $edit = array('file_ftp' => 1);
     $this->drupalPost('admin/people/user_import/add', $edit, t('Next'));
 
@@ -18,22 +18,24 @@ class UserImportWebTestCase extends DrupalWebTestCase {
     $this->assertText(t('Use Different CSV File'), '[assert] File was selected');
   }
 
-  function settingsEmailMatch(&$edit) {
+  public function settingsEmailMatch(&$edit) {
     $edit['field_match[5][field_match]'] = 'user-email';
   }
 
-  function settingsIgnoreFirstLine(&$edit) {
+  public function settingsIgnoreFirstLine(&$edit) {
     $edit['first_line_skip'] = 1;
   }
 
-  function checkAccountsExist($list_failures = FALSE) {
+  public function checkAccountsExist($list_failures = FALSE) {
     $failures_list = '';
     $users_email = $this->usersList();
     $failed = array();
 
     foreach ($users_email as $mail) {
       $user = user_load_by_mail($mail);
-      if (empty($user)) $failed[] = $mail;
+      if (empty($user)) {
+        $failed[] = $mail;
+      }
     }
 
     if (!empty($failed) && $list_failures) {
@@ -47,52 +49,52 @@ class UserImportWebTestCase extends DrupalWebTestCase {
    *  List of users (email addresses) being imported
    *  To Do - Generate this dynamically, bearing in mind it could be used for stress testing
    */
-  function usersList() {
+  public function usersList() {
     return array(
-        'john@example.com',
-        'mandy@example.com',
-        'charles@example.com',
-        'sarah@example.com',
-        'sarah_smith@example.com',
-        'helen@example.com',
-        'claire@example.com',
-        'victoria@example.com',
-        'james@example.com',
-        'anna@example.com',
-        'tino@example.com',
-        'sofia@example.com',
-        'steve@example.com',
-        'lucy@example.com',
-        'angie@example.com',
-        'carmen@example.com',
-        'paul@example.com',
-        'jason@example.com',
-        'mike@example.com',
-        'mary@example.com',
-        'simon@example.com',
-        'kieran@example.com',
-        'arthur@example.com',
-        'gwen@example.com',
-        'chester@example.com',
-        'dorothy@example.com',
-        'cameron@example.com',
-        'trisha@example.com',
-        'david@example.com',
-        'peter@example.com',
-        'saul@example.com',
-        'noel@example.com',
-        'matt@example.com',
-        'aston@example.com',
-        'mille@example.com',
-        'ernest@example.com',
-      );
+      'john@example.com',
+      'mandy@example.com',
+      'charles@example.com',
+      'sarah@example.com',
+      'sarah_smith@example.com',
+      'helen@example.com',
+      'claire@example.com',
+      'victoria@example.com',
+      'james@example.com',
+      'anna@example.com',
+      'tino@example.com',
+      'sofia@example.com',
+      'steve@example.com',
+      'lucy@example.com',
+      'angie@example.com',
+      'carmen@example.com',
+      'paul@example.com',
+      'jason@example.com',
+      'mike@example.com',
+      'mary@example.com',
+      'simon@example.com',
+      'kieran@example.com',
+      'arthur@example.com',
+      'gwen@example.com',
+      'chester@example.com',
+      'dorothy@example.com',
+      'cameron@example.com',
+      'trisha@example.com',
+      'david@example.com',
+      'peter@example.com',
+      'saul@example.com',
+      'noel@example.com',
+      'matt@example.com',
+      'aston@example.com',
+      'mille@example.com',
+      'ernest@example.com',
+    );
   }
 
   /**
    * Store import ID
    * - set on import settings page, retrieve on later tasks
    */
-  function importID($url = NULL) {
+  public function importID($url = NULL) {
     static $import_id = 0;
 
     if (empty($import_id) && !empty($url)) {
@@ -105,15 +107,17 @@ class UserImportWebTestCase extends DrupalWebTestCase {
 
   /**
    * SimpleTest core method: code run after each and every test method.
-  */
-  function tearDown() {
+   */
+  public function tearDown() {
 
     // delete accounts of users imported
     $users_email = $this->usersList();
 
     foreach ($users_email as $mail) {
       $account = user_load_by_mail($mail);
-      if (!empty($account)) user_delete($account->uid);
+      if (!empty($account)) {
+        user_delete($account->uid);
+      }
     }
 
     // delete the import
@@ -141,7 +145,7 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
     );
   }
 
-  function setUp() {
+  public function setUp() {
     parent::setUp(array('user_import'));
     $this->admin_user = $this->drupalCreateUser(array('administer users', 'access administration pages', 'access overlay'));
     $this->user_importer = $this->drupalCreateUser(array('import users'));
@@ -151,7 +155,7 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
    *  User with right permissions creates import (with new settings)
    *  - test core functions
    */
-  function testCreateImport() {
+  public function testCreateImport() {
 
     // Prepare a user to do testing
     $this->drupalLogin($this->user_importer);
@@ -160,7 +164,8 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
     $this->settingsFileSelect();
 
     // import settings
-    $this->importID($this->getUrl()); // store import ID for later
+    // store import ID for later
+    $this->importID($this->getUrl());
     $setting_edit = array();
     $this->settingsEmailMatch($settings);
     $this->settingsIgnoreFirstLine($settings);
@@ -581,6 +586,3 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
 //  }
 //
 //}
-
-
-

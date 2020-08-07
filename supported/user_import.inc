@@ -43,7 +43,9 @@ function user_import_user_import_imported($import_id, $settings) {
   file_unmanaged_delete($settings['filepath']);
 }
 
-// Send email when account is created
+/**
+ * Send email when account is created
+ */
 function _user_import_send_email($account, $password, $profile, $subject, $body, $format, $css, $subscribed) {
   $config = config('user_import.settings');
 
@@ -53,7 +55,7 @@ function _user_import_send_email($account, $password, $profile, $subject, $body,
   // hook_mail()) that the message they want to send comes from.
   $module = 'user_import';
   $key    = 'welcome';
-  
+
   // Specify 'to' and 'from' addresses.
   $to   = $account->mail;
   $from = config_get('system.core', 'site_mail');
@@ -85,7 +87,7 @@ function _user_import_send_email($account, $password, $profile, $subject, $body,
   $send = TRUE;
 
   $sent = backdrop_mail($module, $key, $to, $language, $params, $from, $send);
-  
+
   return;
 }
 

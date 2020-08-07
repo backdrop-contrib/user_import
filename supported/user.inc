@@ -24,7 +24,6 @@ function user_user_import_form_field_match() {
   return $options;
 }
 
-
 /**
  * Implementation of hook_user_import_form_fieldsets().
  */
@@ -170,8 +169,7 @@ function user_user_import_pre_save($settings, $account, $fields, $errors, $updat
       $account_add['created'] = $fields['user']['created'][0];
     }
 
-    $account_add['init']     = $fields['user']['email'][0];
-
+    $account_add['init'] = $fields['user']['email'][0];
 
     if (!empty($settings['options']['activate'])) {
       $account_add['access'] = time();
@@ -207,7 +205,9 @@ function user_user_import_after_save($settings, $account, $password, $fields, $u
  * Role assign.
  */
 function user_user_import_edit_roles_fields(&$form, $import, $collapsed) {
-  if (!user_access('user import assign roles')) return;
+  if (!user_access('user import assign roles')) {
+    return;
+  }
   $roles_data = user_roles(TRUE);
 
   // remove 'authenticated user' option
@@ -389,8 +389,8 @@ function user_user_import_after_save_role($account, $new_roles_allowed, $account
 
           $key = db_insert('role')
             ->fields(array(
-            'name' => $role,
-          ))
+              'name' => $role,
+            ))
             ->execute();
 
           $existing_roles[$key] = $role;
@@ -416,6 +416,3 @@ function user_user_import_after_save_role($account, $new_roles_allowed, $account
 
   return;
 }
-
-
-

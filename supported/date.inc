@@ -17,17 +17,19 @@ if (module_exists('date')) {
    * Commented out for now, as this is done by hacking field.inc:
    * https://drupal.stackexchange.com/q/281761/12076
    */
-   /*
+  /*
   function date_user_import_form_field_match() {
-    return $options;
+  return $options;
   }
-  */
+   */
 
   /**
    * Implementation of hook_user_import_data().
    */
   function date_user_import_data($settings, $update_setting, $column_settings, $module, $field_id, $data, $column_id) {
-    if ($module != 'date') return;
+    if ($module != 'date') {
+      return;
+    }
     $value = $data[$column_id];
     return $value;
   }
@@ -39,10 +41,12 @@ if (module_exists('date')) {
 
     $fields_data = isset($fields['field']) ? $fields['field'] : array();
 
-    if (empty($fields_data)) return;
+    if (empty($fields_data)) {
+      return;
+    }
 
     $processors       = field_user_import_supported_fields();
-    $delimiter        =  $settings['multi_value_delimiter'];
+    $delimiter        = $settings['multi_value_delimiter'];
     $user_fields      = user_load($account->uid);
     $processed_fields = array();
 

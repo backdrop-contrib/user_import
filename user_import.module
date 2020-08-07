@@ -126,7 +126,6 @@ function user_import_menu() {
   return $items;
 }
 
-
 /**
  * Implements hook_cron().
  */
@@ -229,7 +228,6 @@ function user_import_trigger_imports() {
 
     if ($filename == 'sample.txt') {
 
-
       // Check if it's used for an import already.
       $imported = db_query('SELECT import_id FROM {user_import} WHERE filename = :filename', array(':filename' => $filename))->fetchField();
 
@@ -240,7 +238,6 @@ function user_import_trigger_imports() {
         $pointer   = 0;
         $processed = 0;
         $valid     = 0;
-
 
         $field_match = isset($settings['field_match']) ? serialize($settings['field_match']) : '';
         $roles       = isset($settings['roles']) ? serialize($settings['roles']) : '';
@@ -263,7 +260,6 @@ function user_import_trigger_imports() {
 
   return;
 }
-
 
 // - - - - - - - -  FORMS - - - - - - - -
 
@@ -351,7 +347,6 @@ function user_import_limited_errors($import_id = NULL, $template_id = NULL) {
   return $output;
 }
 
-
 /**
  * @param null $import_id
  * @param null $template_id
@@ -362,7 +357,6 @@ function user_import_limited_delete($import_id = NULL, $template_id = NULL) {
 }
 
 // - - - - - - - -  THEMES - - - - - - - -
-
 
 /**
  * @return string
@@ -540,16 +534,17 @@ function theme_user_import_errors_display($settings) {
   // Output of table with the paging
   $output .= theme('table',
       array(
-    "header" => $header,
-    "rows" => $rows,
-    "attributes" => array(),
-    "sticky" => FALSE,
+        "header" => $header,
+        "rows" => $rows,
+        "attributes" => array(),
+        "sticky" => FALSE,
     // Table header will be sticky
-    "caption" => '',
-    "colgroups" => array(),
-    "empty" => t("There are no errors.")
-        , // The message to be displayed if table is empty
-  )
+        "caption" => '',
+        "colgroups" => array(),
+        "empty" => t("There are no errors.")
+  // The message to be displayed if table is empty
+        ,
+      )
     ) . theme("pager");
 
   //$output .= theme('table', array('header' => $header, 'rows' => $rows));
@@ -573,8 +568,9 @@ function theme_user_import_username_errors($errors) {
   return $output;
 }
 
-// - - - - - - - -  MISC - - - - - - - -
-
+/**
+ * - - - - - - - -  MISC - - - - - - - -
+ */
 function _user_import_settings_save($settings) {
   // Database field defaults.
   $database_fields = array(
@@ -669,7 +665,6 @@ function _user_import_settings_save($settings) {
   return $settings;
 }
 
-
 /**
  * @todo Please document this function.
  * @see http://drupal.org/node/1354
@@ -680,19 +675,19 @@ function user_import_import_set($name = '', $file = '', $pointer = 0, $processed
 
     db_update('user_import')
       ->fields(array(
-      'name' => $name,
-      'auto_import_directory' => $auto_import_directory,
-      'filename' => $file->filename,
-      'oldfilename' => $file->oldfilename,
-      'filepath' => $file->filepath,
-      'pointer' => $pointer,
-      'processed' => $processed,
-      'valid' => $valid,
-      'field_match' => $field_match,
-      'roles' => $roles,
-      'options' => $options,
-      'setting' => $setting,
-    ))
+        'name' => $name,
+        'auto_import_directory' => $auto_import_directory,
+        'filename' => $file->filename,
+        'oldfilename' => $file->oldfilename,
+        'filepath' => $file->filepath,
+        'pointer' => $pointer,
+        'processed' => $processed,
+        'valid' => $valid,
+        'field_match' => $field_match,
+        'roles' => $roles,
+        'options' => $options,
+        'setting' => $setting,
+      ))
       ->condition('import_id', $import_id)
       ->execute();
   }
@@ -700,20 +695,20 @@ function user_import_import_set($name = '', $file = '', $pointer = 0, $processed
 
     $import_id = db_insert('user_import')
       ->fields(array(
-      'name' => $name,
-      'auto_import_directory' => $auto_import_directory,
-      'filename' => $file->filename,
-      'oldfilename' => $file->oldfilename,
-      'filepath' => $file->filepath,
-      'started' => time(),
-      'pointer' => $pointer,
-      'processed' => $processed,
-      'valid' => $valid,
-      'field_match' => $field_match,
-      'roles' => $roles,
-      'options' => $options,
-      'setting' => $setting,
-    ))
+        'name' => $name,
+        'auto_import_directory' => $auto_import_directory,
+        'filename' => $file->filename,
+        'oldfilename' => $file->oldfilename,
+        'filepath' => $file->filepath,
+        'started' => time(),
+        'pointer' => $pointer,
+        'processed' => $processed,
+        'valid' => $valid,
+        'field_match' => $field_match,
+        'roles' => $roles,
+        'options' => $options,
+        'setting' => $setting,
+      ))
       ->execute();
   }
 
@@ -735,7 +730,6 @@ function _user_import_settings_select($import_id = NULL, $template = FALSE) {
     if ($template) {
       $sql .= " AND setting = 'template'";
     }
-
 
     $import = (array) db_query_range($sql, 0, 1, array(':import_id' => $import_id))->fetchObject();
 
@@ -838,7 +832,7 @@ function user_import_load_supported() {
 
     foreach ($files as $module_name => $file) {
       if (module_exists($module_name)) {
-        include_once($file->uri);
+        include_once $file->uri;
       }
     }
 
@@ -935,6 +929,7 @@ function user_import_mail($key, &$message, $params) {
  * See http://drupal.org/node/900794.
  */
 class UserImportMailSystem implements MailSystemInterface {
+
   /**
    * Concatenate and wrap the e-mail body.
    *
@@ -985,9 +980,10 @@ class UserImportMailSystem implements MailSystemInterface {
   /**
    * Implements hook_autoload_info().
    */
-  function user_import_autoload_info() {
+  public function user_import_autoload_info() {
     return array(
       'UserImportMailSystem' => 'user_import.module',
     );
   }
+
 }

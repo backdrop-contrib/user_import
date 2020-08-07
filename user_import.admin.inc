@@ -100,7 +100,6 @@ function user_import_preferences($import_id = NULL, $template_id = NULL) {
       return ' ';
     }
 
-
     $output = backdrop_get_form('user_import_add_form');
   }
   else {
@@ -109,8 +108,6 @@ function user_import_preferences($import_id = NULL, $template_id = NULL) {
 
   return $output;
 }
-
-
 
 /**
  * @todo Please document this function.
@@ -272,7 +269,6 @@ function user_import_configure_form() {
     '#default_value' => $config->get('selectable_files'),
   );
 
-
   $form['auto_imports'] = array(
     '#type' => 'fieldset',
     '#title' => t('Automated Imports'),
@@ -341,7 +337,6 @@ function user_import_configure_form() {
       '#default_value' => $config->get('default_settings'),
       '#options' => $templates_list,
     );
-
 
     $form['settings_templates']['templates'] = array(
       '#type' => 'checkboxes',
@@ -814,7 +809,6 @@ function user_import_template_new_submit($form, &$form_state) {
     user_import_create_directory($form_state['values']['auto_import_directory']);
   }
 
-
   _user_import_initialise_import($form_state['values']);
   backdrop_set_message(t("'%name' was saved as a settings template.", array('%name' => $form_state['values']['name'])));
 
@@ -894,11 +888,11 @@ function user_import_edit_submit($form, &$form_state) {
   module_load_include('inc', 'user_import', 'user_import.import');
 
   if ($form_state['values']['setting'] == 'file set') {
-//    $file           = new stdClass();
-//    $file->uri      = $form_state['values']['filepath'];
-//    $file->filename = $form_state['values']['filename'];
+    //    $file           = new stdClass();
+    //    $file->uri      = $form_state['values']['filepath'];
+    //    $file->filename = $form_state['values']['filename'];
     //$filepath       = file_move($file, file_directory_path() . '/' . $form_state['values']['filename']);
-    $filepath       = user_import_move_file_for_processing($form_state['values']['filepath']);
+    $filepath = user_import_move_file_for_processing($form_state['values']['filepath']);
   }
 
   if (!empty($form_state['values']['og_id'])) {
@@ -952,11 +946,13 @@ function _user_import_file_open($filepath, $filename) {
   return $handle;
 }
 
-/*
+/**
+ *
  * File being used
  * $import_id - use file info stored in database
  * $ftp_file - chosen from FTP uploaded files
  * $uploaded_file - uploaded through browser
+ *
  */
 function _user_import_file($import_id = NULL, $ftp_file_selected = NULL) {
 
@@ -999,7 +995,9 @@ function _user_import_file($import_id = NULL, $ftp_file_selected = NULL) {
   return;
 }
 
-// get info on files  uploaded via FTP
+/**
+ * get info on files  uploaded via FTP
+ */
 function _user_import_ftp_files() {
 
   //$directory       = opendir(backdrop_get_path('module', 'user_import'));
@@ -1014,7 +1012,9 @@ function _user_import_ftp_files() {
   return $filenames;
 }
 
-// delete incomplete import settings, where only the file has been uploaded
+/**
+ * delete incomplete import settings, where only the file has been uploaded
+ */
 function _user_import_incomplete_deletion() {
 
   $result = db_query("SELECT * FROM {user_import} WHERE setting = 'file set'");
@@ -1055,7 +1055,7 @@ function user_import_create_directory($directory_name, $path_prefix = 'uploads/'
  */
 function user_import_form_field_match(&$form, $import) {
   $delimiter = isset($import['options']['delimiter']) && !empty($import['options']['delimiter']) ? $import['options']['delimiter'] : ',';
-  $encoding  = isset($import['options']['encoding'])  && !empty($import['options']['encoding'])  ? $import['options']['encoding'] : 'UTF-8';
+  $encoding  = isset($import['options']['encoding'])  && !empty($import['options']['encoding']) ? $import['options']['encoding'] : 'UTF-8';
   $collapsed = (empty($import['name'])) ? FALSE : TRUE;
   $handle    = _user_import_file_open($form['filepath']['#value'], $form['filename']['#value']);
   $data_row  = _user_import_file_row($form['filename']['#value'], $handle, $delimiter, $encoding);
@@ -1132,7 +1132,9 @@ function user_import_form_field_match(&$form, $import) {
   return;
 }
 
-// get first row of file
+/**
+ * get first row of file
+ */
 function _user_import_file_row($filename, $handle, $delimiter = ',', $sencoding = 'UTF-8') {
 
   // Handle folks who may list 'tab' as 't' or 'tab'
@@ -1152,7 +1154,7 @@ function _user_import_file_row($filename, $handle, $delimiter = ',', $sencoding 
   $err = $ii = 0;
   foreach ($data_row as $field) {
     if ('UTF-8' != $sencoding) {
-      $field = mb_convert_encoding ($field, 'UTF-8', $sencoding);
+      $field = mb_convert_encoding($field, 'UTF-8', $sencoding);
       $data_row[$ii] = $field;
     }
     $encoding = mb_check_encoding($field, 'UTF-8');
@@ -1169,8 +1171,10 @@ function _user_import_file_row($filename, $handle, $delimiter = ',', $sencoding 
   return $data_row;
 }
 
-// move from one stage to the next
-// set up all necessary variables
+/**
+ * move from one stage to the next
+ * set up all necessary variables
+ */
 function _user_import_initialise_import($import) {
 
   //_user_import_process won't work w/o this include
@@ -1181,7 +1185,7 @@ function _user_import_initialise_import($import) {
       backdrop_set_message(t('File has already been imported'), 'error');
       break;
 
-      // add setting template values to new import settings
+    // add setting template values to new import settings
     case 'file set':
       if (empty($import['template_id'])) {
         return $import;
@@ -1227,7 +1231,6 @@ function _user_import_initialise_import($import) {
 
   return;
 }
-
 
 /**
  * Delete errors from database for a specified import.

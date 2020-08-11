@@ -16,7 +16,7 @@ function user_import_confirm_delete($form, &$form_state, $import_id) {
     '#value' => $import_id,
   );
 
-  return confirm_form($form,
+return confirm_form($form,
     t('Are you sure you want to delete the user import process?'),
     'admin/people/user_import',
     t('Deleting a user import process will also delete the file from which user data was being read. This action cannot be undone.'),
@@ -120,7 +120,7 @@ function user_import_confirm_continue($form, &$form_state, $import_id) {
     '#value' => $import_id,
   );
 
-  return confirm_form($form,
+return confirm_form($form,
     t('Are you sure you want to continue to import users?'),
     'admin/people/user_import',
     t('Restart user import from where it last finished.'),
@@ -163,7 +163,7 @@ function user_import_confirm_import($form, &$form_state, $import_id) {
     '#value' => $import_id,
   );
 
-  return confirm_form($form,
+return confirm_form($form,
     t('Are you sure you want to import users?'),
     'admin/people/user_import',
     t('Start importing users.'),

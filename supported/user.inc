@@ -86,7 +86,7 @@ function user_user_import_data($settings, $update_setting, $column_settings, $mo
 
     if (!empty($value) && !is_numeric($value)) {
       $parsed = date_parse($value);
-      $timestamp = mktime(
+    $timestamp = mktime(
         $parsed['hour'],
         $parsed['minute'],
         $parsed['second'],

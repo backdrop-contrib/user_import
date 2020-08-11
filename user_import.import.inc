@@ -225,7 +225,7 @@ function _user_import_sanitise_username($username) {
 
   // username cannot contain an illegal character
   $username = preg_replace('/[^\x80-\xF7 [:alnum:]@_.-]/', '', $username);
-  $username = preg_replace(
+$username = preg_replace(
   // Non-printable ISO-8859-1 + NBSP
     '/[\x{80}-\x{A0}' .
   // Soft-hyphen

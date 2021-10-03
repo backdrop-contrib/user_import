@@ -326,13 +326,13 @@ function _user_import_random_username() {
 
     if ($next_vowel) {
       $rand = mt_rand(0, 5);
-      $username .= $vowels{$rand};
+      $username .= $vowels[$rand];
       $next_vowel = 0;
 
     }
     else {
       $rand = mt_rand(0, 19);
-      $username .= $consonants{$rand};
+      $username .= $consonants[$rand];
       $next_vowel = 1;
     }
   }

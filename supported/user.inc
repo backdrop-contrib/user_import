@@ -116,21 +116,19 @@ function user_user_import_pre_save($settings, $account, $fields, $errors, $updat
   $account_add['mail'] = $fields['user']['email'][0];
 
   if (!empty($account->uid)) {
-
-    // update roles
+    // Update roles.
     switch ($update_setting_per_module['roles']) {
       case UPDATE_ADD:
-        // include currently assigned roles
-        foreach ($account->roles as $role_name => $role_label) {
+        // Include currently assigned roles.
+        foreach ($account->roles as $role_name) {
           $account_add['roles'][$role_name] = $role_name;
         }
 
       case UPDATE_REPLACE:
-        // update roles
+        // Update roles.
         if (!isset($account_add['roles'])) {
           $account_add['roles'] = array();
         }
-
         foreach ($settings['roles'] as $role_name => $role_set) {
           if (!empty($role_set)) {
             $account_add['roles'][$role_name] = $role_name;
@@ -140,7 +138,7 @@ function user_user_import_pre_save($settings, $account, $fields, $errors, $updat
         break;
     }
 
-    // update password
+    // Update password.
     if ($update_setting_per_module['password'] == UPDATE_REPLACE) {
       $account_add['pass'] = (empty($fields['user']['password'][0])) ? user_password() : $fields['user']['password'][0];
     }
@@ -148,7 +146,7 @@ function user_user_import_pre_save($settings, $account, $fields, $errors, $updat
       $account_add['pass'] = "";
     }
 
-    // update contact
+    // Update contact.
     if ($update_setting_per_module['contact'] == UPDATE_REPLACE) {
       $account_add['contact'] = $settings['contact'];
     }
@@ -159,8 +157,7 @@ function user_user_import_pre_save($settings, $account, $fields, $errors, $updat
   }
   else {
 
-    // TODO This variable was probably removed in Backdrop without replacement.
-    $account_add['timezone'] = variable_get('date_default_timezone', @date_default_timezone_get());
+    $account_add['timezone'] = config_get('system.date', 'default_timezone');
     $account_add['status']   = 1;
     $account_add['init']     = $fields['user']['email'][0];
     $account_add['pass']     = (empty($fields['user']['password'][0])) ? user_password() : $fields['user']['password'][0];
@@ -176,7 +173,7 @@ function user_user_import_pre_save($settings, $account, $fields, $errors, $updat
       $account_add['login']  = time();
     }
 
-    // add selected roles
+    // Add selected roles.
     foreach ($settings['roles'] as $role_name => $role_set) {
       if (!empty($role_set)) {
         $account_add['roles'][$role_name] = $role_name;
@@ -196,6 +193,7 @@ function user_user_import_after_save($settings, $account, $password, $fields, $u
    */
 
   $roles = isset($fields['user']['roles']) ? $fields['user']['roles'] : array();
+
   user_user_import_after_save_role($account, $settings['roles_new'], $account->roles, $roles);
 
   return;
@@ -210,14 +208,14 @@ function user_user_import_edit_roles_fields(&$form, $import, $collapsed) {
   }
   $roles_data = user_roles(TRUE);
 
-  // remove 'authenticated user' option
+  // Remove 'authenticated user' option.
   foreach ($roles_data as $role_name => $role_label) {
     if ($role_name != 'authenticated') {
       $roles[$role_name] = $role_label;
     }
   }
 
-  // roles selected
+  // Roles selected.
   if (!empty($import['roles'])) {
     foreach ($import['roles'] as $role_name) {
       if ($role_name) {
@@ -292,7 +290,7 @@ function user_user_import_edit_email_fields(&$form, $import, $collapsed) {
     ),
   );
 
-  // CSS Field only needs to show for HTML format
+  // CSS Field only needs to show for HTML format.
   $form['email_message']['message_css'] = array(
     '#type' => 'textarea',
     '#title' => t('CSS'),
@@ -334,7 +332,7 @@ function user_user_import_roles_data($data, $new_roles_allowed) {
   }
   $values = explode(',', $data);
 
-  // check if any roles are specified that don't already exist
+  // Check if any roles are specified that don't already exist.
   $existing_roles = user_roles();
 
   foreach ($values as $piece) {
@@ -342,7 +340,7 @@ function user_user_import_roles_data($data, $new_roles_allowed) {
     $unrecognised = array();
 
     if (!empty($role)) {
-      // only add if role is recognized or adding new roles is allowed
+      // Only add if role is recognized or adding new roles is allowed.
       if (empty($new_roles_allowed) && empty($existing_roles[$role])) {
         $unrecognised[] = $role;
       }
@@ -350,7 +348,6 @@ function user_user_import_roles_data($data, $new_roles_allowed) {
         $roles[] = $role;
       }
     }
-
   }
 
   if (!empty($unrecognised)) {
@@ -375,42 +372,34 @@ function _user_import_existing_uid($email) {
 function user_user_import_after_save_role($account, $new_roles_allowed, $account_roles, $roles) {
 
   $existing_roles = user_roles();
-
-  // if roles were specified, add to existing roles
+  // If roles were specified, add to existing roles.
   $assign_roles = array();
 
   if (is_array($roles) && !empty($roles)) {
-
     foreach ($roles as $role) {
-
       if (!empty($role)) {
-        $key = array_search($role, $existing_roles);
-        if (!empty($new_roles_allowed) && empty($key)) {
-
-          $key = db_insert('role')
-            ->fields(array(
-              'name' => $role,
-            ))
-            ->execute();
-
-          $existing_roles[$key] = $role;
+        if (!empty($new_roles_allowed) && empty($existing_roles[$role])) {
+          // Create new role.
+          $newrole = new stdClass();
+          $newrole->name = $role;
+          $newrole->label = $role;
+          user_role_save($newrole);
+          $existing_roles[$role] = $role;
         }
-
-        $assign_roles[$key] = $role;
+        $assign_roles[$role] = $role;
       }
     }
-
     $need_update = FALSE;
 
-    foreach ($assign_roles as $key => $role) {
-      if (!isset($account_roles[$key])) {
-        $need_update         = TRUE;
-        $account_roles[$key] = $role;
+    foreach ($assign_roles as $role) {
+      if (!in_array($role, $account->roles)) {
+        $need_update = TRUE;
+        $account->roles[] = $role;
       }
     }
 
     if ($need_update) {
-      user_save($account, array('roles' => $account_roles));
+      user_save($account);
     }
   }
 

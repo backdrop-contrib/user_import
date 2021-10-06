@@ -185,10 +185,10 @@ function _user_import_edit_settings_fields(&$form, $import, $collapsed) {
 function _user_import_edit_template_fields(&$form, $import) {
   $config = config('user_import.settings');
 
-  // settings template update controls
+  // Settings template update controls.
   if (empty($import['name'])) {
 
-    // new settings template save controls
+    // New settings template save controls.
 
     $form['save'] = array(
       '#type' => 'fieldset',

@@ -2,7 +2,7 @@
 
 function _user_import_process($settings) {
   $config = config('user_import.settings');
-  // Load supported modules
+  // Load supported modules.
   user_import_load_supported();
 
   $remaining_data            = FALSE;
@@ -21,17 +21,17 @@ function _user_import_process($settings) {
   ini_set('auto_detect_line_endings', TRUE);
   $handle = @fopen($settings['filepath'], "r");
 
-  // move pointer to where test/import last finished
+  // Move pointer to where test/import last finished.
   if ($settings['pointer'] != 0) {
     fseek($handle, $settings['pointer']);
   }
 
-  // start count of imports on this cron run
+  // Start count of imports on this cron run.
   $processed_counter = 0;
 
   while ($data = fgetcsv($handle, $line_max, $delimiter)) {
 
-    // Reset error array prior to testing
+    // Reset error array prior to testing.
     $errors = user_import_errors(FALSE, TRUE);
     $ii = 0;
     foreach ($data as $field) {
@@ -47,20 +47,20 @@ function _user_import_process($settings) {
       $ii++;
     }
 
-    // if importing, check we are not over max number of imports per cron
+    // If importing, check we are not over max number of imports per cron.
     if ($settings['setting'] == 'import' && $processed_counter >= $import_max) {
       $remaining_data = TRUE;
       break;
     }
 
-    // don't process empty lines
+    // Don't process empty lines.
     $line_filled = (count($data) == 1 && backdrop_strlen($data[0]) == 0) ? FALSE : TRUE;
 
     if ($line_filled) {
 
-      // check if this is first line - if so should we skip?
+      // Check if this is first line - if so should we skip?
       if (!empty($settings['first_line_skip']) && $settings['processed'] == 0) {
-        // reset to false on second process
+        // Reset to false on second process.
         $first_line_skip = ($first_line_skip === 0) ? TRUE : FALSE;
       }
 
@@ -91,24 +91,24 @@ function _user_import_process($settings) {
         }
 
         $errors = user_import_errors();
-        $account = entity_create('user', array());
         $updated = FALSE;
 
-        // if we update existing users matched by email (and therefore passed validation even if this email already exists)
-        // look for and use an existing account.
+        // Look for and use an existing account if set to update users.
         if ($update_setting && !empty($fields['user']['email'][0])) {
           $account = user_load_by_mail($fields['user']['email'][0]);
         }
+        if (empty($account)) {
+          $account = entity_create('user', array());
+        }
 
         $account_additions = module_invoke_all('user_import_pre_save', $settings, $account, $fields, $errors, $update_setting_per_module);
-
         foreach ($account_additions as $field_name => $value) {
           $account->$field_name = $value;
         }
         if (empty($errors)) {
 
           if ($settings['setting'] == 'import') {
-            // if $account->uid is not empty then we can assume the account is being updated
+            // If $account->uid is not empty then we can assume the account is being updated.
             if ($account && $account->uid) {
               user_save($account);
               $updated = TRUE;
@@ -133,7 +133,7 @@ function _user_import_process($settings) {
 
       $settings['pointer'] = ftell($handle);
 
-      // save lines that have fatal errors
+      // Save lines that have fatal errors.
       if (!empty($errors)) {
         $account_email = isset($account->email) ? $account->email : '';
         _user_import_errors_display_save($settings['import_id'], $fields, $account_email, $errors);
@@ -186,9 +186,7 @@ function _user_import_create_username($order, $data, $abbreviate, $username_spac
   if (is_array($order)) {
 
     asort($order);
-    //reset($order);
 
-    //while (list ($file_column, $sequence) = each ($order)) {
     foreach ($order as $file_column => $sequence) {
 
       if (!empty($username) && !empty($username_space)) {
@@ -196,7 +194,6 @@ function _user_import_create_username($order, $data, $abbreviate, $username_spac
       }
 
       if ($abbreviate[$file_column] == 1) {
-        //$username .= trim(backdrop_strtoupper(chr(ord($data[$file_column]))));
         $first_character = trim($data[$file_column]);
         $first_character = backdrop_substr($first_character, 0, 1);
         $username .= backdrop_strtoupper($first_character);
@@ -219,11 +216,11 @@ function _user_import_create_username($order, $data, $abbreviate, $username_spac
 }
 
 /**
- *  conform to Backdrop username rules
+ *  Conform to Backdrop username rules.
  */
 function _user_import_sanitise_username($username) {
 
-  // username cannot contain an illegal character
+  // Username cannot contain an illegal character.
   $username = preg_replace('/[^\x80-\xF7 [:alnum:]@_.-]/', '', $username);
 $username = preg_replace(
   // Non-printable ISO-8859-1 + NBSP

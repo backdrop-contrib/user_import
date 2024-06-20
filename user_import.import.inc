@@ -141,6 +141,7 @@ function _user_import_process($settings) {
     }
 
     $settings['setting'] = _user_import_save_progress($settings['setting'], $remaining_data, $settings['pointer'], $settings['processed'], $settings['valid'], $settings['import_id']);
+    unset($account);
   }
 
   // Save progress.

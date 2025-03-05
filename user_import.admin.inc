@@ -360,11 +360,11 @@ function user_import_configure_form() {
  * @see http://drupal.org/node/1354
  */
 function user_import_configure_form_validate($form, &$form_state) {
-  $config = config('user_import.settings');
+  $config = config('system.core');
 
   // Check private files path is set.
   if (!empty($form_state['values']['auto_imports_enabled'])) {
-    $file_private_path = config_get('system.performance', 'file_private_path');
+    $file_private_path = $config->get('file_private_path');
 
     if (!$file_private_path) {
       form_set_error('auto_imports_enabled', t('The !private_file_path must be set to use this feature.', array('!private_file_path' => l(t('Private file system path'), 'admin/config/media/file-system'))));
@@ -373,7 +373,7 @@ function user_import_configure_form_validate($form, &$form_state) {
 
   // Check private files path is set.
   if (!empty($form_state['values']['selectable_files'])) {
-    $file_private_path = config_get('system.performance', 'file_private_path');
+    $file_private_path = $config->get('file_private_path');
 
     if (!$file_private_path) {
       form_set_error('selectable_files', t('The !private_file_path must be set to use the Uploads Directory feature.', array('!private_file_path' => l(t('Private file system path'), 'admin/config/media/file-system'))));

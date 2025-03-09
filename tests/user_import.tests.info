@@ -1,7 +1,7 @@
 [UserImportWebTestCase]
 name = UserImportWebTestCase
 description = UserImportWebTestCase
-group = user_import
+group = User Import
 file = user_import.test
 
 [UserImportBasicsTestCase]

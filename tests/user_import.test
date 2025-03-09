@@ -3,7 +3,7 @@
 /**
  * User Import module base test class.
  */
-class UserImportWebTestCase extends DrupalWebTestCase {
+class UserImportWebTestCase extends BackdropWebTestCase {
   protected $admin_user;
   protected $user_importer;
 
@@ -11,8 +11,8 @@ class UserImportWebTestCase extends DrupalWebTestCase {
    *  Select CSV file (the included example file)
    */
   public function settingsFileSelect() {
-    $edit = array('file_ftp' => 1);
-    $this->drupalPost('admin/people/user_import/add', $edit, t('Next'));
+    $edit = array('files[file_upload]' => 1);
+    $this->backdropPost('admin/people/user_import/add', $edit, t('Next'));
 
     /* Check file was selected */
     $this->assertText(t('Use Different CSV File'), '[assert] File was selected');
@@ -137,18 +137,10 @@ class UserImportWebTestCase extends DrupalWebTestCase {
  */
 class UserImportBasicsTestCase extends UserImportWebTestCase {
 
-  public static function getInfo() {
-    return array(
-      'name' => 'Import Users (Basics)',
-      'description' => 'Import users from a CSV file, test basic functions.',
-      'group' => 'User Import',
-    );
-  }
-
   public function setUp() {
     parent::setUp(array('user_import'));
-    $this->admin_user = $this->drupalCreateUser(array('administer users', 'access administration pages', 'access overlay'));
-    $this->user_importer = $this->drupalCreateUser(array('import users'));
+    $this->admin_user = $this->backdropCreateUser(array('administer users', 'access administration pages'));
+    $this->user_importer = $this->backdropCreateUser(array('import users'));
   }
 
   /**
@@ -158,7 +150,7 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
   public function testCreateImport() {
 
     // Prepare a user to do testing
-    $this->drupalLogin($this->user_importer);
+    $this->backdropLogin($this->user_importer);
 
     // Select CSV file (the included example file)
     $this->settingsFileSelect();
@@ -169,12 +161,11 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
     $setting_edit = array();
     $this->settingsEmailMatch($settings);
     $this->settingsIgnoreFirstLine($settings);
-    $this->drupalPost($this->getUrl(), $settings, 'Import');
+    $this->backdropPost($this->getUrl(), $settings, 'Import');
 
     // check if users have been imported
     $this->checkAccountsExist(TRUE);
   }
-
 }
 
 
@@ -193,8 +184,8 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
 //
 //  function setUp() {
 //      parent::setUp('content', 'number', 'optionwidgets', 'text', 'link', 'date_api', 'date', 'node_import', 'content_profile', 'user_import');
-//      $this->admin_user = $this->drupalCreateUser(array('administer users', 'administer permissions', 'access administration pages', 'administer site configuration', 'administer content types', 'administer taxonomy'));
-//      $this->user_importer = $this->drupalCreateUser(array('import users'));
+//      $this->admin_user = $this->backdropCreateUser(array('administer users', 'administer permissions', 'access administration pages', 'administer site configuration', 'administer content types', 'administer taxonomy'));
+//      $this->user_importer = $this->backdropCreateUser(array('import users'));
 //  }
 //
 //  /**
@@ -202,15 +193,15 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
 //   *  - test import of user data into Nodeprofile module
 //   */
 //  function testCreateImport() {
-//    $this->drupalLogin($this->admin_user);
-//    // $this->drupalGet('admin/build/modules');
-//    // file_put_contents('output.html', $this->drupalGetContent());
+//    $this->backdropLogin($this->admin_user);
+//    // $this->backdropGet('admin/build/modules');
+//    // file_put_contents('output.html', $this->backdropGetContent());
 //
 //    $this->nodeprofileConfiguration();
 //
 //    // Prepare a user to do testing
-//    $this->drupalGet('logout'); // log out first
-//    $this->drupalLogin($this->user_importer);
+//    $this->backdropGet('logout'); // log out first
+//    $this->backdropLogin($this->user_importer);
 //
 //    // Select CSV file (the included example file)
 //    $this->settingsFileSelect();
@@ -221,7 +212,7 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
 //    $this->settingsEmailMatch($settings);
 //    $this->settingsNodeprofileMatch($settings);
 //    $this->settingsIgnoreFirstLine($settings);
-//    $this->drupalPost($this->getUrl(), $settings, 'Import');
+//    $this->backdropPost($this->getUrl(), $settings, 'Import');
 //
 //    // check if users have been imported
 //    $this->checkNodeprofileExist();
@@ -235,44 +226,44 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
 //
 //    // create Identity content type
 //    $edit = array('name' => 'Identity', 'type' => 'identity', 'title_label' => 'Title', 'body_label' => '', 'node_options[promote]' => 0, 'content_profile_use' => 1);
-//    $this->drupalPost('admin/content/types/add', $edit, t('Save content type'));
+//    $this->backdropPost('admin/content/types/add', $edit, t('Save content type'));
 //
 //    // create First Name field
 //    $edit = array('_add_new_field[label]' => 'First Name', '_add_new_field[field_name]' => 'first_name', '_add_new_field[type]' => 'text', '_add_new_field[widget_type]' => 'text_textfield');
-//    $this->drupalPost('admin/content/node-type/identity/fields', $edit, t('Save'));
+//    $this->backdropPost('admin/content/node-type/identity/fields', $edit, t('Save'));
 //
 //    $edit = array('required' => 1);
-//    $this->drupalPost('admin/content/node-type/identity/fields/field_first_name', $edit, t('Save field settings'));
+//    $this->backdropPost('admin/content/node-type/identity/fields/field_first_name', $edit, t('Save field settings'));
 //
 //    // create Last Name field
 //    $edit = array('_add_new_field[label]' => 'Last Name', '_add_new_field[field_name]' => 'last_name', '_add_new_field[type]' => 'text', '_add_new_field[widget_type]' => 'text_textfield');
-//    $this->drupalPost('admin/content/node-type/identity/fields', $edit, t('Save'));
+//    $this->backdropPost('admin/content/node-type/identity/fields', $edit, t('Save'));
 //
 //    $edit = array('required' => 1);
-//    $this->drupalPost('admin/content/node-type/identity/fields/field_last_name', $edit, t('Save field settings'));
+//    $this->backdropPost('admin/content/node-type/identity/fields/field_last_name', $edit, t('Save field settings'));
 //
 //    // create Biography content type
 //    $edit = array('name' => 'Biography', 'type' => 'biography', 'title_label' => 'Title', 'body_label' => '', 'node_options[promote]' => 0, 'content_profile_use' => 1);
-//    $this->drupalPost('admin/content/types/add', $edit, t('Save content type'));
+//    $this->backdropPost('admin/content/types/add', $edit, t('Save content type'));
 //
 //    // create CV field
 //    $edit = array('_add_new_field[label]' => 'CV', '_add_new_field[field_name]' => 'cv', '_add_new_field[type]' => 'text', '_add_new_field[widget_type]' => 'text_textarea');
-//    $this->drupalPost('admin/content/node-type/biography/fields', $edit, t('Save'));
+//    $this->backdropPost('admin/content/node-type/biography/fields', $edit, t('Save'));
 //
 //    $edit = array('required' => 1, 'rows' => 5);
-//    $this->drupalPost('admin/content/node-type/biography/fields/field_cv', $edit, t('Save field settings'));
+//    $this->backdropPost('admin/content/node-type/biography/fields/field_cv', $edit, t('Save field settings'));
 //
 //    // create Blog field (URL)
 //    $edit = array('_add_new_field[label]' => 'Blog', '_add_new_field[field_name]' => 'blog', '_add_new_field[type]' => 'link', '_add_new_field[widget_type]' => 'link');
-//    $this->drupalPost('admin/content/node-type/biography/fields', $edit, t('Save'));
+//    $this->backdropPost('admin/content/node-type/biography/fields', $edit, t('Save'));
 //
 //    // create Birthday field (date)
 //    $edit = array('_add_new_field[label]' => 'Birthday', '_add_new_field[field_name]' => 'birthday', '_add_new_field[type]' => 'datestamp', '_add_new_field[widget_type]' => 'date_text');
-//    $this->drupalPost('admin/content/node-type/biography/fields', $edit, t('Save'));
+//    $this->backdropPost('admin/content/node-type/biography/fields', $edit, t('Save'));
 //
 //    // create Interests Vocabulary
 //    $edit = array('name' => 'Interests', 'nodes[biography]' => 'biography', 'tags' => 1);
-//    $this->drupalPost('admin/content/taxonomy/add/vocabulary', $edit, t('Save'));
+//    $this->backdropPost('admin/content/taxonomy/add/vocabulary', $edit, t('Save'));
 //
 //    $vocabularies = taxonomy_get_vocabularies('biography');
 //
@@ -282,28 +273,28 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
 //
 //    // create Contact Details contact type
 //    $edit = array('name' => 'Contact Details', 'type' => 'contact_details', 'title_label' => 'Title', 'body_label' => '', 'node_options[promote]' => 0, 'content_profile_use' => 1);
-//    $this->drupalPost('admin/content/types/add', $edit, t('Save content type'));
+//    $this->backdropPost('admin/content/types/add', $edit, t('Save content type'));
 //
 //    // create Can Be Contacted field
 //    $edit = array('_add_new_field[label]' => 'Contact', '_add_new_field[field_name]' => 'can_be_contacted', '_add_new_field[type]' => 'number_integer', '_add_new_field[widget_type]' => 'optionwidgets_onoff');
-//    $this->drupalPost('admin/content/node-type/contact-details/fields', $edit, t('Save'));
+//    $this->backdropPost('admin/content/node-type/contact-details/fields', $edit, t('Save'));
 //
 //    $edit = array('allowed_values' => "0
 //    1|Can be contacted");
-//    $this->drupalPost('admin/content/node-type/contact-details/fields/field_can_be_contacted', $edit, t('Save field settings'));
+//    $this->backdropPost('admin/content/node-type/contact-details/fields/field_can_be_contacted', $edit, t('Save field settings'));
 //
 //    // create Contact Preference field
 //    $edit = array('_add_new_field[label]' => 'Contact Preference', '_add_new_field[field_name]' => 'contact_preference', '_add_new_field[type]' => 'text', '_add_new_field[widget_type]' => 'optionwidgets_select');
-//    $this->drupalPost('admin/content/node-type/contact-details/fields', $edit, t('Save'));
+//    $this->backdropPost('admin/content/node-type/contact-details/fields', $edit, t('Save'));
 //
 //    $edit = array('allowed_values' => 'email|email
 //    telephone|telephone
 //    post|post');
-//    $this->drupalPost('admin/content/node-type/contact-details/fields/field_contact_preference', $edit, t('Save field settings'));
+//    $this->backdropPost('admin/content/node-type/contact-details/fields/field_contact_preference', $edit, t('Save field settings'));
 //
 //    // set access perm for authenticated users to creade profile nodes
 //    $edit = array('2[create identity content]' => 'create identity content', '2[create biography content]' => 'create biography content', '2[create contact_details content]' => 'create contact_details content');
-//    $this->drupalPost('admin/people/permissions', $edit, t('Save permissions'));
+//    $this->backdropPost('admin/people/permissions', $edit, t('Save permissions'));
 //  }
 //
 //
@@ -325,7 +316,7 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
 //   *  Check data in CSV file matches data in profiles
 //   */
 //  function checkNodeprofileExist() {
-//    $file_path = drupal_get_path('module', 'user_import') . '/sample.txt';
+//    $file_path = backdrop_get_path('module', 'user_import') . '/tests/sample.txt';
 //    $handle = @fopen($file_path, "r");
 //    $row = 0;
 //
@@ -336,12 +327,12 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
 //        $user = user_load_by_mail($csv[5]);
 //        // test each data cell against nodeprofile field content
 //        $identity = node_load(array('type' => 'identity', 'uid' => $user->uid), NULL, TRUE);
-//        $this->drupalGet("node/$identity->nid");
+//        $this->backdropGet("node/$identity->nid");
 //        $this->assertText(check_plain($csv[0]), "[Compare CSV and Profile data] Row: $row Field: First Name");
 //        $this->assertText(check_plain($csv[1]), "[Compare CSV and Profile data] Row: $row Field: Last Name " . $csv[1]);
 //
 //        $biography = node_load(array('type' => 'biography', 'uid' => $user->uid), NULL, TRUE);
-//        $this->drupalGet("node/$biography->nid");
+//        $this->backdropGet("node/$biography->nid");
 //        $this->assertText($csv[6], "[Compare CSV and Profile data] Row: $row Field: Blog");
 //        $this->assertText($csv[10], "[Compare CSV and Profile data] Row: $row Field: CV");
 //        $birthday = format_date(strtotime($csv[11]), 'custom', 'D, j/m/Y');
@@ -349,7 +340,7 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
 //
 //
 //        $contact_details = node_load(array('type' => 'contact_details', 'uid' => $user->uid), NULL, TRUE);
-//        $this->drupalGet("node/$contact_details->nid");
+//        $this->backdropGet("node/$contact_details->nid");
 //
 //        if (isset($csv[7]) && !empty($csv[7])) {
 //          $this->assertText('Can be contacted', "[Compare CSV and Profile data] Row: $row Field: Contact Permission set");
@@ -363,7 +354,7 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
 //        //test interests link on profile page
 //        if (!empty($user->profile_interests)) {
 //          $interests = explode(',', $user->profile_interests);
-//          $this->drupalGet('profile/profile_interests/' . $interests[0]);
+//          $this->backdropGet('profile/profile_interests/' . $interests[0]);
 //          $this->assertWantedRaw('<a title="View user profile." href="/' . url('user/' . $user->uid) . '">' . $user->name . '</a>' , '[Freeform List] User is listed on page about item in list');
 //        }
 //
@@ -439,8 +430,8 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
 //
 //  function setUp() {
 //        parent::setUp('user_import', 'profile');
-//        $this->admin_user = $this->drupalCreateUser(array('administer users', 'access administration pages', 'administer site configuration'));
-//        $this->user_importer = $this->drupalCreateUser(array('import users'));
+//        $this->admin_user = $this->backdropCreateUser(array('administer users', 'access administration pages', 'administer site configuration'));
+//        $this->user_importer = $this->backdropCreateUser(array('import users'));
 //  }
 //
 //  /**
@@ -448,12 +439,12 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
 //   *  - test import of user data into Profile module
 //   */
 //  function testCreateImport() {
-//    $this->drupalLogin($this->admin_user);
+//    $this->backdropLogin($this->admin_user);
 //    $this->profileFieldsCreate();
 //
 //    // Prepare a user to do testing
-//    $this->drupalGet('logout'); // log out first
-//    $this->drupalLogin($this->user_importer);
+//    $this->backdropGet('logout'); // log out first
+//    $this->backdropLogin($this->user_importer);
 //
 //    // Select CSV file (the included example file)
 //    $this->settingsFileSelect();
@@ -465,7 +456,7 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
 //    $this->settingsEmailMatch($settings);
 //    $this->settingsProfileMatch($settings);
 //    $this->settingsIgnoreFirstLine($settings);
-//    $this->drupalPost($this->getUrl(), $settings, 'Import');
+//    $this->backdropPost($this->getUrl(), $settings, 'Import');
 //
 //    // check if users have been imported
 //    $this->checkProfileExist();
@@ -478,35 +469,35 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
 //
 //    // Textfield
 //    $edit = array('category' => 'Name', 'title' => 'First Name', 'name' => 'profile_first_name');
-//    $this->drupalPost('admin/people/profile/add/textfield', $edit, t('Save field'));
+//    $this->backdropPost('admin/people/profile/add/textfield', $edit, t('Save field'));
 //
 //    // Textfield
 //    $edit = array('category' => 'Name', 'title' => 'Last Name', 'name' => 'profile_last_name');
-//    $this->drupalPost('admin/people/profile/add/textfield', $edit, t('Save field'));
+//    $this->backdropPost('admin/people/profile/add/textfield', $edit, t('Save field'));
 //
 //    // Textarea
 //    $edit = array('category' => 'Biography', 'title' => 'CV', 'name' => 'profile_cv');
-//    $this->drupalPost('admin/people/profile/add/textarea', $edit, t('Save field'));
+//    $this->backdropPost('admin/people/profile/add/textarea', $edit, t('Save field'));
 //
 //    // Checkbox
 //    $edit = array('category' => 'Contact Details', 'title' => 'Can Be Contacted', 'name' => 'profile_contact_permission');
-//    $this->drupalPost('admin/people/profile/add/checkbox', $edit, t('Save field'));
+//    $this->backdropPost('admin/people/profile/add/checkbox', $edit, t('Save field'));
 //
 //    // List
 //    $edit = array('category' => 'Contact Details', 'title' => 'Contact Preference', 'name' => 'profile_contact_preference', 'options' => 'email,telephone,post');
-//    $this->drupalPost('admin/people/profile/add/selection', $edit, t('Save field'));
+//    $this->backdropPost('admin/people/profile/add/selection', $edit, t('Save field'));
 //
 //    // Freeform List
 //    $edit = array('category' => 'Biography', 'title' => 'Interests', 'name' => 'profile_interests');
-//    $this->drupalPost('admin/people/profile/add/list', $edit, t('Save field'));
+//    $this->backdropPost('admin/people/profile/add/list', $edit, t('Save field'));
 //
 //    // URL
 //    $edit = array('category' => 'Biography', 'title' => 'Blog', 'name' => 'profile_blog');
-//    $this->drupalPost('admin/people/profile/add/url', $edit, t('Save field'));
+//    $this->backdropPost('admin/people/profile/add/url', $edit, t('Save field'));
 //
 //    // Date
 //    $edit = array('category' => 'Biography', 'title' => 'Birthday', 'name' => 'profile_birthday');
-//    $this->drupalPost('admin/people/profile/add/date', $edit, t('Save field'));
+//    $this->backdropPost('admin/people/profile/add/date', $edit, t('Save field'));
 //  }
 //
 //  /**
@@ -528,7 +519,7 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
 //   */
 //  function checkProfileExist() {
 //
-//    $file_path = drupal_get_path('module', 'user_import') . '/sample.txt';
+//    $file_path = backdrop_get_path('module', 'user_import') . '/tests/sample.txt';
 //    $handle = @fopen($file_path, "r");
 //    $row = 0;
 //
@@ -575,7 +566,7 @@ class UserImportBasicsTestCase extends UserImportWebTestCase {
 //        //test interests link on profile page
 //        // if (!empty($user->profile_interests)) {
 //        //   $interests = explode(',', $user->profile_interests);
-//        //   $this->drupalGet('profile/profile_interests/' . $interests[0]);
+//        //   $this->backdropGet('profile/profile_interests/' . $interests[0]);
 //        //   $this->assertRaw('<a title="View user profile." href="/'. url('user/'. $user->uid) .'">'. $user->name .'</a>', '[Freeform List] User is listed on page about item in list');
 //        // }
 //
